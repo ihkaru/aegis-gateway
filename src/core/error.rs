@@ -45,6 +45,28 @@ pub enum AegisError {
     #[error("Drain timeout during shutdown: {0}")]
     DrainTimeout(String),
 
+    #[error("Budget exceeded for tenant '{tenant}': spent ${current_usd:.2} of limit ${limit_usd:.2}")]
+    BudgetExceeded {
+        tenant: String,
+        current_usd: f64,
+        limit_usd: f64,
+    },
+
+    #[error("Tenant '{tenant}' is frozen due to budget cutoff: {reason}")]
+    BudgetFrozen {
+        tenant: String,
+        reason: String,
+    },
+
+    #[error("Skill verification failed: {0}")]
+    SkillVerificationFailed(String),
+
+    #[error("Skill '{skill}' is missing required prerequisite: {missing}")]
+    SkillDependencyMissing {
+        skill: String,
+        missing: String,
+    },
+
     #[error("Internal gateway error: {0}")]
     Internal(String),
 }

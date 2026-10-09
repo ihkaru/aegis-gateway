@@ -16,10 +16,12 @@ use crate::core::types::TenantId;
 
 pub mod drain;
 pub mod health;
+pub mod quota;
 pub mod redis_backend;
 
 pub use drain::{DrainCoordinator, TaskGuard};
 pub use health::GatewayHealthService;
+pub use quota::HardFreezeQuota;
 pub use redis_backend::RedisStateBackend;
 
 /// Thread-safe in-memory state backend for development & testing.

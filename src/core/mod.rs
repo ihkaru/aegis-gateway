@@ -21,13 +21,16 @@ pub use identity::TokenValidator;
 pub use policy::{PolicyContext, PolicyDecision, PolicyEngine};
 pub use secrets::SecretStore;
 pub use session::SessionRevocationRegistry;
-pub use skills::{PoisonScanner, SkillBundle, SkillMetadata, SkillRegistry};
+pub use skills::{
+    GitOpsSyncReport, PoisonScanner, SignedSkillBundle, SkillBundle, SkillDependency,
+    SkillMetadata, SkillRegistry, SkillVectorRetriever,
+};
 pub use state::{
-    DistributedCache, DistributedCircuitBreaker, DistributedRateLimiter, DistributedState,
-    QuotaEngine,
+    BudgetManager, BudgetStatus, DepartmentChargeback, DistributedCache, DistributedCircuitBreaker,
+    DistributedRateLimiter, DistributedState, QuotaEngine, TenantBudget,
 };
 pub use types::{
-    CallerContext, DisclosureTier, ProjectedTool, TenantId, ToolCallRequest, ToolCallResponse,
-    ToolDefinition,
+    CallerContext, DisclosureTier, ProjectedTool, ProgressiveDisclosure, TenantId, TokenSavings,
+    ToolCallRequest, ToolCallResponse, ToolDefinition,
 };
 

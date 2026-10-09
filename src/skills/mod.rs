@@ -8,6 +8,12 @@ use tokio::sync::RwLock;
 use crate::core::error::{AegisError, AegisResult};
 use crate::core::skills::{PoisonScanner, SkillBundle, SkillMetadata, SkillRegistry};
 
+pub mod gitops;
+pub mod vector_rag;
+
+pub use gitops::GitOpsSkillSync;
+pub use vector_rag::SemanticSkillRetriever;
+
 /// In-memory skill registry with hot-reloading capability
 #[derive(Clone, Default)]
 pub struct LocalSkillRegistry {

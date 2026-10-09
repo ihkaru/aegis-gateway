@@ -2,6 +2,9 @@
 
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
+pub mod projector;
+pub use projector::ProgressiveProjector;
+
 /// Project a full tool definition into an optimized progressive disclosure tier
 pub fn project_tool(tool: &ToolDefinition, tier: DisclosureTier, score: f64) -> ProjectedTool {
     let summary = if tool.description.len() > 120 {

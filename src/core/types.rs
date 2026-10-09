@@ -82,3 +82,19 @@ pub struct ToolCallResponse {
     pub latency_ms: u64,
     pub dlp_masked: bool,
 }
+
+/// Token savings statistics achieved via progressive disclosure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenSavings {
+    pub full_schema_tokens: usize,
+    pub projected_tokens: usize,
+    pub saved_tokens: usize,
+    pub reduction_percentage: f64,
+}
+
+/// Contract for progressive projection and token optimization
+pub trait ProgressiveDisclosure: Send + Sync {
+    fn project(&self, tool: &ToolDefinition, tier: DisclosureTier, score: f64) -> ProjectedTool;
+    fn calculate_savings(&self, original: &[ToolDefinition], tier: DisclosureTier) -> TokenSavings;
+}
+
