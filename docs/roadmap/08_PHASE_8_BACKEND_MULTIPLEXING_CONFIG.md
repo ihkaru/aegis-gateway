@@ -2,19 +2,19 @@
 
 > **Milestone Tag**: `v0.9.0-backend-multiplexing`  
 > **Status**: `Planned`  
-> **Target Standard**: Process Supervision, Cross-Server Routing & Drop-in Configuration
+> **Target Standard**: Hermetic Process Sandboxing (OWASP LLM08), Anti-Command-Injection (CWE-78), Zero-Zombie Process Hygiene
 
 ---
 
 ## 1. Objectives
 
-Enable Aegis Gateway to act as a true operational reverse proxy for arbitrary backend MCP servers (Node.js/npx, Python, Go, Docker, or remote HTTP/SSE servers). Load server topologies declaratively from configuration files (`aegis.yaml`), manage backend process lifecycles, and dynamically aggregate tool catalogs.
+Enable Aegis Gateway to act as a secure, production-grade reverse proxy for arbitrary backend MCP servers (Node.js/npx, Python, Go, Docker, or remote HTTP/SSE servers). Load server topologies declaratively from configuration files (`aegis.yaml`), enforce hermetic subprocess sandboxing, manage process lifecycles without leaking host credentials, and dynamically aggregate tool catalogs.
 
 ---
 
 ## 2. Architecture & Contracts
 
-Defined in `src/core/backend.rs` (to be created):
+Defined in `src/core/backend.rs`:
 
 ```rust
 #[async_trait]
@@ -33,24 +33,25 @@ pub trait BackendRegistry: Send + Sync {
 }
 ```
 
-### Operational Proxy Flow
+### Enterprise Subprocess Sandboxing Invariants
 
-```mermaid
-flowchart TD
-    Client["AI Client (Claude / Cursor)"] --> Ingress["Phase 7: Stdio / HTTP Ingress"]
-    Ingress --> Pipeline["Aegis Enterprise Pipeline (ABAC -> DLP -> Quota)"]
-    Pipeline --> Dispatcher["Phase 8: Backend Multiplexer"]
-    Dispatcher --> B1["Subprocess 1: Postgres MCP (Stdio)"]
-    Dispatcher --> B2["Subprocess 2: Filesystem MCP (Stdio)"]
-    Dispatcher --> B3["Remote Server: GitHub MCP (HTTP/SSE)"]
-```
+1. **Hermetic Environment Variable Sanitization (Anti-Secret Exfiltration)**:
+   - *Threat (OWASP LLM08)*: Third-party MCP packages (npm/pip) running locally blindly inherit host environment variables containing `AWS_SECRET_ACCESS_KEY`, database passwords, and API keys.
+   - *Aegis Mitigation*: Subprocesses are launched with strict `env_clear()`. Only safe OS primitives (`PATH`, `HOME`, `TMPDIR`) and explicitly declared backend environment variables are injected.
+2. **Anti-Command-Injection Execution (CWE-78 Defense)**:
+   - Command arguments are strictly passed as typed string vectors `Vec<String>` without shell interpolation (`sh -c` or `bash -c` string formatting is strictly prohibited).
+3. **Anti-Zombie Process Group Guarantee**:
+   - Subprocesses are assigned to dedicated process groups with `kill_on_drop(true)` to ensure that gateway termination, client disconnection, or server restart terminates all child processes cleanly without leaving orphaned zombie processes.
+4. **Resilient Failure Isolation**:
+   - If a backend crashes or hangs, the circuit breaker isolates that specific backend while the rest of the gateway and other MCP tools remain fully available.
 
 ---
 
 ## 3. Milestones & Checklist
 
-- [ ] **8.1 Declarative Configuration Parser (`aegis.yaml`)**: Parse backend definitions supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml`.
-- [ ] **8.2 Stdio Subprocess Spawner & Lifecycle Supervisor**: Spawn asynchronous child processes with piped standard IO, automatic restart on crash, and clean process group termination on exit.
+- [ ] **8.1 Declarative Configuration Parser (`aegis.yaml`)**: Parse backend topologies supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml`.
+- [ ] **8.2 Hermetic Subprocess Spawner & Lifecycle Supervisor**: Spawn asynchronous child processes with strict `env_clear()`, `kill_on_drop(true)`, and piped standard IO.
 - [ ] **8.3 Remote HTTP/SSE Backend Connector**: Forward tool calls to remote network-attached MCP endpoints with connection pooling and timeouts.
 - [ ] **8.4 Automated Catalog Aggregation**: Interrogate all registered backends via `tools/list` upon startup, map to Aegis `ToolDefinition`, and populate the registry dynamically.
 - [ ] **8.5 Full End-to-End Operational Pipeline**: Complete transparent bidirectional proxying uniting Client Ingress, Enterprise Control Plane, and Upstream Backends.
+
