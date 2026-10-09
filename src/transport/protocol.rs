@@ -9,7 +9,7 @@ use crate::core::backend::BackendRegistry;
 use crate::core::error::{AegisError, AegisResult};
 use crate::core::transport::{
     JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, WireProtocolHandler,
-    INTERNAL_ERROR, INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
+    INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
 };
 use crate::core::types::{
     CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition,
@@ -215,10 +215,7 @@ impl McpProtocolHandler {
                     }),
                 )
             }
-            Err(e) => JsonRpcResponse::error(
-                id,
-                JsonRpcError::new(INTERNAL_ERROR, format!("Aegis policy or execution error: {e}")),
-            ),
+            Err(e) => JsonRpcResponse::error(id, e.to_rpc_error()),
         }
     }
 
@@ -230,8 +227,18 @@ impl McpProtocolHandler {
             .unwrap_or("");
 
         let read = self.tools.read().await;
-        let projected = self.gateway.discover_tools(&read, query, DisclosureTier::L0).await;
-        JsonRpcResponse::success(id, json!({ "tools": projected }))
+        let mut index = crate::discovery::CatalogSearchIndex::new();
+        index.index_tools_for_backend("default", read.clone());
+        let res = index.search(query, DisclosureTier::L0, 20);
+        JsonRpcResponse::success(
+            id,
+            json!({
+                "tools": res.tools,
+                "total_matches": res.total_matches,
+                "indexed_backends": res.indexed_backends,
+                "unindexed_backends": res.unindexed_backends,
+            }),
+        )
     }
 
     async fn handle_meta_plan(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {

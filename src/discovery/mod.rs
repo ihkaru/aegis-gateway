@@ -2,10 +2,14 @@
 
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
+pub mod catalog_index;
 pub mod namespace;
 pub mod planner;
 pub mod projector;
 
+pub use catalog_index::{
+    BackendCatalogMetadata, BackendIndexStatus, CatalogSearchIndex, CatalogSearchResult,
+};
 pub use namespace::{NamespacedCatalog, PromptDefinition};
 pub use planner::{
     ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep, PlanStepValidation, PlanValidation,

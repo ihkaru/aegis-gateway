@@ -26,6 +26,7 @@ flowchart LR
 ```
 | **Phase 12**| **Egress Guardrails Refusal Integrity and Outcome Attestation** | Operational gap resolution | `In Progress` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
 | **Phase 13**| **Stream Buffer Reuse OAuth Resource Metadata and Process Reaper** | Operational gap resolution | `In Progress` | [`13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md`](./13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md) |
+| **Phase 14**| **Session Teardown Fence, Configurable OAuth Callback Host, Typed SSRF Refusal and Large Catalog Deep Indexing** | Operational gap resolution | `In Progress` | [`14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md`](./14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md) |
 
 ---
 

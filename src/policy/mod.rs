@@ -7,18 +7,22 @@ use crate::core::error::AegisResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
 pub mod egress;
+pub mod oauth_callback;
 pub mod oauth_metadata;
 pub mod oidc;
 pub mod opa;
 pub mod revocation;
 pub mod secrets;
+pub mod ssrf;
 
 pub use egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
+pub use oauth_callback::{CallbackServerConfig, OAuthCallbackResolver};
 pub use oauth_metadata::ProtectedResourceMetadata;
 pub use oidc::{OidcClaims, OidcTokenValidator};
 pub use opa::{OpaRule, OpaPolicyEngine};
 pub use revocation::MemoryRevocationRegistry;
 pub use secrets::{EnvSecretStore, VaultSecretStore};
+pub use ssrf::{SecurityPosture, SsrfRedirectValidator};
 
 /// Enterprise Attribute-Based Access Control (ABAC) Policy Engine
 #[derive(Default)]

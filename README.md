@@ -181,6 +181,7 @@ cargo test --test phase9_legacy_parity_test          # Tier 8: Legacy Gaps (Sear
 cargo test --test phase11_search_planning_and_real_routing_test # Tier 9: Search, DAG Planning & Real Routing
 cargo test --test phase12_egress_guardrails_refusal_integrity_and_outcome_attestation_test # Tier 10: Egress, Refusal & Attestation
 cargo test --test phase13_stream_buffer_reuse_oauth_resource_metadata_and_process_reaper_test # Tier 11: Stream Reuse, OAuth & Reaping
+cargo test --test phase14_session_teardown_fence_configurable_oauth_callback_host_typed_ssrf_refusal_and_large_catalog_deep_indexing_test # Tier 12: Session Fence, OAuth Host & Deep Indexing
 ```
 
 ---
@@ -204,6 +205,7 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 11**| Search, Planning & Zero-Mock | Progressive Discovery, Task Planning & Real Wire Routing | `Completed` |
 | **Phase 12**| Egress, Refusal & Attestation | SSRF Guardrails, Refusal Audit Integrity & Outcome Attestation | `Completed` |
 | **Phase 13**| Stream, OAuth & Reaper | Reusable Stream Buffer, OAuth Resource Metadata & Process Reaping | `Completed` |
+| **Phase 14**| Session Fence, OAuth Host & Deep Indexing | In-Flight Session Teardown Guard, Configurable OAuth Host, Typed SSRF & Large Catalog Deep Indexing | `Completed` |
 
 ---
 

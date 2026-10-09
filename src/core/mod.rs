@@ -23,7 +23,7 @@ pub use identity::TokenValidator;
 
 pub use policy::{PolicyContext, PolicyDecision, PolicyEngine};
 pub use secrets::SecretStore;
-pub use session::SessionRevocationRegistry;
+pub use session::{SessionFence, SessionLifecycleStatus, SessionRevocationRegistry};
 pub use skills::{
     GitOpsSyncReport, PoisonScanner, SignedSkillBundle, SkillBundle, SkillDependency,
     SkillMetadata, SkillRegistry, SkillVectorRetriever,

@@ -18,11 +18,13 @@ pub mod drain;
 pub mod health;
 pub mod quota;
 pub mod redis_backend;
+pub mod session_fence;
 
 pub use drain::{DrainCoordinator, TaskGuard};
 pub use health::GatewayHealthService;
 pub use quota::HardFreezeQuota;
 pub use redis_backend::RedisStateBackend;
+pub use session_fence::InMemorySessionFence;
 
 /// Thread-safe in-memory state backend for development & testing.
 /// In production, swap with `RedisStateBackend` or `PostgreSqlStateBackend` with zero code change.
