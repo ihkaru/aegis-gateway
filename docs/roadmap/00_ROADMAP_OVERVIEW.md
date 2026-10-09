@@ -20,6 +20,8 @@ flowchart LR
     P3 --> P4["Phase 4:<br/>SIEM Audit & Compliance"]
     P4 --> P5["Phase 5:<br/>FinOps & Multi-Tenancy"]
     P5 --> P6["Phase 6:<br/>Centralized Skill OS"]
+    P6 --> P7["Phase 7:<br/>MCP Wire Transports"]
+    P7 --> P8["Phase 8:<br/>Backend Multiplexing"]
 ```
 
 ---
@@ -34,6 +36,8 @@ flowchart LR
 | **Phase 4** | **Tamper-Evident SIEM Audit** | SHA-256 cryptographic chain, Splunk/Datadog OTel export | `Completed` | [`04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md`](./04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md) |
 | **Phase 5** | **FinOps & Multi-Tenancy** | Hard budget freezes, departmental chargeback, token tracking | `Completed` | [`05_PHASE_5_FINOPS_MULTI_TENANCY.md`](./05_PHASE_5_FINOPS_MULTI_TENANCY.md) |
 | **Phase 6** | **Centralized Skill OS** | Dynamic `SKILL.md` registry, GitOps sync, Semantic Skill RAG | `Completed` | [`06_PHASE_6_CENTRALIZED_SKILL_OS.md`](./06_PHASE_6_CENTRALIZED_SKILL_OS.md) |
+| **Phase 7** | **MCP Wire Transports** | JSON-RPC 2.0 framing, Stdio (`--stdio`), and Streamable HTTP/SSE | `Planned` | [`07_PHASE_7_MCP_WIRE_TRANSPORTS.md`](./07_PHASE_7_MCP_WIRE_TRANSPORTS.md) |
+| **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Planned` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
 
 ---
 
