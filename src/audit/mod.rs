@@ -6,9 +6,18 @@ use tracing::info;
 use crate::core::audit::{AuditEvent, AuditSink};
 use crate::core::error::AegisResult;
 
+pub mod otel;
+pub mod sequencer;
+pub mod siem;
+
+pub use otel::OtelAuditSink;
+pub use sequencer::HashChainSequencer;
+pub use siem::{DatadogAuditSink, MultiplexedAuditSink, SplunkHecSink};
+
 /// High-throughput structured SIEM audit logger
 #[derive(Default)]
 pub struct StructuredAuditLogger;
+
 
 impl StructuredAuditLogger {
     pub fn new() -> Self {

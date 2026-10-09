@@ -7,8 +7,15 @@ use serde_json::Value;
 use crate::core::dlp::{DlpFinding, DlpPipeline, SensitivityLevel};
 use crate::core::error::AegisResult;
 
+pub mod matcher;
+pub mod presidio;
+
+pub use matcher::FastMatcher;
+pub use presidio::PresidioDlpPipeline;
+
 /// Real-time PII & Sensitive Data Loss Prevention Pipeline
 pub struct PiiDlpPipeline {
+
     credit_card_regex: Regex,
     ssn_regex: Regex,
     api_key_regex: Regex,

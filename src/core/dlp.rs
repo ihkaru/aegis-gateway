@@ -12,11 +12,31 @@ pub enum SensitivityLevel {
     RestrictedFinancial,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ComplianceProfile {
+    PciDss,
+    Hipaa,
+    Gdpr,
+    Comprehensive,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MaskingStrategy {
+    RedactPlaceholder,
+    TruncatePan,
+    HashSha256,
+}
+
 #[derive(Debug, Clone)]
 pub struct DlpFinding {
     pub category: String,
     pub field_path: String,
     pub sensitivity: SensitivityLevel,
+}
+
+/// Fast pattern matcher abstraction for sub-millisecond scanning
+pub trait FastPatternMatcher: Send + Sync {
+    fn scan_text(&self, text: &str) -> Vec<DlpFinding>;
 }
 
 /// Data Loss Prevention (DLP) pipeline for inspecting and redacting sensitive data
@@ -28,3 +48,4 @@ pub trait DlpPipeline: Send + Sync {
     /// Scan input argument payload to prevent data exfiltration
     async fn inspect_request_arguments(&self, arguments: &Value) -> AegisResult<Vec<DlpFinding>>;
 }
+
