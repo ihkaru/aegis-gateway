@@ -65,8 +65,11 @@ impl DaemonSupervisor {
         Arc<SubprocessBackendRegistry>,
     )> {
         let gateway = Arc::new(AegisGateway::default());
-        let handler = Arc::new(McpProtocolHandler::new(Arc::clone(&gateway)));
         let registry = Arc::new(SubprocessBackendRegistry::new());
+        let handler = Arc::new(McpProtocolHandler::with_registry(
+            Arc::clone(&gateway),
+            Some(Arc::clone(&registry) as Arc<dyn BackendRegistry>),
+        ));
 
         if let Some(cfg) = Self::resolve_config(config_path)? {
             for (name, srv) in cfg.mcp_servers {

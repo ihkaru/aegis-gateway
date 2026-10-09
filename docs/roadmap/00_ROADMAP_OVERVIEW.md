@@ -42,6 +42,7 @@ flowchart LR
 | **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Completed` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
 | **Phase 9** | **Production CLI Daemon** | Standalone CLI (`serve`, `add`, `list`, `doctor`), Legacy Parity | `Completed` | [`09_PHASE_9_PRODUCTION_CLI_DAEMON.md`](./09_PHASE_9_PRODUCTION_CLI_DAEMON.md) |
 | **Phase 10**| **Graduated E2E Testing** | 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`10_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./10_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
+| **Phase 11**| **Search, Planning & Zero-Mock** | Progressive Discovery, Task Planning & Zero-Mock Wire Routing | `Completed` | [`11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md`](./11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md) |
 
 ---
 

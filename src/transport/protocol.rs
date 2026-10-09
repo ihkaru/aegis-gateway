@@ -5,7 +5,8 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::backend::BackendRegistry;
+use crate::core::error::{AegisError, AegisResult};
 use crate::core::transport::{
     JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, WireProtocolHandler,
     INTERNAL_ERROR, INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
@@ -13,11 +14,14 @@ use crate::core::transport::{
 use crate::core::types::{
     CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition,
 };
+use crate::discovery::{ExecutionPlan, ExecutionPlanner};
 use crate::AegisGateway;
 
 /// Core MCP wire protocol engine handling standard JSON-RPC 2.0 lifecycle
 pub struct McpProtocolHandler {
     gateway: Arc<AegisGateway>,
+    registry: Option<Arc<dyn BackendRegistry>>,
+    planner: ExecutionPlanner,
     tools: Arc<RwLock<Vec<ToolDefinition>>>,
     server_name: String,
     server_version: String,
@@ -25,11 +29,20 @@ pub struct McpProtocolHandler {
 
 impl McpProtocolHandler {
     pub fn new(gateway: Arc<AegisGateway>) -> Self {
+        Self::with_registry(gateway, None)
+    }
+
+    pub fn with_registry(
+        gateway: Arc<AegisGateway>,
+        registry: Option<Arc<dyn BackendRegistry>>,
+    ) -> Self {
         Self {
             gateway,
+            registry,
+            planner: ExecutionPlanner::new(),
             tools: Arc::new(RwLock::new(Vec::new())),
             server_name: "aegis-gateway".to_string(),
-            server_version: "0.8.0".to_string(),
+            server_version: "0.9.0".to_string(),
         }
     }
 
@@ -70,7 +83,7 @@ impl McpProtocolHandler {
 
     async fn handle_tools_list(&self, id: JsonRpcId) -> JsonRpcResponse {
         let read = self.tools.read().await;
-        let tool_list: Vec<Value> = read
+        let mut tool_list: Vec<Value> = read
             .iter()
             .map(|t| {
                 json!({
@@ -80,6 +93,23 @@ impl McpProtocolHandler {
                 })
             })
             .collect();
+
+        // Advertise first-class built-in meta-tools
+        tool_list.push(json!({
+            "name": "gateway_search_tools",
+            "description": "Progressive tool discovery across active MCP backend servers",
+            "inputSchema": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
+        }));
+        tool_list.push(json!({
+            "name": "gateway_plan_tasks",
+            "description": "Formulate and preflight multi-step execution plans across tools against zero-trust policy",
+            "inputSchema": { "type": "object", "properties": { "plan_id": { "type": "string" }, "steps": { "type": "array" } }, "required": ["steps"] }
+        }));
+        tool_list.push(json!({
+            "name": "gateway_list_servers",
+            "description": "List connected upstream backend MCP servers and operational status",
+            "inputSchema": { "type": "object", "properties": {} }
+        }));
 
         JsonRpcResponse::success(id, json!({ "tools": tool_list }))
     }
@@ -110,30 +140,84 @@ impl McpProtocolHandler {
             .cloned()
             .unwrap_or_else(|| json!({}));
 
+        // Handle meta-tools directly
+        if tool_name == "gateway_search_tools" {
+            return self.handle_meta_search(id, Some(arguments)).await;
+        }
+        if tool_name == "gateway_plan_tasks" {
+            return self.handle_meta_plan(id, Some(arguments)).await;
+        }
+        if tool_name == "gateway_list_servers" {
+            return self.handle_meta_list_servers(id).await;
+        }
+
+        let tool_info = {
+            let read = self.tools.read().await;
+            read.iter().find(|t| t.name == tool_name).cloned()
+        };
+
+        let server_name = tool_info
+            .as_ref()
+            .map(|t| t.server.clone())
+            .unwrap_or_else(|| "default".to_string());
+
         let req = ToolCallRequest {
             tool: tool_name.clone(),
-            server: "backend".to_string(),
+            server: server_name.clone(),
             arguments: arguments.clone(),
             caller: Self::default_caller(),
         };
 
-        match self.gateway.execute_tool(req, || Ok(json!({ "status": "executed", "tool": tool_name }))).await {
+        let reg_opt = self.registry.clone();
+        let srv = server_name.clone();
+        let t_name = tool_name.clone();
+        let args = arguments.clone();
+        let id_cloned = id.clone();
+
+        let exec_closure = move || async move {
+            if let Some(reg) = reg_opt {
+                let backend = reg.get(&srv).await?;
+                let backend_req = JsonRpcRequest {
+                    jsonrpc: "2.0".to_string(),
+                    id: Some(id_cloned),
+                    method: "tools/call".to_string(),
+                    params: Some(json!({
+                        "name": t_name,
+                        "arguments": args
+                    })),
+                };
+                let resp = backend.send_request(&backend_req).await?;
+                if let Some(err) = resp.error {
+                    Err(AegisError::Internal(format!("Backend error: {}", err.message)))
+                } else {
+                    Ok(resp.result.unwrap_or_else(|| json!({})))
+                }
+            } else {
+                Ok(json!({ "result": "completed", "tool": t_name, "server": srv }))
+            }
+        };
+
+        match self.gateway.execute_tool_async(req, exec_closure).await {
             Ok(resp) => {
-                let content_text = serde_json::to_string(&resp.output).unwrap_or_default();
+                let content_val = if let Some(content) = resp.output.get("content") {
+                    content.clone()
+                } else {
+                    json!([{
+                        "type": "text",
+                        "text": serde_json::to_string(&resp.output).unwrap_or_default()
+                    }])
+                };
                 JsonRpcResponse::success(
                     id,
                     json!({
-                        "content": [{
-                            "type": "text",
-                            "text": content_text
-                        }],
+                        "content": content_val,
                         "isError": !resp.success
                     }),
                 )
             }
             Err(e) => JsonRpcResponse::error(
                 id,
-                JsonRpcError::new(INTERNAL_ERROR, format!("Aegis policy or pipeline denial: {e}")),
+                JsonRpcError::new(INTERNAL_ERROR, format!("Aegis policy or execution error: {e}")),
             ),
         }
     }
@@ -148,6 +232,44 @@ impl McpProtocolHandler {
         let read = self.tools.read().await;
         let projected = self.gateway.discover_tools(&read, query, DisclosureTier::L0).await;
         JsonRpcResponse::success(id, json!({ "tools": projected }))
+    }
+
+    async fn handle_meta_plan(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
+        let plan_val = match params {
+            Some(p) => p,
+            None => {
+                return JsonRpcResponse::error(
+                    id,
+                    JsonRpcError::new(INVALID_PARAMS, "Missing plan definition in arguments"),
+                );
+            }
+        };
+        let plan: ExecutionPlan = match serde_json::from_value(plan_val) {
+            Ok(p) => p,
+            Err(e) => {
+                return JsonRpcResponse::error(
+                    id,
+                    JsonRpcError::new(INVALID_PARAMS, format!("Invalid execution plan schema: {e}")),
+                );
+            }
+        };
+
+        let read = self.tools.read().await;
+        let caller = Self::default_caller();
+        let validation = self
+            .planner
+            .validate_plan(&plan, &read, self.gateway.policy(), &caller)
+            .await;
+        JsonRpcResponse::success(id, serde_json::to_value(validation).unwrap_or_else(|_| json!({})))
+    }
+
+    async fn handle_meta_list_servers(&self, id: JsonRpcId) -> JsonRpcResponse {
+        let servers = if let Some(ref reg) = self.registry {
+            reg.list_backends().await.unwrap_or_default()
+        } else {
+            vec!["default".to_string()]
+        };
+        JsonRpcResponse::success(id, json!({ "servers": servers }))
     }
 }
 
@@ -165,7 +287,6 @@ impl WireProtocolHandler for McpProtocolHandler {
             }
         };
 
-        // Notifications (e.g. notifications/initialized or any message without id) do not expect a response
         let id = match req.id {
             Some(id) => id,
             None => return Ok(None),
@@ -180,7 +301,11 @@ impl WireProtocolHandler for McpProtocolHandler {
             "ping" => JsonRpcResponse::success(id, json!({})),
             "tools/list" => self.handle_tools_list(id).await,
             "tools/call" => self.handle_tools_call(id, req.params).await,
+            "resources/list" => JsonRpcResponse::success(id, json!({ "resources": [] })),
+            "prompts/list" => JsonRpcResponse::success(id, json!({ "prompts": [] })),
             "gateway_search_tools" => self.handle_meta_search(id, req.params).await,
+            "gateway_plan_tasks" => self.handle_meta_plan(id, req.params).await,
+            "gateway_list_servers" => self.handle_meta_list_servers(id).await,
             other => JsonRpcResponse::error(
                 id,
                 JsonRpcError::new(METHOD_NOT_FOUND, format!("Method '{other}' not implemented")),

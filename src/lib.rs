@@ -86,22 +86,28 @@ impl AegisGateway {
             .iter()
             .filter(|t| {
                 query == "*"
+                    || query.is_empty()
                     || t.name.to_lowercase().contains(&q_lower)
                     || t.description.to_lowercase().contains(&q_lower)
+                    || t.server.to_lowercase().contains(&q_lower)
+                    || t.tags.iter().any(|tag| tag.to_lowercase().contains(&q_lower))
             })
             .map(|t| discovery::project_tool(t, tier, 1.0))
             .collect()
     }
 
-    /// Enterprise Zero-Trust Tool Execution Pipeline
-    pub async fn execute_tool(
+    /// Enterprise Zero-Trust Tool Execution Pipeline (Asynchronous)
+    pub async fn execute_tool_async<F, Fut>(
         &self,
         req: ToolCallRequest,
-        raw_executor: impl FnOnce() -> AegisResult<serde_json::Value>,
-    ) -> AegisResult<ToolCallResponse> {
+        raw_executor: F,
+    ) -> AegisResult<ToolCallResponse>
+    where
+        F: FnOnce() -> Fut,
+        Fut: std::future::Future<Output = AegisResult<serde_json::Value>>,
+    {
         let _task_slot = self.drain.acquire_slot()?;
         let start = Instant::now();
-
 
         // 1. Multi-Tenant Budget & Quota Check
         if !self.state.check_budget(&req.caller.tenant_id).await? {
@@ -158,8 +164,8 @@ impl AegisGateway {
             PolicyDecision::Allow => {}
         }
 
-        // 5. Execute Tool Backend
-        let raw_output = match raw_executor() {
+        // 5. Execute Tool Backend Asynchronously
+        let raw_output = match raw_executor().await {
             Ok(out) => {
                 self.state.record_success(&req.server).await?;
                 out
@@ -199,9 +205,23 @@ impl AegisGateway {
         })
     }
 
+    /// Synchronous convenience wrapper for execute_tool_async
+    pub async fn execute_tool(
+        &self,
+        req: ToolCallRequest,
+        raw_executor: impl FnOnce() -> AegisResult<serde_json::Value>,
+    ) -> AegisResult<ToolCallResponse> {
+        self.execute_tool_async(req, || async { raw_executor() }).await
+    }
+
     /// Access the centralized skill registry
     pub fn skills(&self) -> &dyn SkillRegistry {
         self.skills.as_ref()
+    }
+
+    /// Access the policy engine
+    pub fn policy(&self) -> &dyn PolicyEngine {
+        self.policy.as_ref()
     }
 }
 

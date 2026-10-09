@@ -2,7 +2,12 @@
 
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
+pub mod planner;
 pub mod projector;
+
+pub use planner::{
+    ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep, PlanStepValidation, PlanValidation,
+};
 pub use projector::ProgressiveProjector;
 
 /// Project a full tool definition into an optimized progressive disclosure tier

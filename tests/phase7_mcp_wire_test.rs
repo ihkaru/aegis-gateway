@@ -133,8 +133,7 @@ async fn test_mcp_wire_tools_list_and_call() {
         .expect("list response");
     let list_val: serde_json::Value = serde_json::from_str(&list_resp).expect("parse list");
     let tools = list_val["result"]["tools"].as_array().expect("tools array");
-    assert_eq!(tools.len(), 1);
-    assert_eq!(tools[0]["name"], "query_database");
+    assert!(tools.iter().any(|t| t["name"] == "query_database"));
 
     // 2. tools/call
     let call_req = json!({

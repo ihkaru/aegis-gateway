@@ -8,6 +8,10 @@ echo "============================================================"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+echo "Step 0: Running Production Zero-Mock Integrity Audit..."
+bash scripts/audit_mock_detection.sh
+echo ""
+
 echo "Step 1: Running SOLID, Interface-First & 350-Line Limit Audit..."
 bash .agents/skills/solid-code-reviewer/scripts/audit_solid.sh
 echo ""

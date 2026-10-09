@@ -150,6 +150,21 @@ aegis-gateway serve --config aegis.yaml --stdio
 
 ---
 
+### 🧠 6. Autonomous Agent Engineers (Search, Planning & Zero-Mock Execution)
+*Goal: Token-efficient tool discovery, multi-step DAG planning with cycle prevention, and genuine backend execution.*
+
+* **Progressive Tool Discovery (`gateway_search_tools`)**: Eliminates LLM context bloat through multi-tier progressive disclosure:
+  * **L0**: Capability summary (~50 tokens per tool).
+  * **L1**: Signature and parameter keys.
+  * **L2**: Full JSON Schema only on demand.
+* **DAG Execution Planning (`gateway_plan_tasks`)**:
+  * **Cycle Detection**: DFS recursion check flags circular dependencies prior to execution.
+  * **Preflight ABAC**: Authorizes every step against tenant policies before any tool fires.
+  * **Risk Tier Scoring**: Assigns Low/Medium/High/Critical risk tiers; mandates explicit human approval for destructive actions.
+* **100% Genuine Wire Routing**: Dispatches tool calls asynchronously to registered child processes and HTTP servers with zero mock stubs.
+
+---
+
 ## 🧪 Graduated Testing Framework & Parity Suite
 
 Aegis Gateway enforces real-world reliability through a progressive 6-Tier E2E matrix and legacy parity verification:
@@ -163,6 +178,7 @@ cargo test --test e2e_tier5_ciso_adversarial_security# Tier 5: OWASP LLM, DLP, &
 cargo test --test e2e_tier6_sre_chaos_resilience     # Tier 6: Fault Injection & FinOps Hard Freeze
 cargo test --test phase9_cli_daemon_test             # Tier 7: Production CLI Daemon & Server
 cargo test --test phase9_legacy_parity_test          # Tier 8: Legacy Gaps (Search, Cache, Split, Headers)
+cargo test --test phase11_search_planning_and_real_routing_test # Tier 9: Search, DAG Planning & Real Routing
 ```
 
 ---
@@ -183,17 +199,19 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 8** | Backend Multiplexing | Hermetic Sandboxing, Config Loader | `Completed` |
 | **Phase 9** | Production CLI Daemon | CLI Subcommands (`serve`, `add`, `list`), Legacy Parity | `Completed` |
 | **Phase 10**| Graduated E2E Testing | 6-Tier Persona Validation Matrix | `Completed` |
+| **Phase 11**| Search, Planning & Zero-Mock | Progressive Discovery, Task Planning & Real Wire Routing | `Completed` |
 
 ---
 
 ## Verification & Auditing
 
-Run the comprehensive enterprise governance check:
+Run the comprehensive enterprise governance check and zero-mock audit:
 ```bash
+bash scripts/audit_mock_detection.sh
 bash scripts/governance-check.sh
 ```
 
-Run all 62 unit, integration, and E2E test cases:
+Run all unit, integration, and E2E test suites:
 ```bash
 cargo test
 ```
