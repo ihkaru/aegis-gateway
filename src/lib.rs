@@ -7,12 +7,15 @@
 //! Granular ABAC, Real-time DLP, and Tamper-Proof Audit.
 
 pub mod audit;
+pub mod backend;
 pub mod core;
 pub mod discovery;
 pub mod dlp;
 pub mod policy;
 pub mod skills;
 pub mod state;
+pub mod transport;
+
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -193,5 +196,17 @@ impl AegisGateway {
     /// Access the centralized skill registry
     pub fn skills(&self) -> &dyn SkillRegistry {
         self.skills.as_ref()
+    }
+}
+
+impl Default for AegisGateway {
+    fn default() -> Self {
+        Self::new(
+            Arc::new(state::InMemoryStateBackend::new()),
+            Arc::new(policy::AbacPolicyEngine::new()),
+            Arc::new(dlp::PiiDlpPipeline::new()),
+            Arc::new(audit::StructuredAuditLogger::new()),
+            Arc::new(skills::LocalSkillRegistry::new()),
+        )
     }
 }

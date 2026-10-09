@@ -36,8 +36,9 @@ flowchart LR
 | **Phase 4** | **Tamper-Evident SIEM Audit** | SHA-256 cryptographic chain, Splunk/Datadog OTel export | `Completed` | [`04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md`](./04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md) |
 | **Phase 5** | **FinOps & Multi-Tenancy** | Hard budget freezes, departmental chargeback, token tracking | `Completed` | [`05_PHASE_5_FINOPS_MULTI_TENANCY.md`](./05_PHASE_5_FINOPS_MULTI_TENANCY.md) |
 | **Phase 6** | **Centralized Skill OS** | Dynamic `SKILL.md` registry, GitOps sync, Semantic Skill RAG | `Completed` | [`06_PHASE_6_CENTRALIZED_SKILL_OS.md`](./06_PHASE_6_CENTRALIZED_SKILL_OS.md) |
-| **Phase 7** | **MCP Wire Transports** | JSON-RPC 2.0 framing, Stdio (`--stdio`), and Streamable HTTP/SSE | `Planned` | [`07_PHASE_7_MCP_WIRE_TRANSPORTS.md`](./07_PHASE_7_MCP_WIRE_TRANSPORTS.md) |
-| **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Planned` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
+| **Phase 7** | **MCP Wire Transports** | JSON-RPC 2.0 framing, Stdio (`--stdio`), and Streamable HTTP/SSE | `Completed` | [`07_PHASE_7_MCP_WIRE_TRANSPORTS.md`](./07_PHASE_7_MCP_WIRE_TRANSPORTS.md) |
+| **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Completed` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
+| **E2E Suite**| **Graduated Testing Framework**| 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`09_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./09_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
 
 ---
 

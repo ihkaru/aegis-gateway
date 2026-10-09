@@ -1,7 +1,7 @@
 # Phase 8: Backend Process Spawning, Upstream Multiplexing & Config Engine
 
 > **Milestone Tag**: `v0.9.0-backend-multiplexing`  
-> **Status**: `Planned`  
+> **Status**: `Completed`  
 > **Target Standard**: Hermetic Process Sandboxing (OWASP LLM08), Anti-Command-Injection (CWE-78), Zero-Zombie Process Hygiene
 
 ---
@@ -27,8 +27,9 @@ pub trait BackendTransport: Send + Sync {
 
 #[async_trait]
 pub trait BackendRegistry: Send + Sync {
-    async fn register_backend(&self, name: &str, transport: Arc<dyn BackendTransport>) -> AegisResult<()>;
-    async fn get_backend(&self, name: &str) -> AegisResult<Arc<dyn BackendTransport>>;
+    async fn register(&self, name: &str, transport: Arc<dyn BackendTransport>) -> AegisResult<()>;
+    async fn get(&self, name: &str) -> AegisResult<Arc<dyn BackendTransport>>;
+    async fn list_backends(&self) -> AegisResult<Vec<String>>;
     async fn discover_all_tools(&self) -> AegisResult<Vec<ToolDefinition>>;
 }
 ```
@@ -49,9 +50,9 @@ pub trait BackendRegistry: Send + Sync {
 
 ## 3. Milestones & Checklist
 
-- [ ] **8.1 Declarative Configuration Parser (`aegis.yaml`)**: Parse backend topologies supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml`.
-- [ ] **8.2 Hermetic Subprocess Spawner & Lifecycle Supervisor**: Spawn asynchronous child processes with strict `env_clear()`, `kill_on_drop(true)`, and piped standard IO.
-- [ ] **8.3 Remote HTTP/SSE Backend Connector**: Forward tool calls to remote network-attached MCP endpoints with connection pooling and timeouts.
-- [ ] **8.4 Automated Catalog Aggregation**: Interrogate all registered backends via `tools/list` upon startup, map to Aegis `ToolDefinition`, and populate the registry dynamically.
-- [ ] **8.5 Full End-to-End Operational Pipeline**: Complete transparent bidirectional proxying uniting Client Ingress, Enterprise Control Plane, and Upstream Backends.
+- [x] **8.1 Declarative Configuration Parser (`aegis.yaml`)**: Parse backend topologies supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml` (verified in `tests/phase8_backend_multiplexing_test.rs`).
+- [x] **8.2 Hermetic Subprocess Spawner & Lifecycle Supervisor**: Spawn asynchronous child processes with strict `env_clear()`, `kill_on_drop(true)`, and piped standard IO (verified in `tests/phase8_backend_multiplexing_test.rs` & `tests/e2e_tier3_team_multiplexing.rs`).
+- [x] **8.3 Remote HTTP/SSE Backend Connector**: Forward tool calls to remote network-attached MCP endpoints with connection pooling and timeouts (verified in `tests/phase8_backend_multiplexing_test.rs`).
+- [x] **8.4 Automated Catalog Aggregation**: Interrogate all registered backends via `tools/list` upon startup, map to Aegis `ToolDefinition`, and populate the registry dynamically (verified in `tests/phase8_backend_multiplexing_test.rs` & `tests/e2e_tier3_team_multiplexing.rs`).
+- [x] **8.5 Full End-to-End Operational Pipeline**: Complete transparent bidirectional proxying uniting Client Ingress, Enterprise Control Plane, and Upstream Backends (verified in `tests/phase8_backend_multiplexing_test.rs`).
 

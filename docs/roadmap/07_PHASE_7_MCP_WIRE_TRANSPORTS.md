@@ -1,7 +1,7 @@
 # Phase 7: MCP Wire Protocol & Dual Ingress Transports (Stdio & Streamable HTTP)
 
 > **Milestone Tag**: `v0.8.0-wire-transports`  
-> **Status**: `Planned`  
+> **Status**: `Completed`  
 > **Target Standard**: Model Context Protocol Specification (2024-11-05 & Streamable HTTP RFC 2025-03-26)
 
 ---
@@ -50,9 +50,9 @@ pub trait WireProtocolHandler: Send + Sync {
 
 ## 3. Milestones & Checklist
 
-- [ ] **7.1 JSON-RPC 2.0 Message Models & Framing**: Standard `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcNotification`, and canonical error taxonomy (`-32700..-32603`).
-- [ ] **7.2 Standard MCP Protocol Handshake Engine**: Support `initialize`, `notifications/initialized`, and `ping` compliant with MCP 2024-11-05 & 2025-03-26.
-- [ ] **7.3 Native Stdio Client Ingress (`--stdio`)**: Async stdin line reader and stdout writer with strict stderr-isolated tracing.
-- [ ] **7.4 Enterprise Streamable HTTP Ingress**: Unified `POST /mcp` endpoint with streaming chunked transfer and legacy SSE backward compatibility.
-- [ ] **7.5 Meta-Tool & Direct Exposure Duality**: Seamless support for both compact meta-tools (`gateway_search_tools`, `gateway_invoke`) and direct transparent tool listing.
+- [x] **7.1 JSON-RPC 2.0 Message Models & Framing**: Standard `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcNotification`, and canonical error taxonomy (`-32700..-32603`, verified in `tests/phase7_mcp_wire_test.rs`).
+- [x] **7.2 Standard MCP Protocol Handshake Engine**: Support `initialize`, `notifications/initialized`, and `ping` compliant with MCP 2024-11-05 & 2025-03-26 (verified in `tests/phase7_mcp_wire_test.rs`).
+- [x] **7.3 Native Stdio Client Ingress (`--stdio`)**: Async stdin line reader and stdout writer with strict stderr-isolated tracing (verified in `tests/phase7_mcp_wire_test.rs` & `tests/e2e_tier1_hobbyist_quickstart.rs`).
+- [x] **7.4 Enterprise Streamable HTTP Ingress**: Unified `POST /mcp` endpoint with streaming chunked transfer and legacy SSE backward compatibility (verified in `tests/phase7_mcp_wire_test.rs` & `tests/e2e_tier4_enterprise_ha_production.rs`).
+- [x] **7.5 Meta-Tool & Direct Exposure Duality**: Seamless support for both compact meta-tools (`gateway_search_tools`, `gateway_invoke`) and direct transparent tool listing (verified in `tests/phase7_mcp_wire_test.rs`).
 
