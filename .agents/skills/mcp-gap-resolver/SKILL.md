@@ -1,15 +1,15 @@
 ---
 name: mcp-gap-resolver
-description: Autonomous skill to detect functional and operational gaps between legacy MCP gateways (docker/mcp-gateway, microsoft/mcp-gateway) and Aegis Gateway via live GitHub research, formulate new phase roadmaps, and implement enterprise-grade solutions with graduated test suites and zero mocks.
+description: Autonomous skill to detect functional and operational gaps between legacy MCP gateways (MikkoParkkola/mcp-gateway, docker/mcp-gateway, microsoft/mcp-gateway) and Aegis Gateway via live GitHub research, formulate new phase roadmaps, and implement enterprise-grade solutions with graduated test suites and zero mocks.
 ---
 
 # MCP Gap Resolver & Autonomous Phase Scaffolder
 
 This skill equips coding agents with an end-to-end autonomous workflow to:
-1. Conduct real-time research into open and closed GitHub issues of legacy/first-generation MCP gateways (`docker/mcp-gateway`, `microsoft/mcp-gateway`, etc.).
-2. Cross-reference detected issues against Aegis Gateway to identify unaddressed edge cases, bugs, and functional gaps.
+1. Conduct real-time research into open and closed GitHub issues of legacy/first-generation MCP gateways, primarily [MikkoParkkola/mcp-gateway](https://github.com/MikkoParkkola/mcp-gateway) (the canonical Rust reference gateway under PolyForm Noncommercial license), as well as `docker/mcp-gateway` and `microsoft/mcp-gateway`.
+2. Cross-reference detected issues (over 390+ real community reports, crashes, and PRs) against Aegis Gateway to identify unaddressed edge cases, bugs, and functional gaps.
 3. Formulate and scaffold structured roadmap milestones (`docs/roadmap/NN_PHASE_NN_*.md`).
-4. Implement genuine, enterprise-grade Rust code adhering to SOLID principles, `< 350 lines per file`, `#![deny(unsafe_code)]`, and zero mock closures.
+4. Implement genuine, enterprise-grade Rust code adhering to SOLID principles, `< 350 lines per file`, `#![deny(unsafe_code)]`, and zero mock closures under a 100% permissive MIT license.
 5. Generate graduated test suites verifying real operational behavior under both golden and adversarial conditions.
 6. Enforce zero-mock integrity via automated audit gates.
 
@@ -33,19 +33,19 @@ This skill equips coding agents with an end-to-end autonomous workflow to:
 
 ### Step 1: Live GitHub Research & Gap Detection
 
-Query live GitHub issues from target repositories and cross-reference with local Aegis code:
+Query live GitHub issues from target repositories, prioritizing `MikkoParkkola/mcp-gateway`:
 
 ```bash
-# General scan of latest 30 issues across docker and microsoft repositories
+# General scan of latest 30 issues across primary reference and secondary gateways
 python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
-  --repo docker/mcp-gateway,microsoft/mcp-gateway \
+  --repo MikkoParkkola/mcp-gateway,docker/mcp-gateway,microsoft/mcp-gateway \
   --state all \
   --limit 30 \
   --local-root /root/projects/aegis-gateway
 
-# Targeted scan for specific operational keywords (e.g. leak, timeout, refusal, proxy)
+# Targeted scan for specific operational keywords on primary benchmark
 python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
-  --repo docker/mcp-gateway \
+  --repo MikkoParkkola/mcp-gateway \
   --query "leak" \
   --limit 15
 

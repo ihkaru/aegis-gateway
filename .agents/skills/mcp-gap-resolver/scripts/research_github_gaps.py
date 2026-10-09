@@ -173,8 +173,8 @@ def generate_report(results: List[Dict[str, Any]], repos: List[str], format_type
 
 def main():
     parser = argparse.ArgumentParser(description="Research gaps from legacy MCP gateways")
-    parser.add_argument("--repo", default="docker/mcp-gateway,microsoft/mcp-gateway",
-                        help="Comma-separated list of GitHub repositories")
+    parser.add_argument("--repo", default="MikkoParkkola/mcp-gateway,docker/mcp-gateway,microsoft/mcp-gateway",
+                        help="Comma-separated list of GitHub repositories (MikkoParkkola/mcp-gateway primary)")
     parser.add_argument("--state", default="all", choices=["open", "closed", "all"],
                         help="Issue state to query")
     parser.add_argument("--limit", type=int, default=20,
