@@ -25,6 +25,7 @@ flowchart LR
     P9 --> P10["Phase 10:<br/>Graduated E2E"]
 ```
 | **Phase 12**| **Egress Guardrails Refusal Integrity and Outcome Attestation** | Operational gap resolution | `In Progress` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
+| **Phase 13**| **Stream Buffer Reuse OAuth Resource Metadata and Process Reaper** | Operational gap resolution | `In Progress` | [`13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md`](./13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md) |
 
 ---
 
@@ -44,6 +45,7 @@ flowchart LR
 | **Phase 10**| **Graduated E2E Testing** | 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`10_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./10_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
 | **Phase 11**| **Search, Planning & Zero-Mock** | Progressive Discovery, Task Planning & Zero-Mock Wire Routing | `Completed` | [`11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md`](./11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md) |
 | **Phase 12**| **Egress, Refusal & Attestation** | SSRF Guardrails, Refusal Audit Integrity & Tool Outcome Attestation | `Completed` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
+| **Phase 13**| **Stream Buffers, OAuth & Reaping** | Reusable Stream Buffers, OAuth Resource Metadata & Process Reaping | `Completed` | [`13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md`](./13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md) |
 
 ---
 

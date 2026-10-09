@@ -55,6 +55,10 @@ impl LiveHttpServer {
             .route("/healthz", get(handle_health))
             .route("/readyz", get(handle_ready))
             .route("/stats", get(handle_stats))
+            .route(
+                "/.well-known/oauth-protected-resource",
+                get(handle_oauth_metadata),
+            )
             .with_state(self.state.clone())
     }
 
@@ -169,6 +173,19 @@ async fn handle_stats(State(state): State<AppState>) -> Response {
         StatusCode::OK,
         [("content-type", "application/json")],
         stats.to_string(),
+    )
+        .into_response()
+}
+
+async fn handle_oauth_metadata() -> Response {
+    let metadata = crate::policy::ProtectedResourceMetadata::new(
+        "http://localhost:39400/mcp",
+        "https://auth.example.com",
+    );
+    (
+        StatusCode::OK,
+        [("content-type", "application/json")],
+        metadata.to_json().to_string(),
     )
         .into_response()
 }

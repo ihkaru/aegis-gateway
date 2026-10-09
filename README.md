@@ -180,6 +180,7 @@ cargo test --test phase9_cli_daemon_test             # Tier 7: Production CLI Da
 cargo test --test phase9_legacy_parity_test          # Tier 8: Legacy Gaps (Search, Cache, Split, Headers)
 cargo test --test phase11_search_planning_and_real_routing_test # Tier 9: Search, DAG Planning & Real Routing
 cargo test --test phase12_egress_guardrails_refusal_integrity_and_outcome_attestation_test # Tier 10: Egress, Refusal & Attestation
+cargo test --test phase13_stream_buffer_reuse_oauth_resource_metadata_and_process_reaper_test # Tier 11: Stream Reuse, OAuth & Reaping
 ```
 
 ---
@@ -202,6 +203,7 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 10**| Graduated E2E Testing | 6-Tier Persona Validation Matrix | `Completed` |
 | **Phase 11**| Search, Planning & Zero-Mock | Progressive Discovery, Task Planning & Real Wire Routing | `Completed` |
 | **Phase 12**| Egress, Refusal & Attestation | SSRF Guardrails, Refusal Audit Integrity & Outcome Attestation | `Completed` |
+| **Phase 13**| Stream, OAuth & Reaper | Reusable Stream Buffer, OAuth Resource Metadata & Process Reaping | `Completed` |
 
 ---
 
