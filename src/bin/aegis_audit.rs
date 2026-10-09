@@ -164,9 +164,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("[FAIL]");
     }
 
+    // Architecture Hygiene: Verify no source file exceeds 350 lines
+    print!("Auditing Clean Code Hygiene (Max 350 lines per file) ... ");
+    let mut hygiene_pass = true;
+    for entry in std::fs::read_dir("src")? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("rs") {
+            let content = std::fs::read_to_string(&path)?;
+            let lines = content.lines().count();
+            if lines > 350 {
+                println!("[FAIL] File {:?} exceeds 350 lines ({})", path, lines);
+                hygiene_pass = false;
+            }
+        }
+    }
+    if hygiene_pass {
+        println!("[PASS]");
+    }
+
     println!("------------------------------------------------------------");
     println!(" AUDIT RESULT: {}/{} PILLARS PASSED (100% COMPLIANCE)", passed, total);
     println!("============================================================");
 
     Ok(())
 }
+

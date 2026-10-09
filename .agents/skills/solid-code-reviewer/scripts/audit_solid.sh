@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo " [AEGIS AUDIT] SOLID Principles & Rust Hygiene Audit"
+echo " [AEGIS AUDIT] SOLID, Interface-First & 350-Line Limit Audit"
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -10,34 +10,68 @@ cd "$PROJECT_ROOT"
 
 FAILURES=0
 
-echo "--> Verifying #![deny(unsafe_code)] at crate root..."
-if grep -q "deny(unsafe_code)" src/lib.rs; then
-  echo "  [PASS] Zero Unsafe Code policy enforced at src/lib.rs"
+echo "--> 1. Verifying Maximum File Length (Limit: <= 350 lines per file)..."
+OVERSIZED_FILES=0
+while IFS= read -r line; do
+  lines=$(echo "$line" | awk '{print $1}')
+  filepath=$(echo "$line" | awk '{print $2}')
+  if [ "$lines" -gt 350 ]; then
+    echo "  [FAIL] File $filepath exceeds limit: $lines lines (Max: 350)!"
+    OVERSIZED_FILES=$((OVERSIZED_FILES + 1))
+    FAILURES=$((FAILURES + 1))
+  fi
+done < <(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | grep -v " total$")
+
+if [ "$OVERSIZED_FILES" -eq 0 ]; then
+  MAX_FILE=$(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | grep -v " total$" | sort -n | tail -n 1)
+  echo "  [PASS] All files within <= 350 lines limit (Largest: $MAX_FILE)"
+fi
+
+echo "--> 2. Verifying Zero Unsafe Code policy (#![deny(unsafe_code)])..."
+if grep -q "deny(unsafe_code)" src/lib.rs && grep -q "deny(unsafe_code)" src/main.rs; then
+  echo "  [PASS] Zero Unsafe Code policy enforced at src/lib.rs and src/main.rs"
 else
-  echo "  [FAIL] #![deny(unsafe_code)] missing at src/lib.rs"
+  echo "  [FAIL] #![deny(unsafe_code)] missing at crate roots"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "--> Verifying Dependency Inversion (traits in core/)..."
-if [ -d "src/core" ] && [ $(ls src/core/*.rs | wc -l) -ge 4 ]; then
-  echo "  [PASS] Core abstraction layer separated into src/core"
+echo "--> 3. Verifying Interface-First Principle (Core traits in src/core)..."
+CORE_TRAITS=("DistributedState" "PolicyEngine" "DlpPipeline" "AuditSink" "SkillRegistry" "QuotaEngine")
+for trait_name in "${CORE_TRAITS[@]}"; do
+  if grep -rq "pub trait $trait_name" src/core/; then
+    echo "  [PASS] Trait contract '$trait_name' defined in src/core"
+  else
+    echo "  [FAIL] Missing trait contract '$trait_name' in src/core"
+    FAILURES=$((FAILURES + 1))
+  fi
+done
+
+echo "--> 4. Verifying Dependency Injection (DI) Pattern in AegisGateway..."
+if grep -q "pub struct AegisGateway" src/lib.rs && \
+   grep -q "Arc<dyn DistributedState>" src/lib.rs && \
+   grep -q "Arc<dyn PolicyEngine>" src/lib.rs && \
+   grep -q "Arc<dyn DlpPipeline>" src/lib.rs && \
+   grep -q "Arc<dyn AuditSink>" src/lib.rs && \
+   grep -q "Arc<dyn SkillRegistry>" src/lib.rs; then
+  echo "  [PASS] AegisGateway constructor uses strict trait Dependency Injection"
 else
-  echo "  [FAIL] Core abstraction layer insufficient or missing"
+  echo "  [FAIL] AegisGateway violates Dependency Injection; concrete types coupled"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "--> Checking for dangerous unwrap() in production src/..."
+echo "--> 5. Checking for dangerous bare unwrap() in production src/..."
 UNWRAP_COUNT=$(grep -rn "\.unwrap()" src/ --exclude="*test*" --exclude="main.rs" --exclude="aegis_audit.rs" 2>/dev/null | grep -v "unwrap_or" | wc -l || true)
 if [ "$UNWRAP_COUNT" -eq 0 ]; then
   echo "  [PASS] Zero unwrap() found in production library code"
 else
-  echo "  [WARN] Found $UNWRAP_COUNT unwrap() occurrences in src/. Target is 0!"
+  echo "  [FAIL] Found $UNWRAP_COUNT unwrap() occurrences in src/. Target is 0!"
+  FAILURES=$((FAILURES + 1))
 fi
 
 if [ "$FAILURES" -eq 0 ]; then
-  echo ">>> [SUCCESS] SOLID Principles & Rust hygiene checks passed!"
+  echo ">>> [SUCCESS] SOLID, Interface-First & 350-line checks PASSED!"
   exit 0
 else
-  echo ">>> [ERROR] SOLID Principles audit FAILED with $FAILURES violation(s)!"
+  echo ">>> [ERROR] SOLID architecture audit FAILED with $FAILURES violation(s)!"
   exit 1
 fi
