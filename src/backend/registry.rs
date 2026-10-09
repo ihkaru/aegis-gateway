@@ -65,7 +65,10 @@ impl BackendRegistry for SubprocessBackendRegistry {
                         for t in tools_arr {
                             if let Some(tool_name) = t.get("name").and_then(|n| n.as_str()) {
                                 let desc = t.get("description").and_then(|d| d.as_str()).unwrap_or("");
-                                let schema = t.get("inputSchema").cloned().unwrap_or_else(|| json!({}));
+                                let schema = match t.get("inputSchema") {
+                                    Some(s) if s.is_object() => s.clone(),
+                                    _ => json!({ "type": "object", "properties": {} }),
+                                };
                                 all_tools.push(ToolDefinition {
                                     name: tool_name.to_string(),
                                     server: name.clone(),

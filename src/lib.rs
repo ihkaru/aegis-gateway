@@ -8,7 +8,9 @@
 
 pub mod audit;
 pub mod backend;
+pub mod cli;
 pub mod core;
+pub mod daemon;
 pub mod discovery;
 pub mod dlp;
 pub mod policy;
@@ -64,6 +66,10 @@ impl AegisGateway {
     }
 
     pub fn drain_coordinator(&self) -> &state::DrainCoordinator {
+        &self.drain
+    }
+
+    pub fn drain_coordinator_arc(&self) -> &Arc<state::DrainCoordinator> {
         &self.drain
     }
 

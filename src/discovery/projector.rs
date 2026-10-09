@@ -64,14 +64,23 @@ impl ProgressiveProjector {
             .map(|t| {
                 let name_lower = t.name.to_lowercase();
                 let desc_lower = t.description.to_lowercase();
+                let server_lower = t.server.to_lowercase();
                 let mut score = 0.1; // Base score
 
                 for q in &query_tokens {
                     if name_lower.contains(q) {
                         score += 3.0;
                     }
+                    if server_lower.contains(q) {
+                        score += 2.5;
+                    }
                     if desc_lower.contains(q) {
                         score += 1.0;
+                    }
+                    for tag in &t.tags {
+                        if tag.to_lowercase().contains(q) {
+                            score += 2.0;
+                        }
                     }
                 }
                 (score, t)

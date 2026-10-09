@@ -38,12 +38,22 @@ impl HermeticSubprocessBackend {
         args: &[String],
         explicit_env: &HashMap<String, String>,
     ) -> Command {
+        Self::build_command_for_backend("default", command, args, explicit_env)
+    }
+
+    /// Build hermetic Command with per-backend package manager cache isolation
+    pub fn build_command_for_backend(
+        backend_name: &str,
+        command: &str,
+        args: &[String],
+        explicit_env: &HashMap<String, String>,
+    ) -> Command {
         let mut cmd = Command::new(command);
 
         // 1. Enforce hermetic isolation: clear ALL host environment variables (OWASP LLM08)
         cmd.env_clear();
 
-        // 2. Inject only safe minimum OS primitives
+        // 2. Inject safe minimum OS primitives
         if let Ok(path) = std::env::var("PATH") {
             cmd.env("PATH", path);
         }
@@ -56,23 +66,60 @@ impl HermeticSubprocessBackend {
             cmd.env("TMPDIR", "/tmp");
         }
 
-        // 3. Inject only explicitly declared backend configuration variables
+        #[cfg(windows)]
+        {
+            for key in ["USERPROFILE", "APPDATA", "LOCALAPPDATA", "TEMP", "TMP", "SYSTEMROOT"] {
+                if let Ok(v) = std::env::var(key) {
+                    cmd.env(key, v);
+                }
+            }
+        }
+
+        // 3. Isolated package-manager caches to prevent concurrent corruption (Issue #622)
+        let first_word = command.split_whitespace().next().unwrap_or(command);
+        let prog = first_word.rsplit('/').next().unwrap_or(first_word).trim();
+        let safe_name = Self::sanitize_component(backend_name);
+        let base_cache = std::env::temp_dir().join("aegis-cache");
+
+        if matches!(prog, "npx" | "npm" | "pnpm" | "yarn" | "bunx") && !explicit_env.contains_key("npm_config_cache") {
+            cmd.env("npm_config_cache", base_cache.join("npm").join(&safe_name));
+        }
+        if matches!(prog, "uv" | "uvx") && !explicit_env.contains_key("UV_CACHE_DIR") {
+            cmd.env("UV_CACHE_DIR", base_cache.join("uv").join(&safe_name));
+        }
+        if matches!(prog, "pip" | "pipx") && !explicit_env.contains_key("PIP_CACHE_DIR") {
+            cmd.env("PIP_CACHE_DIR", base_cache.join("pip").join(&safe_name));
+        }
+
+        // 4. Inject explicitly declared backend configuration variables
         for (k, v) in explicit_env {
             cmd.env(k, v);
         }
 
-        // 4. Pass arguments as typed argv array (CWE-78 defense: zero shell interpolation)
+        // 5. Pass arguments as typed argv array (CWE-78 defense: zero shell interpolation)
         cmd.args(args);
 
-        // 5. Configure non-blocking pipes
+        // 6. Configure non-blocking pipes
         cmd.stdin(Stdio::piped());
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::inherit()); // Diagnostic logs flow safely to stderr
 
-        // 6. Anti-zombie guarantee: terminate child cleanly on drop
+        // 7. Anti-zombie guarantee: terminate child cleanly on drop
         cmd.kill_on_drop(true);
 
         cmd
+    }
+
+    fn sanitize_component(name: &str) -> String {
+        let cleaned: String = name
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' })
+            .collect();
+        if cleaned.is_empty() {
+            "unnamed".to_string()
+        } else {
+            cleaned
+        }
     }
 }
 
@@ -83,7 +130,12 @@ impl BackendTransport for HermeticSubprocessBackend {
             AegisError::Internal(format!("No command specified for backend '{}'", self.config.name))
         })?;
 
-        let mut cmd = Self::build_command(command_str, &self.config.args, &self.config.env);
+        let mut cmd = Self::build_command_for_backend(
+            &self.config.name,
+            command_str,
+            &self.config.args,
+            &self.config.env,
+        );
         let mut child = cmd.spawn().map_err(|e| {
             AegisError::Internal(format!("Failed to spawn backend process '{}': {e}", self.config.name))
         })?;

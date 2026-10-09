@@ -15,13 +15,15 @@ Aegis Gateway establishes a **Cloud-Native, Enterprise-by-Design Control Plane**
 
 ```mermaid
 flowchart LR
-    P1["Phase 1:<br/>Distributed State & HA"] --> P2["Phase 2:<br/>Zero-Trust IAM & ABAC"]
-    P2 --> P3["Phase 3:<br/>DLP & AI Guardrails"]
-    P3 --> P4["Phase 4:<br/>SIEM Audit & Compliance"]
-    P4 --> P5["Phase 5:<br/>FinOps & Multi-Tenancy"]
-    P5 --> P6["Phase 6:<br/>Centralized Skill OS"]
-    P6 --> P7["Phase 7:<br/>MCP Wire Transports"]
-    P7 --> P8["Phase 8:<br/>Backend Multiplexing"]
+    P1["Phase 1:<br/>Distributed State"] --> P2["Phase 2:<br/>Zero-Trust IAM"]
+    P2 --> P3["Phase 3:<br/>DLP Guardrails"]
+    P3 --> P4["Phase 4:<br/>SIEM Audit"]
+    P4 --> P5["Phase 5:<br/>FinOps Quotas"]
+    P5 --> P6["Phase 6:<br/>Skill OS"]
+    P6 --> P7["Phase 7:<br/>MCP Wire"]
+    P7 --> P8["Phase 8:<br/>Multiplexing"]
+    P8 --> P9["Phase 9:<br/>CLI Daemon & Parity"]
+    P9 --> P10["Phase 10:<br/>Graduated E2E"]
 ```
 
 ---
@@ -38,7 +40,8 @@ flowchart LR
 | **Phase 6** | **Centralized Skill OS** | Dynamic `SKILL.md` registry, GitOps sync, Semantic Skill RAG | `Completed` | [`06_PHASE_6_CENTRALIZED_SKILL_OS.md`](./06_PHASE_6_CENTRALIZED_SKILL_OS.md) |
 | **Phase 7** | **MCP Wire Transports** | JSON-RPC 2.0 framing, Stdio (`--stdio`), and Streamable HTTP/SSE | `Completed` | [`07_PHASE_7_MCP_WIRE_TRANSPORTS.md`](./07_PHASE_7_MCP_WIRE_TRANSPORTS.md) |
 | **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Completed` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
-| **E2E Suite**| **Graduated Testing Framework**| 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`09_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./09_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
+| **Phase 9** | **Production CLI Daemon** | Standalone CLI (`serve`, `add`, `list`, `doctor`), Legacy Parity | `Completed` | [`09_PHASE_9_PRODUCTION_CLI_DAEMON.md`](./09_PHASE_9_PRODUCTION_CLI_DAEMON.md) |
+| **Phase 10**| **Graduated E2E Testing** | 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`10_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./10_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
 
 ---
 
