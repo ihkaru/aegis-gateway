@@ -2,9 +2,11 @@
 
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
+pub mod namespace;
 pub mod planner;
 pub mod projector;
 
+pub use namespace::{NamespacedCatalog, PromptDefinition};
 pub use planner::{
     ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep, PlanStepValidation, PlanValidation,
 };

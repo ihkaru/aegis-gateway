@@ -111,6 +111,20 @@ impl AegisGateway {
 
         // 1. Multi-Tenant Budget & Quota Check
         if !self.state.check_budget(&req.caller.tenant_id).await? {
+            self.audit
+                .emit(&AuditEvent {
+                    event_id: uuid::Uuid::new_v4().to_string(),
+                    timestamp: chrono::Utc::now(),
+                    caller: req.caller.clone(),
+                    action: AuditAction::PolicyEvaluated {
+                        allowed: false,
+                        reason: Some("Monthly spending quota exceeded".to_string()),
+                    },
+                    target_resource: format!("{}:{}", req.server, req.tool),
+                    payload_hash_sha256: "refusal_quota".to_string(),
+                    metadata: serde_json::json!({ "refusal": "QuotaExceeded", "args": req.arguments }),
+                })
+                .await?;
             return Err(AegisError::RateLimitExceeded {
                 tenant: req.caller.tenant_id.as_str().to_string(),
                 message: "Monthly spending quota exceeded".to_string(),
@@ -123,6 +137,20 @@ impl AegisGateway {
             .acquire(&req.caller.tenant_id, &req.tool, 1)
             .await?
         {
+            self.audit
+                .emit(&AuditEvent {
+                    event_id: uuid::Uuid::new_v4().to_string(),
+                    timestamp: chrono::Utc::now(),
+                    caller: req.caller.clone(),
+                    action: AuditAction::PolicyEvaluated {
+                        allowed: false,
+                        reason: Some("Too many concurrent requests".to_string()),
+                    },
+                    target_resource: format!("{}:{}", req.server, req.tool),
+                    payload_hash_sha256: "refusal_ratelimit".to_string(),
+                    metadata: serde_json::json!({ "refusal": "RateLimitExceeded", "args": req.arguments }),
+                })
+                .await?;
             return Err(AegisError::RateLimitExceeded {
                 tenant: req.caller.tenant_id.as_str().to_string(),
                 message: "Too many concurrent requests".to_string(),
@@ -131,6 +159,20 @@ impl AegisGateway {
 
         // 3. Distributed Circuit Breaker Check
         if !self.state.is_available(&req.server).await? {
+            self.audit
+                .emit(&AuditEvent {
+                    event_id: uuid::Uuid::new_v4().to_string(),
+                    timestamp: chrono::Utc::now(),
+                    caller: req.caller.clone(),
+                    action: AuditAction::PolicyEvaluated {
+                        allowed: false,
+                        reason: Some(format!("Circuit open for {}", req.server)),
+                    },
+                    target_resource: format!("{}:{}", req.server, req.tool),
+                    payload_hash_sha256: "refusal_circuit".to_string(),
+                    metadata: serde_json::json!({ "refusal": "CircuitOpen", "server": req.server }),
+                })
+                .await?;
             return Err(AegisError::CircuitOpen(req.server.clone()));
         }
 
@@ -202,6 +244,7 @@ impl AegisGateway {
             output: sanitized_output,
             latency_ms: start.elapsed().as_millis() as u64,
             dlp_masked,
+            attestation: None,
         })
     }
 

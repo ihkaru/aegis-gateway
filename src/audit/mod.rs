@@ -6,10 +6,12 @@ use tracing::info;
 use crate::core::audit::{AuditEvent, AuditSink};
 use crate::core::error::AegisResult;
 
+pub mod attestation;
 pub mod otel;
 pub mod sequencer;
 pub mod siem;
 
+pub use attestation::ToolOutcomeAttestation;
 pub use otel::OtelAuditSink;
 pub use sequencer::HashChainSequencer;
 pub use siem::{DatadogAuditSink, MultiplexedAuditSink, SplunkHecSink};

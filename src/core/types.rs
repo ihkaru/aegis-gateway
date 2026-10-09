@@ -81,6 +81,8 @@ pub struct ToolCallResponse {
     pub output: Value,
     pub latency_ms: u64,
     pub dlp_masked: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attestation: Option<Value>,
 }
 
 /// Token savings statistics achieved via progressive disclosure

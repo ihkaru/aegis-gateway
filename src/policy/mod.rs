@@ -6,13 +6,15 @@ use serde_json::Value;
 use crate::core::error::AegisResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
+pub mod egress;
 pub mod oidc;
 pub mod opa;
 pub mod revocation;
 pub mod secrets;
 
+pub use egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
 pub use oidc::{OidcClaims, OidcTokenValidator};
-pub use opa::{OpaPolicyEngine, OpaRule};
+pub use opa::{OpaRule, OpaPolicyEngine};
 pub use revocation::MemoryRevocationRegistry;
 pub use secrets::{EnvSecretStore, VaultSecretStore};
 

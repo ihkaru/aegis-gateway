@@ -6,7 +6,6 @@
 > **Architecture Core**: SOLID, Zero Unsafe Code, Dependency Inversion
 
 ---
-
 ## Executive Summary
 
 `Aegis Gateway` is engineered to solve the fundamental enterprise readiness deficit present in first-generation MCP gateways. First-generation proxies suffer from in-memory state lock-in, coarse role bits, zero data-loss prevention, and non-commercial license traps.
@@ -25,6 +24,7 @@ flowchart LR
     P8 --> P9["Phase 9:<br/>CLI Daemon & Parity"]
     P9 --> P10["Phase 10:<br/>Graduated E2E"]
 ```
+| **Phase 12**| **Egress Guardrails Refusal Integrity and Outcome Attestation** | Operational gap resolution | `In Progress` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
 
 ---
 
@@ -43,6 +43,7 @@ flowchart LR
 | **Phase 9** | **Production CLI Daemon** | Standalone CLI (`serve`, `add`, `list`, `doctor`), Legacy Parity | `Completed` | [`09_PHASE_9_PRODUCTION_CLI_DAEMON.md`](./09_PHASE_9_PRODUCTION_CLI_DAEMON.md) |
 | **Phase 10**| **Graduated E2E Testing** | 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`10_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./10_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
 | **Phase 11**| **Search, Planning & Zero-Mock** | Progressive Discovery, Task Planning & Zero-Mock Wire Routing | `Completed` | [`11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md`](./11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md) |
+| **Phase 12**| **Egress, Refusal & Attestation** | SSRF Guardrails, Refusal Audit Integrity & Tool Outcome Attestation | `Completed` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
 
 ---
 
