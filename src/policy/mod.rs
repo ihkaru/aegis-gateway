@@ -6,9 +6,20 @@ use serde_json::Value;
 use crate::core::error::AegisResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
+pub mod oidc;
+pub mod opa;
+pub mod revocation;
+pub mod secrets;
+
+pub use oidc::{OidcClaims, OidcTokenValidator};
+pub use opa::{OpaPolicyEngine, OpaRule};
+pub use revocation::MemoryRevocationRegistry;
+pub use secrets::{EnvSecretStore, VaultSecretStore};
+
 /// Enterprise Attribute-Based Access Control (ABAC) Policy Engine
 #[derive(Default)]
 pub struct AbacPolicyEngine;
+
 
 impl AbacPolicyEngine {
     pub fn new() -> Self {

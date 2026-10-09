@@ -34,6 +34,7 @@ pub struct AegisGateway {
     dlp: Arc<dyn DlpPipeline>,
     audit: Arc<dyn AuditSink>,
     skills: Arc<dyn SkillRegistry>,
+    drain: Arc<state::DrainCoordinator>,
 }
 
 impl AegisGateway {
@@ -50,8 +51,19 @@ impl AegisGateway {
             dlp,
             audit,
             skills,
+            drain: Arc::new(state::DrainCoordinator::new()),
         }
     }
+
+    pub fn with_drain(mut self, drain: Arc<state::DrainCoordinator>) -> Self {
+        self.drain = drain;
+        self
+    }
+
+    pub fn drain_coordinator(&self) -> &state::DrainCoordinator {
+        &self.drain
+    }
+
 
     /// Discover tools with progressive disclosure projection
     pub async fn discover_tools(
@@ -78,7 +90,9 @@ impl AegisGateway {
         req: ToolCallRequest,
         raw_executor: impl FnOnce() -> AegisResult<serde_json::Value>,
     ) -> AegisResult<ToolCallResponse> {
+        let _task_slot = self.drain.acquire_slot()?;
         let start = Instant::now();
+
 
         // 1. Multi-Tenant Budget & Quota Check
         if !self.state.check_budget(&req.caller.tenant_id).await? {

@@ -14,10 +14,19 @@ use crate::core::state::{
 };
 use crate::core::types::TenantId;
 
+pub mod drain;
+pub mod health;
+pub mod redis_backend;
+
+pub use drain::{DrainCoordinator, TaskGuard};
+pub use health::GatewayHealthService;
+pub use redis_backend::RedisStateBackend;
+
 /// Thread-safe in-memory state backend for development & testing.
 /// In production, swap with `RedisStateBackend` or `PostgreSqlStateBackend` with zero code change.
 #[derive(Clone, Default)]
 pub struct InMemoryStateBackend {
+
     cache: Arc<RwLock<HashMap<String, (Value, Instant, Duration)>>>,
     rate_buckets: Arc<RwLock<HashMap<String, (u32, Instant)>>>,
     circuit_failures: Arc<RwLock<HashMap<String, (u32, Instant)>>>,

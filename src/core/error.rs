@@ -36,6 +36,16 @@ pub enum AegisError {
     #[error("Audit sink delivery error: {0}")]
     AuditError(String),
 
+    #[error("Secret management error: {0}")]
+    SecretError(String),
+
+    #[error("Session is revoked or deactivated: {0}")]
+    SessionRevoked(String),
+
+    #[error("Drain timeout during shutdown: {0}")]
+    DrainTimeout(String),
+
     #[error("Internal gateway error: {0}")]
     Internal(String),
 }
+

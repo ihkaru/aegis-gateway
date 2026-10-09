@@ -28,9 +28,10 @@ flowchart LR
 
 | Phase | Title | Focus Area | Status | Spec Document |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | **Distributed Foundation** | Redis/Postgres state backend, distributed locks, clustering HA | `In Progress` | [`01_PHASE_1_DISTRIBUTED_FOUNDATION.md`](./01_PHASE_1_DISTRIBUTED_FOUNDATION.md) |
-| **Phase 2** | **Zero-Trust IAM & ABAC** | OIDC/SAML, Okta/Entra ID federation, OPA/Cedar payload ABAC | `Planned` | [`02_PHASE_2_ZERO_TRUST_IAM_ABAC.md`](./02_PHASE_2_ZERO_TRUST_IAM_ABAC.md) |
+| **Phase 1** | **Distributed Foundation** | Redis/Postgres state backend, distributed locks, clustering HA | `Completed` | [`01_PHASE_1_DISTRIBUTED_FOUNDATION.md`](./01_PHASE_1_DISTRIBUTED_FOUNDATION.md) |
+| **Phase 2** | **Zero-Trust IAM & ABAC** | OIDC/SAML, Okta/Entra ID federation, OPA/Cedar payload ABAC | `Completed` | [`02_PHASE_2_ZERO_TRUST_IAM_ABAC.md`](./02_PHASE_2_ZERO_TRUST_IAM_ABAC.md) |
 | **Phase 3** | **Real-Time DLP & Guardrails**| PII/PCI masking, Presidio pipeline, Prompt injection defense | `In Progress` | [`03_PHASE_3_REALTIME_DLP_GUARDRAILS.md`](./03_PHASE_3_REALTIME_DLP_GUARDRAILS.md) |
+
 | **Phase 4** | **Tamper-Evident SIEM Audit** | SHA-256 cryptographic chain, Splunk/Datadog OTel export | `In Progress` | [`04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md`](./04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md) |
 | **Phase 5** | **FinOps & Multi-Tenancy** | Hard budget freezes, departmental chargeback, token tracking | `Planned` | [`05_PHASE_5_FINOPS_MULTI_TENANCY.md`](./05_PHASE_5_FINOPS_MULTI_TENANCY.md) |
 | **Phase 6** | **Centralized Skill OS** | Dynamic `SKILL.md` registry, GitOps sync, Semantic Skill RAG | `In Progress` | [`06_PHASE_6_CENTRALIZED_SKILL_OS.md`](./06_PHASE_6_CENTRALIZED_SKILL_OS.md) |
