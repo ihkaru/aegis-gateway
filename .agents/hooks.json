@@ -1,0 +1,12 @@
+{
+  "enterprise-governance-gate": {
+    "enabled": true,
+    "Stop": [
+      {
+        "type": "command",
+        "command": "./scripts/agy_stop_hook.sh",
+        "timeout": 60
+      }
+    ]
+  }
+}
