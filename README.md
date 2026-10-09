@@ -56,6 +56,22 @@ This repository includes autonomous agent skills located in [`.agents/skills/`](
 
 ---
 
+---
+
+## Enterprise Roadmap
+
+Aegis Gateway follows an enterprise multi-phase roadmap detailed in [`docs/roadmap/`](docs/roadmap/):
+
+- **[Master Overview](docs/roadmap/00_ROADMAP_OVERVIEW.md)**: Executive summary, phase ledger, and compliance standards.
+- **[Phase 1: Distributed State & HA](docs/roadmap/01_PHASE_1_DISTRIBUTED_FOUNDATION.md)**: Redis/Cluster backend, distributed locks, and K8s HA.
+- **[Phase 2: Zero-Trust IAM & ABAC](docs/roadmap/02_PHASE_2_ZERO_TRUST_IAM_ABAC.md)**: OIDC/SAML federation and payload-level policy evaluation.
+- **[Phase 3: Real-Time DLP & AI Guardrails](docs/roadmap/03_PHASE_3_REALTIME_DLP_GUARDRAILS.md)**: In-line PII/PCI masking and anti-poisoning defenses.
+- **[Phase 4: Tamper-Evident SIEM Audit](docs/roadmap/04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md)**: SHA-256 hash chaining and OTel/Splunk export.
+- **[Phase 5: FinOps & Multi-Tenancy](docs/roadmap/05_PHASE_5_FINOPS_MULTI_TENANCY.md)**: Departmental chargeback and hard budget cutoffs.
+- **[Phase 6: Centralized Skill OS](docs/roadmap/06_PHASE_6_CENTRALIZED_SKILL_OS.md)**: Progressive disclosure and GitOps skill catalog.
+
+---
+
 ## Quick Start & Verification
 
 ### 1. Run the Unified Enterprise Governance Suite
@@ -77,3 +93,4 @@ cargo test
 ```bash
 cargo run --bin aegis-gateway
 ```
+
