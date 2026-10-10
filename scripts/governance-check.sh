@@ -34,7 +34,12 @@ echo ""
 
 echo "Step 6: Running Rust Cargo Tests & Type Checks..."
 cargo check --all-targets
-cargo test
+if command -v cargo-nextest >/dev/null 2>&1; then
+  echo "Using cargo-nextest for fast parallel test execution..."
+  CI=1 cargo nextest run
+else
+  cargo test
+fi
 
 echo ""
 echo "============================================================"
