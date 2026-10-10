@@ -186,6 +186,18 @@ aegis-gateway serve --config aegis.yaml --stdio
 
 ---
 
+### ⚡ 9. Dynamic Runtime Control Plane & Zero-Downtime Hot-Reload (Envoy & Kong Architecture)
+*Goal: Eliminate disruptive server restarts, preserve active AI agent streams, and prevent split-brain drift across Kubernetes pods.*
+
+* **Zero-Restart Philosophy**: In enterprise production, restarting gateways is an anti-pattern that violently severs active Streamable HTTP / SSE sessions and orphans suspended approval tasks. Aegis enforces atomic in-memory state swapping (`RwLock` / RCU-style) with 0ms downtime.
+* **Tri-Mode Control Plane**:
+  * **GitOps & Kubernetes Operator (Phase 25)**: Declarative CRDs (`AegisBackend`, `AegisPolicy`, `AegisTenant`) reconciled dynamically via admission controllers.
+  * **Admin Management API (Phase 27)**: High-speed programmatic control plane for adding/removing backends and hot-reloading policy tiers (`dev` -> `strict`).
+  * **OS Signal & File Watcher (Phase 27)**: Responds to `SIGHUP` and file configuration events for standalone Docker/bare-metal environments.
+* **Distributed Pub/Sub Cluster Sync (Phase 28)**: Multi-pod state synchronization over Redis / Pub/Sub channels with rolling SHA-256 checksum verification, preventing configuration drift and split-brain states across cluster replicas.
+
+---
+
 ## 🧪 Graduated Testing Framework & Parity Suite
 
 Aegis Gateway enforces real-world reliability through a progressive 6-Tier E2E matrix and legacy parity verification:
