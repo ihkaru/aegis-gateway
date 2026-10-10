@@ -11,6 +11,7 @@ pub mod protocol;
 pub mod server;
 pub mod signer;
 pub mod stdio;
+pub mod tls_listener;
 
 pub use buffer::ReusableStreamBuffer;
 pub use command_split::{split_command, split_command_unix, split_command_windows};
@@ -21,4 +22,5 @@ pub use protocol::McpProtocolHandler;
 pub use server::LiveHttpServer;
 pub use signer::McpMessageSigner;
 pub use stdio::StdioTransport;
+pub use tls_listener::NativeTlsIngressEngine;
 

@@ -19,6 +19,8 @@ pub mod oauth_metadata;
 pub mod oidc;
 pub mod opa;
 pub mod revocation;
+pub mod saml;
+pub mod scim;
 pub mod secrets;
 pub mod ssrf;
 
@@ -35,6 +37,8 @@ pub use oauth_metadata::ProtectedResourceMetadata;
 pub use oidc::{OidcClaims, OidcTokenValidator};
 pub use opa::{OpaRule, OpaPolicyEngine};
 pub use revocation::MemoryRevocationRegistry;
+pub use saml::NativeSamlServiceProvider;
+pub use scim::NativeScimInboundReceiver;
 pub use secrets::{EnvSecretStore, VaultSecretStore};
 pub use ssrf::{SecurityPosture, SsrfRedirectValidator};
 

@@ -4,3 +4,7 @@ Cargo.lock
 *.log
 .env
 .DS_Store
+node_modules/
+**/node_modules/
+!ui/dist/
+!ui/dist/**

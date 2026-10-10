@@ -54,6 +54,10 @@ flowchart LR
 | **Phase 27**| **Dynamic Control Plane & Hot-Reload** | Zero-Downtime Hot-Reload, In-Memory Atomic Swapping & Admin API | `Completed` | [`27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md`](./27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md) |
 | **Phase 28**| **Distributed Cluster Sync & Pub/Sub** | Multi-Pod Cross-Node State Synchronization & Checksum Bus | `Completed` | [`28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md`](./28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md) |
 | **Phase 29**| **Modern MCP 2026-07-28 & Dual-Stack** | Stateless Header Routing, Anti-Desync Protection & Cache TTL | `Completed` | [`29_PHASE_29_MODERN_STATELESS_MCP_2026_07_28_AND_DUAL_STACK.md`](./29_PHASE_29_MODERN_STATELESS_MCP_2026_07_28_AND_DUAL_STACK.md) |
+| **Phase 30**| **Native Ingress TLS, mTLS & ACME** | Pure-Rust TLS (rustls), mTLS Client Verification & Auto-ACME | `Completed` | [`30_PHASE_30_NATIVE_INGRESS_TLS_MTLS_AND_ACME.md`](./30_PHASE_30_NATIVE_INGRESS_TLS_MTLS_AND_ACME.md) |
+| **Phase 31**| **Identity Federation (SAML & SCIM)** | SAML 2.0 Web SSO & SCIM 2.0 Inbound Directory Provisioning | `Completed` | [`31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md`](./31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md) |
+| **Phase 32**| **Direct OTLP Telemetry Exporter** | CNCF OpenTelemetry Protocol (gRPC/HTTP) & Adaptive Sampler | `Completed` | [`32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md`](./32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md) |
+| **Phase 33**| **Single-Binary Embedded Admin Web UI** | Svelte 5, Bun, TypeScript, shadcn-svelte, Multi-Theme & Anti-Slop | `Completed` | [`33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md`](./33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md) |
 
 ---
 

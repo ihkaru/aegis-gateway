@@ -9,11 +9,14 @@ pub mod data_governance;
 pub mod delegation;
 pub mod dlp;
 pub mod error;
+pub mod federation;
 pub mod health;
 pub mod identity;
+pub mod ingress_tls;
 pub mod k8s;
 pub mod notification;
 pub mod oauth_connect;
+pub mod otlp;
 pub mod policy;
 pub mod protocol_negotiation;
 pub mod proxy;
@@ -90,6 +93,17 @@ pub use cluster_sync::{ClusterSyncEngine, ClusterSyncMessage, ClusterSyncReceipt
 pub use protocol_negotiation::{
     AntiDesyncValidationResult, HeaderRoutingMetadata, McpProtocolNegotiator,
     McpProtocolVersion, NegotiatedMcpContext,
+};
+pub use ingress_tls::{
+    AcmeCertificateManager, MtlsClientVerifier, MtlsValidationResult, TlsCertificateDetails,
+    TlsCertificateStatus, TlsIngressEngine,
+};
+pub use federation::{
+    SamlAssertionContext, SamlServiceProvider, ScimEventType, ScimInboundReceiver,
+    ScimProvisionResult, ScimUserRecord,
+};
+pub use otlp::{
+    OtlpExportBatch, OtlpExportProtocol, OtlpExportResult, OtlpSpanData, OtlpTelemetryExporter,
 };
 
 

@@ -56,74 +56,55 @@ First-generation MCP gateways operate as fragile, single-process hobbyist wrappe
 
 ```mermaid
 flowchart TD
-    subgraph Clients["AI Clients & Orchestrators"]
-        Agent["🤖 Autonomous Agent / IDE<br/>(Antigravity, Claude Code, Cursor)"]
-        Admin["⚙️ Platform Admin / GitOps<br/>(ArgoCD, CLI, Admin API)"]
+    subgraph Clients["Clients & Orchestrators"]
+        Agent["Autonomous Agent / IDE<br/>(Antigravity, Claude Code, Cursor)"]
+        Admin["Platform Admin / GitOps<br/>(ArgoCD, Admin Web UI :8485)"]
     end
 
-    subgraph Aegis["Aegis Gateway Control Plane & Data Plane"]
+    subgraph ControlPlane["Control Plane (Governance & Dynamic Reconciler)"]
         direction TB
-
-        subgraph Ingress["Unified Ingress Transports"]
-            HTTP["⚡ Streamable HTTP (POST /mcp)"]
-            SSE["📡 Server-Sent Events (/sse)"]
-            STDIO["💻 Hermetic Stdio (Framed JSON-RPC)"]
-        end
-
-        subgraph Security["Zero-Trust Security Boundary"]
-            Auth["🔐 Zero-Trust IAM & OIDC JWT"]
-            ABAC["🛡️ Dynamic Payload ABAC (Bounds Check)"]
-            DLP["🔍 Bidirectional Real-Time DLP (PCI/PHI)"]
-            Poison["🧪 Prompt Poison Scanner (OWASP LLM01)"]
-        end
-
-        subgraph Control["Dynamic Control Plane & Governance"]
-            Reconciler["🔄 Zero-Downtime Reconciler (Atomic Swap)"]
-            FinOps["💰 FinOps Multi-Tenant Quotas (Hard Freeze)"]
-            HITL["🤝 Human-in-the-Loop Approval Dispatcher"]
-            Audit["📜 Tamper-Evident SHA-256 SIEM Audit Chain"]
-        end
-
-        subgraph Data["Zero-Knowledge Data Plane"]
-            Router["🔀 Stateless Tool Gateway Router"]
-            Proxy["🔒 Zero-Knowledge Loopback Credential Proxy"]
-            InSitu["📊 In-Situ Analytical Enclave (DuckDB/Polars)"]
-            Vault["📦 Multi-Modal Chunked Streaming Vault (TUS)"]
-        end
+        AdminUI["Embedded Admin Web UI<br/>(Svelte 5 / Bun / Multi-Theme)"]
+        Reconciler["Zero-Downtime Reconciler<br/>(Atomic In-Memory Swap)"]
+        ClusterSync["Multi-Pod Cluster Sync<br/>(Redis Pub/Sub & Checksum Bus)"]
+        FinOps["FinOps Multi-Tenant Quotas<br/>(Hard Freeze Cutoffs)"]
+        HITL["HITL Approval Gate<br/>(Slack/Teams/Webhook HMAC)"]
+        Secrets["Secret Broker (Infisical)<br/>(Dynamic Hot Rotation)"]
     end
 
-    subgraph State["Distributed Enterprise State"]
-        Redis[("⚡ Redis Cluster / Distributed State")]
-        SecretStore[("🔑 Infisical Vault / Central Secrets")]
-        SIEM[("📊 SIEM Sinks (Splunk, Datadog, Otel)")]
+    subgraph DataPlane["Data Plane (Stateless Wire & Security Boundary :8484)"]
+        direction TB
+        Ingress["Native Ingress Hardening<br/>(Pure-Rust TLS 1.3, mTLS & Auto-ACME)"]
+        Auth["IAM: OIDC JWT & SAML 2.0<br/>(SCIM 2.0 Inbound Sync)"]
+        ABAC["Dynamic Payload ABAC<br/>(OPA Bounds & DDL Refusal)"]
+        DLP["Bidirectional Real-Time DLP<br/>(Sub-ms PCI-DSS & HIPAA Masking)"]
+        Router["Stateless Tool Router<br/>(MCP 2026-07-28 Header Routing)"]
+        InSitu["In-Situ Analytical Enclave<br/>(DuckDB Server-Side Zero Egress)"]
+        Proxy["Zero-Knowledge Credential Proxy<br/>(Ephemeral Loopback Sidecar)"]
     end
 
-    subgraph Upstreams["Upstream Tool Backends & Sandboxes"]
-        Subprocess["📦 Hermetic Subprocesses (env_clear)"]
-        RemoteMCP["🌐 Remote MCP Servers (HTTP/SSE)"]
-        Sandbox["🐳 Context-Agnostic Hermetic Sandbox"]
+    subgraph UpstreamTools["Upstream Execution Plane (Tools & Sandboxes)"]
+        direction TB
+        Subprocess["Hermetic Stdio Subprocess<br/>(env_clear & Process Reaping)"]
+        RemoteMCP["Remote MCP Servers<br/>(HTTP & SSE Transports)"]
+        Sandbox["Context-Agnostic Sandbox<br/>(Hermetic Code Execution)"]
+        ExternalAPI["Protected SaaS & Databases<br/>(Keys injected via Loopback)"]
     end
 
-    Agent -->|"MCP Invocations"| Ingress
-    Admin -->|"CRD Sync / Admin API"| Reconciler
+    Agent -->|"MCP Calls :8484"| Ingress
+    Admin -->|"GitOps CRD / :8485"| AdminUI --> Reconciler
+    Reconciler <-->|"Sync Bus"| ClusterSync
+    Reconciler -->|"Hot Rules"| ABAC & Ingress
+    Secrets -.->|"Loopback Ephemeral"| Proxy
 
-    Ingress --> Auth --> ABAC --> DLP --> Poison
-    Poison --> Router
-
-    Reconciler <-->|"Cluster Sync Bus"| Redis
-    Reconciler -->|"Hot-Reload Rules"| ABAC
-    FinOps <-->|"Token Metering"| Redis
-    Audit -->|"W3C Trace & Logs"| SIEM
-    Proxy <-->|"Ephemeral Fetch"| SecretStore
-
+    Ingress --> Auth --> ABAC --> DLP --> Router
+    Router --> InSitu
     Router --> Proxy
-    Proxy --> Subprocess & RemoteMCP
-    Router --> InSitu & Sandbox & Vault
+    Proxy --> Subprocess & RemoteMCP & Sandbox
+    Proxy --> ExternalAPI
 
-    style Aegis fill:#f8fafc,stroke:#3b82f6,stroke-width:2px
-    style Security fill:#eff6ff,stroke:#1d4ed8
-    style Control fill:#fefce8,stroke:#ca8a04
-    style Data fill:#ecfdf5,stroke:#059669
+    style ControlPlane fill:#fefce8,stroke:#ca8a04,stroke-width:2px
+    style DataPlane fill:#eff6ff,stroke:#1d4ed8,stroke-width:2px
+    style UpstreamTools fill:#ecfdf5,stroke:#059669,stroke-width:2px
 ```
 
 ---
@@ -139,6 +120,9 @@ flowchart TD
 | **Data Loss Prevention (DLP)**| ❌ None (PII/PCI leaks to context window) | ❌ None | ❌ None | ✅ **Bidirectional Sub-ms PCI-DSS / HIPAA Masking** |
 | **Data Exfiltration Defense**| ❌ Unrestricted raw file download | ❌ Unrestricted download | ❌ Unrestricted download | ✅ **In-Situ Analytical Enclave (DuckDB, >99.9% reduction)** |
 | **Human-in-the-Loop (HITL)** | ❌ No suspension or approval gates | ❌ None | ❌ None | ✅ **Multi-Channel Approval (Slack/Teams) with HMAC** |
+| **Ingress TLS & mTLS** | ❌ Reverse proxy mandatory | ❌ Reverse proxy mandatory | ⚠️ Azure Front Door lock-in | ✅ **Native Pure-Rust TLS 1.3, mTLS & Auto-ACME** |
+| **Identity Federation** | ❌ Local file token only | ❌ Environment vars | ⚠️ Entra ID lock-in only | ✅ **Universal OIDC, SAML 2.0 & SCIM 2.0 Ingestion** |
+| **Admin Control Interface** | ❌ None (CLI only) | ❌ Docker Compose only | ⚠️ Azure Portal SaaS | ✅ **Embedded Svelte 5 Web UI (:8485, Multi-Theme, Anti-Slop)** |
 | **MCP Protocol Standard** | ⚠️ Legacy `2024-11-05` only | ⚠️ Legacy `2024-11-05` only | ⚠️ Breaking cut (drops `2024-11-05`) | ✅ **Dual-Stack Adaptive (`2026-07-28` + `2024-11-05`)** |
 | **FinOps Cost Governance** | ❌ Unbounded loops drain API credits | ❌ None | ❌ None | ✅ **Real-Time Token Quotas & Automated Hard Freeze** |
 | **Compliance Audit Trail** | ❌ Raw stdout logging | ❌ Docker container logs | ❌ Basic telemetry | ✅ **Cryptographic SHA-256 Hash Chained SIEM Audit** |
