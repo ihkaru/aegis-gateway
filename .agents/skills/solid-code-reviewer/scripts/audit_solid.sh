@@ -11,18 +11,12 @@ cd "$PROJECT_ROOT"
 FAILURES=0
 
 echo "--> 1. Verifying Maximum File Length (Limit: <= 350 lines per file)..."
-OVERSIZED_FILES=0
-while IFS= read -r line; do
-  lines=$(echo "$line" | awk '{print $1}')
-  filepath=$(echo "$line" | awk '{print $2}')
-  if [ "$lines" -gt 350 ]; then
-    echo "  [FAIL] File $filepath exceeds limit: $lines lines (Max: 350)!"
-    OVERSIZED_FILES=$((OVERSIZED_FILES + 1))
-    FAILURES=$((FAILURES + 1))
-  fi
-done < <(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | grep -v " total$")
+OVERSIZED=$(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | awk '$1 > 350 && $2 != "total" { print "  [FAIL] File " $2 " exceeds limit: " $1 " lines (Max: 350)!"; failed++ } END { exit (failed > 0 ? 1 : 0) }' || true)
 
-if [ "$OVERSIZED_FILES" -eq 0 ]; then
+if [ -n "$OVERSIZED" ]; then
+  echo "$OVERSIZED"
+  FAILURES=$((FAILURES + 1))
+else
   MAX_FILE=$(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | grep -v " total$" | sort -n | tail -n 1)
   echo "  [PASS] All files within <= 350 lines limit (Largest: $MAX_FILE)"
 fi

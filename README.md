@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust: 2024](https://img.shields.io/badge/Rust-2024%20Edition-blue.svg)](https://www.rust-lang.org)
 [![Security: Zero Unsafe](https://img.shields.io/badge/Unsafe-Denied%20(%23![deny(unsafe_code)])-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Tests: 145 Passed](https://img.shields.io/badge/Tests-145%20Passed%20(100%25)-brightgreen.svg)](#-verification--auditing)
+[![Tests: 151 Passed](https://img.shields.io/badge/Tests-151%20Passed%20(100%25)-brightgreen.svg)](#-verification--auditing)
 [![Compliance: SOC2 / HIPAA / ISO27001](https://img.shields.io/badge/Compliance-SOC2%20%7C%20HIPAA%20%7C%20ISO27001-green.svg)](#-ciso-security--compliance-mapping)
 [![Control Plane: Zero--Downtime Hot--Reload](https://img.shields.io/badge/Control%20Plane-Zero--Downtime%20Hot--Reload-orange.svg)](#-enterprise-architect-day-2-operations)
 
@@ -267,7 +267,7 @@ spec:
 Aegis Gateway enforces software craftsmanship through continuous automated governance gates:
 
 ```bash
-# 1. Ultra-fast parallel test execution via cargo-nextest (~6 seconds across all 145 tests)
+# 1. Ultra-fast parallel test & governance battery via cargo-nextest (~7 seconds across all 151 tests)
 cargo nextest run
 
 # Or standard Cargo runner
