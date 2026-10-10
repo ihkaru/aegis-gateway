@@ -150,14 +150,17 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
             "arguments": {"query": scen["query"], "tier": "L0", "top_k": 5}
         })
         latencies.append(lat)
-        content = res.get("result", {}).get("content", [])
         tools_found = []
-        if content and "text" in content[0]:
-            try:
-                parsed = json.loads(content[0]["text"])
-                tools_found = [t.get("name") for t in parsed.get("tools", [])]
-            except Exception:
-                pass
+        if "result" in res:
+            r = res["result"]
+            if "tools" in r:
+                tools_found = [t.get("name") for t in r.get("tools", [])]
+            elif "content" in r and r["content"]:
+                try:
+                    parsed = json.loads(r["content"][0]["text"])
+                    tools_found = [t.get("name") for t in parsed.get("tools", [])]
+                except Exception:
+                    pass
 
         expected = scen["expected"]
         rank = tools_found.index(expected) + 1 if expected in tools_found else None
@@ -183,8 +186,8 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
     print("\n[Step 3] Evaluating Multi-Step DAG Planning & Cycle Prevention...")
     # 3A: Valid Sequential Plan
     valid_plan = {
+        "plan_id": "plan_invoice_pipeline",
         "title": "Customer Invoicing Flow",
-        "description": "Fetch customer -> charge card -> email invoice",
         "steps": [
             {"id": "step_cust", "tool": "stripe_create_customer", "arguments": {"email": "user@example.com"}, "depends_on": []},
             {"id": "step_pay", "tool": "stripe_charge_card", "arguments": {"customer_id": "{{step_cust.output.id}}", "amount": 5000}, "depends_on": ["step_cust"]},
@@ -192,22 +195,26 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
         ]
     }
     _, val_res, val_lat = make_mcp_request(endpoint, "tools/call", {"name": "gateway_plan_tasks", "arguments": valid_plan})
-    val_parsed = json.loads(val_res.get("result", {}).get("content", [{}])[0].get("text", "{}"))
-    valid_plan_ok = val_parsed.get("valid", False) and len(val_parsed.get("steps", [])) == 3
-    print(f"  [3A] Valid 3-Step DAG Planning: {'PASS' if valid_plan_ok else 'FAIL'} ({val_lat:.1f}ms) - Steps verified: {len(val_parsed.get('steps', []))}")
+    val_parsed = val_res.get("result", {})
+    if not val_parsed and "content" in val_res.get("result", {}):
+        val_parsed = json.loads(val_res["result"]["content"][0]["text"])
+    valid_plan_ok = val_parsed.get("valid", False) and val_parsed.get("step_count", 0) == 3
+    print(f"  [3A] Valid 3-Step DAG Planning: {'PASS' if valid_plan_ok else 'FAIL'} ({val_lat:.1f}ms) - Steps validated: {val_parsed.get('step_count', 0)}, Risk: {val_parsed.get('overall_risk')}")
 
     # 3B: Circular Dependency Injection (Cycle Rejection Test)
     cycle_plan = {
+        "plan_id": "plan_deadlock_cycle",
         "title": "Deadlock Cycle Plan",
-        "description": "A depends on B, B depends on C, C depends on A",
         "steps": [
-            {"id": "step_A", "tool": "tool_1", "arguments": {}, "depends_on": ["step_C"]},
-            {"id": "step_B", "tool": "tool_2", "arguments": {}, "depends_on": ["step_A"]},
-            {"id": "step_C", "tool": "tool_3", "arguments": {}, "depends_on": ["step_B"]}
+            {"id": "step_A", "tool": "upload_to_storage", "arguments": {}, "depends_on": ["step_C"]},
+            {"id": "step_B", "tool": "generate_presigned_url", "arguments": {}, "depends_on": ["step_A"]},
+            {"id": "step_C", "tool": "delete_storage_object", "arguments": {}, "depends_on": ["step_B"]}
         ]
     }
     _, cyc_res, cyc_lat = make_mcp_request(endpoint, "tools/call", {"name": "gateway_plan_tasks", "arguments": cycle_plan})
-    cyc_parsed = json.loads(cyc_res.get("result", {}).get("content", [{}])[0].get("text", "{}"))
+    cyc_parsed = cyc_res.get("result", {})
+    if not cyc_parsed and "content" in cyc_res.get("result", {}):
+        cyc_parsed = json.loads(cyc_res["result"]["content"][0]["text"])
     cycle_rejected = not cyc_parsed.get("valid", True) and "Circular dependency" in " ".join(cyc_parsed.get("errors", []))
     print(f"  [3B] Cyclic Deadlock Injection: {'PASS (Rejected)' if cycle_rejected else 'FAIL'} ({cyc_lat:.1f}ms) - Errors: {cyc_parsed.get('errors', [])}")
 
