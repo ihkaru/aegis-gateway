@@ -109,6 +109,42 @@ impl EmbeddedAdminServer {
             _ => (404, json!({"error": "Endpoint not found"}).to_string().into_bytes(), "application/json"),
         }
     }
+
+    /// Build an Axum Router serving static embedded SPA assets and REST APIs
+    pub fn into_router(self: std::sync::Arc<Self>) -> axum::Router {
+        axum::Router::new().fallback(move |req: axum::extract::Request| {
+            let server = self.clone();
+            async move {
+                let method = req.method().as_str();
+                let path = req.uri().path();
+                let (status, body, mime) = server.handle_request(method, path);
+                axum::response::Response::builder()
+                    .status(status)
+                    .header("content-type", mime)
+                    .body(axum::body::Body::from(body))
+                    .unwrap_or_else(|_| {
+                        axum::response::IntoResponse::into_response(
+                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                        )
+                    })
+            }
+        })
+    }
+
+    /// Run the embedded admin web server as an independent Axum HTTP service
+    pub async fn run_server(self, host: &str) -> crate::core::error::AegisResult<()> {
+        let addr_str = format!("{host}:{}", self.port);
+        let addr: std::net::SocketAddr = addr_str
+            .parse()
+            .map_err(|e| crate::core::error::AegisError::Internal(format!("Invalid UI socket address '{addr_str}': {e}")))?;
+
+        let server_arc = std::sync::Arc::new(self);
+        let app = server_arc.into_router();
+        let listener = tokio::net::TcpListener::bind(&addr).await?;
+        eprintln!("[AEGIS] Embedded Admin Web UI listening on http://{addr}");
+        axum::serve(listener, app).await?;
+        Ok(())
+    }
 }
 
 fn guess_mime(path: &str) -> &'static str {

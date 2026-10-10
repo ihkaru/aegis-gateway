@@ -58,6 +58,7 @@ flowchart LR
 | **Phase 31**| **Identity Federation (SAML & SCIM)** | SAML 2.0 Web SSO & SCIM 2.0 Inbound Directory Provisioning | `Completed` | [`31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md`](./31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md) |
 | **Phase 32**| **Direct OTLP Telemetry Exporter** | CNCF OpenTelemetry Protocol (gRPC/HTTP) & Adaptive Sampler | `Completed` | [`32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md`](./32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md) |
 | **Phase 33**| **Single-Binary Embedded Admin Web UI** | Svelte 5, Bun, TypeScript, shadcn-svelte, Multi-Theme & Anti-Slop | `Completed` | [`33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md`](./33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md) |
+| **Phase 34**| **Embedded UI Enterprise Control Suite** | Interactive Backends, Live Policy Switcher, Tool Playground & SIEM Audit | `In Planning` | [`34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md`](./34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md) |
 
 ---
 

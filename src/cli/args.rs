@@ -50,6 +50,9 @@ pub enum Command {
 
     /// Verify cryptographic hash-chain audit log integrity (SOC 2 Type II report)
     Audit(AuditArgs),
+
+    /// Start the embedded administrative Web UI control plane
+    Ui(UiArgs),
 }
 
 #[derive(Debug, Args, Clone)]
@@ -149,3 +152,15 @@ pub struct AuditArgs {
     #[arg(short, long)]
     pub output: Option<String>,
 }
+
+#[derive(Debug, Args, Clone)]
+pub struct UiArgs {
+    /// Bind host for Admin Web UI server
+    #[arg(long, default_value = "0.0.0.0", env = "AEGIS_UI_HOST")]
+    pub host: String,
+
+    /// Port for Admin Web UI server
+    #[arg(short, long, default_value_t = 8485, env = "AEGIS_UI_PORT")]
+    pub port: u16,
+}
+

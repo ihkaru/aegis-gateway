@@ -6,7 +6,7 @@ use serde_json::json;
 use crate::backend::TopologyConfigLoader;
 use crate::cli::args::{
     AddArgs, AuditArgs, Cli, Command, DoctorArgs, InitArgs, ListArgs, RemoveArgs, ServeArgs,
-    ValidateArgs,
+    UiArgs, ValidateArgs,
 };
 use crate::core::error::{AegisError, AegisResult};
 use crate::daemon::DaemonSupervisor;
@@ -37,6 +37,7 @@ pub async fn run(cli: Cli) -> AegisResult<()> {
         Some(Command::List(args)) => run_list(args),
         Some(Command::Doctor(args)) => run_doctor(args),
         Some(Command::Audit(args)) => run_audit(args).await,
+        Some(Command::Ui(args)) => run_ui(args).await,
         None => {
             let args = ServeArgs {
                 stdio: false,
@@ -249,3 +250,15 @@ fn check_command_exists(cmd: &str) -> bool {
     }
     false
 }
+
+pub async fn run_ui(args: UiArgs) -> AegisResult<()> {
+    let server = crate::control::web_ui::EmbeddedAdminServer::new(args.port, true);
+    println!("============================================================");
+    println!("      AEGIS GATEWAY: EMBEDDED ADMIN WEB UI CONTROL PLANE    ");
+    println!("============================================================");
+    println!("Serving Svelte 5 Dashboard at http://{}:{}", args.host, args.port);
+    println!("Open http://localhost:{} in your browser", args.port);
+    println!("------------------------------------------------------------");
+    server.run_server(&args.host).await
+}
+
