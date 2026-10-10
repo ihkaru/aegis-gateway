@@ -3,14 +3,18 @@
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
 pub mod catalog_index;
+pub mod hybrid_search;
 pub mod namespace;
+pub mod pipeline;
 pub mod planner;
 pub mod projector;
 
 pub use catalog_index::{
     BackendCatalogMetadata, BackendIndexStatus, CatalogSearchIndex, CatalogSearchResult,
 };
+pub use hybrid_search::{HybridSearchEngine, HybridSearchResult};
 pub use namespace::{NamespacedCatalog, PromptDefinition};
+pub use pipeline::{DagPipelineEngine, PipelineExecutionResult, PipelineStepResult};
 pub use planner::{
     ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep, PlanStepValidation, PlanValidation,
 };

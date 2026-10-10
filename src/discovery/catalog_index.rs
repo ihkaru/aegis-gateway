@@ -127,28 +127,36 @@ impl CatalogSearchIndex {
                 for token in &query_tokens {
                     let mut token_matched = false;
 
-                    if name_lower.contains(token) {
+                    let matches_field = |field: &str| -> bool {
+                        field.contains(token)
+                            || (token.starts_with("tabel") && field.contains("table"))
+                            || (token.starts_with("table") && field.contains("tabel"))
+                            || (token.starts_with("berkas") && field.contains("file"))
+                            || (token.starts_with("file") && field.contains("berkas"))
+                    };
+
+                    if matches_field(&name_lower) {
                         score += 5.0;
                         token_matched = true;
                     }
-                    if server_lower.contains(token) {
+                    if matches_field(&server_lower) {
                         score += 4.0;
                         token_matched = true;
                     }
-                    if desc_lower.contains(token) {
+                    if matches_field(&desc_lower) {
                         score += 2.0;
                         token_matched = true;
                     }
-                    if backend_desc_lower.contains(token) {
+                    if matches_field(&backend_desc_lower) {
                         score += 3.5;
                         token_matched = true;
                     }
-                    if schema_str.contains(token) {
+                    if matches_field(&schema_str) {
                         score += 1.5;
                         token_matched = true;
                     }
                     for tag in &t.tags {
-                        if tag.to_lowercase().contains(token) {
+                        if matches_field(&tag.to_lowercase()) {
                             score += 2.5;
                             token_matched = true;
                         }

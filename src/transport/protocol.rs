@@ -227,16 +227,16 @@ impl McpProtocolHandler {
             .unwrap_or("");
 
         let read = self.tools.read().await;
-        let mut index = crate::discovery::CatalogSearchIndex::new();
-        index.index_tools_for_backend("default", read.clone());
-        let res = index.search(query, DisclosureTier::L0, 20);
+        let mut engine = crate::discovery::HybridSearchEngine::new();
+        engine.index_tools("default", read.clone());
+        let res = engine.search(query, DisclosureTier::L0, 20);
         JsonRpcResponse::success(
             id,
             json!({
                 "tools": res.tools,
-                "total_matches": res.total_matches,
-                "indexed_backends": res.indexed_backends,
-                "unindexed_backends": res.unindexed_backends,
+                "total_matches": res.total_candidates,
+                "lexical_hits": res.lexical_hits,
+                "semantic_hits": res.semantic_hits,
             }),
         )
     }
