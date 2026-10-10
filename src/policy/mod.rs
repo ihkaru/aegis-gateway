@@ -6,8 +6,11 @@ use serde_json::Value;
 use crate::core::error::AegisResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
+pub mod approval_dispatcher;
 pub mod approval_gate;
+pub mod data_egress;
 pub mod delegation;
+pub mod durable_resume;
 pub mod egress;
 pub mod infisical;
 pub mod oauth_callback;
@@ -19,8 +22,11 @@ pub mod revocation;
 pub mod secrets;
 pub mod ssrf;
 
+pub use approval_dispatcher::MultiChannelApprovalDispatcher;
 pub use approval_gate::ActionApprovalGate;
+pub use data_egress::TieredDataEgressEngine;
 pub use delegation::{UserIdentityDelegationBroker, VirtualResourceScoper};
+pub use durable_resume::DurableTaskResumeRouter;
 pub use egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
 pub use infisical::{ChainedSecretStore, InfisicalSecretStore, InfisicalTransport, LocalInfisicalTransport};
 pub use oauth_callback::{CallbackServerConfig, OAuthCallbackResolver};

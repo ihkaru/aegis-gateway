@@ -56,6 +56,10 @@ impl ActionApprovalGate {
             return (RiskTier::High, format!("Destructive or unrecoverable operation via tool '{tool}'"));
         }
 
+        if tool_lower.contains("data_egress") || arg_str.contains("egress_raw_dataset") {
+            return (RiskTier::High, "Raw restricted data egress exceeding security threshold".to_string());
+        }
+
         if arg_str.contains("iam") || arg_str.contains("grant_admin") || tool_lower.contains("grant_permission") {
             return (RiskTier::High, "Privilege escalation or IAM modification".to_string());
         }

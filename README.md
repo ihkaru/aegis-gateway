@@ -210,6 +210,13 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 14**| Session Fence, OAuth Host & Deep Indexing | In-Flight Session Teardown Guard, Configurable OAuth Host, Typed SSRF & Large Catalog Deep Indexing | `Completed` |
 | **Phase 15**| DAG Interpolation & Hybrid RRF | Runtime DAG Expression Interpolation Pipeline & Hybrid Semantic RRF Tool Retrieval Engine | `Completed` |
 | **Phase 16**| Universal Code Sandbox & Credential Broker | Hermetic Context-Agnostic Execution Sandbox, Zero-Knowledge Vault Credential Broker & Default-Deny Egress Firewall | `Completed` |
+| **Phase 17**| Dynamic Vault & Hot Rotation | Infisical Universal Auth Secret Store, Zero-Plaintext on Disk & Webhook Rotation | `Completed` |
+| **Phase 18**| Zero-Knowledge Egress Credential Proxy | Loopback Proxy Sidecar, Zero-Secret Process Space & Anti-Obfuscation Injection | `Completed` |
+| **Phase 19**| HITL Approval Gate & Risk Interceptor | Declarative Action Risk Classification, Suspended Task State & Interactive Approval | `Completed` |
+| **Phase 20**| User Identity Delegation & Blast Scoping | 3-Legged OAuth OBO Impersonation, Non-Repudiation Audit & Virtual Resource Isolation | `Completed` |
+| **Phase 21**| Agnostic Managed OAuth Connect Engine | RFC 9728 Discovery, Vendor-Agnostic PKCE Router & Interactive Auth Lifecycle | `Completed` |
+| **Phase 22**| Policy Tiers & In-Situ Analytics | Configurable Policy Profiles (Dev/Hybrid/Strict), Granular Data Egress & In-Situ Analytics Enclave | `Completed` |
+| **Phase 23**| Multi-Channel Approval & Durable Resume | Pluggable Multi-Channel Approval Dispatcher (Slack/Teams/Webhook/MCP) & Durable Resume Router | `Completed` |
 
 ---
 

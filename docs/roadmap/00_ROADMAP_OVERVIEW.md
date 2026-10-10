@@ -34,6 +34,8 @@ flowchart LR
 | **Phase 19**| **HITL Approval Gate & Risk Interceptor** | Declarative Action Risk Classification, Suspended Task State & Interactive Approval | `Completed` | [`19_PHASE_19_HUMAN_IN_THE_LOOP_APPROVAL_GATE_AND_HIGH_RISK_INTERCEPTOR.md`](./19_PHASE_19_HUMAN_IN_THE_LOOP_APPROVAL_GATE_AND_HIGH_RISK_INTERCEPTOR.md) |
 | **Phase 20**| **User Identity Delegation & Blast Scoping** | 3-Legged OAuth OBO Impersonation, Non-Repudiation Audit & Virtual Resource Isolation | `Completed` | [`20_PHASE_20_USER_DELEGATED_IDENTITY_AND_BLAST_RADIUS_SCOPING.md`](./20_PHASE_20_USER_DELEGATED_IDENTITY_AND_BLAST_RADIUS_SCOPING.md) |
 | **Phase 21**| **Agnostic Managed OAuth Connect Engine** | RFC 9728 Discovery, Vendor-Agnostic PKCE Router & Interactive Auth Lifecycle | `Completed` | [`21_PHASE_21_AGNOSTIC_MANAGED_OAUTH_CONNECT_ENGINE.md`](./21_PHASE_21_AGNOSTIC_MANAGED_OAUTH_CONNECT_ENGINE.md) |
+| **Phase 22**| **Policy Tiers & In-Situ Analytics** | Configurable Policy Profiles (Dev/Hybrid/Strict), Granular Data Egress & In-Situ Analytics Enclave | `Completed` | [`22_PHASE_22_CONFIGURABLE_POLICY_TIERS_AND_IN_SITU_DATA_ENCLAVE.md`](./22_PHASE_22_CONFIGURABLE_POLICY_TIERS_AND_IN_SITU_DATA_ENCLAVE.md) |
+| **Phase 23**| **Multi-Channel Approval & Durable Resume** | Pluggable Multi-Channel Approval Dispatcher (Slack/Teams/Webhook/MCP) & Durable Resume Router | `Completed` | [`23_PHASE_23_PLUGGABLE_MULTI_CHANNEL_APPROVAL_DISPATCHER_AND_DURABLE_RESUME.md`](./23_PHASE_23_PLUGGABLE_MULTI_CHANNEL_APPROVAL_DISPATCHER_AND_DURABLE_RESUME.md) |
 
 ---
 

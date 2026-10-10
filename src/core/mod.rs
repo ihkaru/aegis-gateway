@@ -3,11 +3,13 @@
 pub mod approval;
 pub mod audit;
 pub mod backend;
+pub mod data_governance;
 pub mod delegation;
 pub mod dlp;
 pub mod error;
 pub mod health;
 pub mod identity;
+pub mod notification;
 pub mod oauth_connect;
 pub mod policy;
 pub mod proxy;
@@ -20,7 +22,15 @@ pub mod transport;
 pub mod types;
 
 pub use approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
+pub use data_governance::{
+    DataClassification, DataEgressDecision, DataEgressPolicyEngine, InSituDataEnclave,
+    InSituExecutionResult, PolicyTier,
+};
 pub use delegation::{DelegatedToken, IdentityDelegationBroker, ResourceScoper};
+pub use notification::{
+    ApprovalChannelTarget, ApprovalNotificationDispatcher, ApprovalNotificationPayload,
+    DurableResumeRouter,
+};
 pub use oauth_connect::{AuthProviderConfig, AuthRequiredResponse, ConnectSession, OAuthConnectEngine};
 pub use proxy::{CredentialProxyEngine, ProxyBinding};
 
