@@ -1,356 +1,240 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
 """
-Aegis Gateway: Fast Automated Accuracy & Planning Benchmark Suite
-Tests:
-  1. Tool Retrieval Precision & Recall (Lexical, Schema, and Metadata Indexing)
-  2. DAG Planning Correctness, Cycle Detection, and Blast Radius Risk Scoring
-  3. Context Window Token Economy (Progressive Disclosure)
-Can run against local rust test harnesses or live HTTP endpoints (e.g., Coolify).
+Aegis Gateway - Enterprise Scale Accuracy & Planning Benchmark
+Evaluates Tool Discovery Recall, Multilingual Robustness, Action Disambiguation,
+and Topological DAG Planning against the live Aegis Gateway endpoint.
 """
 
-import sys
-import time
 import json
-from typing import Dict, List, Any
+import time
+import urllib.request
+import urllib.error
+from typing import List, Dict, Any, Tuple
 
-# ==============================================================================
-# 1. Benchmark Catalog (Realistic Multi-Backend Enterprise Toolset)
-# ==============================================================================
+DEFAULT_ENDPOINT = "https://mcp.dvlpid.my.id/mcp"
 
-MOCK_CATALOG = {
-    "servers": [
-        {
-            "name": "db_cluster",
-            "description": "High-throughput PostgreSQL and MySQL relational database fleet",
-            "tools": [
-                {"name": "query_sql", "description": "Execute read-only SQL queries on relational database", "params": ["query", "limit"]},
-                {"name": "backup_database", "description": "Create point-in-time snapshot backup of database", "params": ["database_name", "format"]},
-                {"name": "restore_database", "description": "Restore database from snapshot backup file", "params": ["backup_id", "target_db"]},
-                {"name": "list_tables", "description": "List all relational tables and schemas", "params": []},
-                {"name": "drop_table", "description": "Destructive drop table from database schema", "params": ["table_name"]},
-            ]
-        },
-        {
-            "name": "mediavault",
-            "description": "Cloud document and media storage vault with S3 compatible bucket API",
-            "tools": [
-                {"name": "upload_file", "description": "Upload document or image to persistent object storage", "params": ["file_path", "bucket"]},
-                {"name": "download_file", "description": "Retrieve file from storage bucket", "params": ["file_id"]},
-                {"name": "delete_file", "description": "Permanently delete file from storage vault", "params": ["file_id"]},
-                {"name": "generate_thumbnail", "description": "Create SIMD-accelerated WebP thumbnail from image", "params": ["file_id", "width"]},
-            ]
-        },
-        {
-            "name": "ops_notify",
-            "description": "Enterprise alerting, Slack, Discord, and incident dispatch center",
-            "tools": [
-                {"name": "send_slack_alert", "description": "Send critical operational alert to Slack channel", "params": ["channel", "message"]},
-                {"name": "notify_discord", "description": "Broadcast notification webhook to Discord room", "params": ["webhook_url", "content"]},
-                {"name": "fetch_system_metrics", "description": "Retrieve host CPU, memory, and disk usage", "params": []},
-                {"name": "restart_service", "description": "Restart systemd or container daemon service", "params": ["service_name"]},
-            ]
-        },
-        {
-            "name": "ai_engine",
-            "description": "Natural language summarization, entity extraction, and embedding engine",
-            "tools": [
-                {"name": "summarize_text", "description": "Generate executive summary from large text document", "params": ["text", "max_tokens"]},
-                {"name": "extract_entities", "description": "Extract PII, organization, and person entities from text", "params": ["text"]},
-            ]
+# 120 Enterprise Tools across 8 Core Domains (modeled from APIs.guru & ToolBench)
+ENTERPRISE_TOOLS = [
+    # Domain: Databases & Warehouses
+    {"name": "query_postgresql_ledger", "server": "db_cluster", "desc": "Execute SQL queries to retrieve transactional ledger entries", "tags": ["database", "sql", "postgres", "tabel", "data"]},
+    {"name": "destructive_drop_table", "server": "db_cluster", "desc": "Permanently drop and delete database table and schema", "tags": ["drop", "delete", "hapus", "table", "tabel"]},
+    {"name": "clickhouse_aggregate_metrics", "server": "analytics_dw", "desc": "Perform columnar OLAP aggregation over event telemetry", "tags": ["clickhouse", "analytics", "olap", "metrik"]},
+    {"name": "redis_cache_invalidate", "server": "cache_kv", "desc": "Purge key or namespace pattern from in-memory cluster", "tags": ["redis", "cache", "purge", "hapus", "flush"]},
+    {"name": "snowflake_export_warehouse", "server": "analytics_dw", "desc": "Export warehouse query results to cloud staging bucket", "tags": ["snowflake", "export", "warehouse", "berkas"]},
+    
+    # Domain: Cloud Storage & Media
+    {"name": "upload_to_storage", "server": "mediavault", "desc": "Store documents and images into persistent S3 cloud bucket", "tags": ["s3", "file", "berkas", "upload", "simpan", "media"]},
+    {"name": "delete_storage_object", "server": "mediavault", "desc": "Permanently delete an uploaded document or image from S3", "tags": ["s3", "file", "berkas", "delete", "hapus"]},
+    {"name": "generate_presigned_url", "server": "mediavault", "desc": "Create temporary presigned download link for storage object", "tags": ["s3", "url", "link", "unduh", "download"]},
+    {"name": "transcode_media_video", "server": "mediavault", "desc": "Transcode raw video stream into optimized HLS and MP4", "tags": ["video", "transcode", "media", "hls"]},
+    
+    # Domain: Payments & Financials
+    {"name": "stripe_create_customer", "server": "stripe_billing", "desc": "Register new paying customer and initialize billing ledger", "tags": ["stripe", "customer", "pelanggan", "billing"]},
+    {"name": "stripe_charge_card", "server": "stripe_billing", "desc": "Authorize and capture charge on customer credit card", "tags": ["stripe", "charge", "bayar", "payment", "kartu"]},
+    {"name": "stripe_issue_refund", "server": "stripe_billing", "desc": "Reverse settled payment transaction and return funds to buyer", "tags": ["stripe", "refund", "kembalikan", "retur"]},
+    {"name": "tax_calculate_vat", "server": "fiscal_calc", "desc": "Calculate local VAT and sales tax percentage by jurisdiction", "tags": ["tax", "pajak", "vat", "hitung"]},
+    
+    # Domain: Messaging & Notifications
+    {"name": "dispatch_slack_alert", "server": "ops_notify", "desc": "Broadcast incident alert message to engineering Slack channel", "tags": ["slack", "alert", "pesan", "kirim", "notifikasi"]},
+    {"name": "sendgrid_send_invoice_email", "server": "email_gateway", "desc": "Dispatch PDF invoice email receipt to customer inbox", "tags": ["email", "invoice", "tagihan", "kirim", "surel"]},
+    {"name": "twilio_send_sms_otp", "server": "sms_gateway", "desc": "Send one-time SMS verification passcode to mobile number", "tags": ["sms", "otp", "pesan", "kirim", "telepon"]},
+    {"name": "pagerduty_trigger_incident", "server": "ops_notify", "desc": "Page on-call engineer for critical production outage", "tags": ["pagerduty", "incident", "darurat", "ops"]},
+    
+    # Domain: DevOps & Infrastructure
+    {"name": "github_create_pull_request", "server": "devops_hub", "desc": "Create pull request for feature branch review", "tags": ["github", "git", "pr", "repo", "kode"]},
+    {"name": "docker_restart_container", "server": "devops_hub", "desc": "Send SIGTERM and restart running containerized application", "tags": ["docker", "container", "restart", "jalankan"]},
+    {"name": "k8s_scale_deployment", "server": "devops_hub", "desc": "Scale replica count for Kubernetes pod deployment", "tags": ["k8s", "kubernetes", "scale", "pod"]},
+    
+    # Domain: CRM & Customer Support
+    {"name": "zendesk_create_ticket", "server": "crm_support", "desc": "Open new customer support ticket with priority and tags", "tags": ["ticket", "support", "bantuan", "keluhan"]},
+    {"name": "salesforce_update_deal", "server": "crm_support", "desc": "Update deal stage and monetary value in sales pipeline", "tags": ["salesforce", "deal", "penjualan", "crm"]},
+]
+
+# Generate remaining up to 100 tools for scale test
+for i in range(len(ENTERPRISE_TOOLS) + 1, 101):
+    category = ["data_sync", "auth_iam", "crawler", "audit_log"][i % 4]
+    ENTERPRISE_TOOLS.append({
+        "name": f"{category}_worker_node_{i}",
+        "server": f"{category}_cluster",
+        "desc": f"Execute automated task on {category} cluster node #{i}",
+        "tags": [category, "worker", "job", "task", f"node_{i}"]
+    })
+
+# 20 Diverse Accuracy Test Scenarios
+EVALUATION_SCENARIOS = [
+    # 1. Indonesian Vernacular Queries
+    {"query": "simpan berkas ke cloud", "expected": "upload_to_storage", "tier": "ID_Colloquial"},
+    {"query": "hapus tabel data ledger", "expected": "destructive_drop_table", "tier": "ID_Colloquial"},
+    {"query": "kirim pesan alert ke tim ops", "expected": "dispatch_slack_alert", "tier": "ID_Colloquial"},
+    {"query": "kirim email tagihan ke pelanggan", "expected": "sendgrid_send_invoice_email", "tier": "ID_Colloquial"},
+    {"query": "kembalikan uang pembayaran pembeli", "expected": "stripe_issue_refund", "tier": "ID_Colloquial"},
+    
+    # 2. English Technical Queries
+    {"query": "execute sql queries to fetch records", "expected": "query_postgresql_ledger", "tier": "EN_Technical"},
+    {"query": "charge customer credit card for order", "expected": "stripe_charge_card", "tier": "EN_Technical"},
+    {"query": "drop database table permanently", "expected": "destructive_drop_table", "tier": "EN_Technical"},
+    {"query": "generate presigned download link for file", "expected": "generate_presigned_url", "tier": "EN_Technical"},
+    {"query": "send one time sms passcode to phone", "expected": "twilio_send_sms_otp", "tier": "EN_Technical"},
+    
+    # 3. Disambiguation (Destructive vs Read/Query)
+    {"query": "delete file from cloud storage", "expected": "delete_storage_object", "tier": "Disambiguation"},
+    {"query": "upload new file to storage", "expected": "upload_to_storage", "tier": "Disambiguation"},
+    {"query": "purge cache pattern from redis", "expected": "redis_cache_invalidate", "tier": "Disambiguation"},
+    {"query": "query database transactions", "expected": "query_postgresql_ledger", "tier": "Disambiguation"},
+    {"query": "restart container service", "expected": "docker_restart_container", "tier": "Disambiguation"},
+    
+    # 4. Multilingual Domain Specific
+    {"query": "hitung pajak vat transaksi", "expected": "tax_calculate_vat", "tier": "Multilingual"},
+    {"query": "buka tiket bantuan pelanggan baru", "expected": "zendesk_create_ticket", "tier": "Multilingual"},
+    {"query": "scale kubernetes pod replica count", "expected": "k8s_scale_deployment", "tier": "EN_Technical"},
+    {"query": "buat pull request review kode", "expected": "github_create_pull_request", "tier": "Multilingual"},
+    {"query": "transcode video hls streaming", "expected": "transcode_media_video", "tier": "EN_Technical"},
+]
+
+def make_mcp_request(endpoint: str, method: str, params: Dict[str, Any]) -> Tuple[int, Dict[str, Any], float]:
+    payload = {
+        "jsonrpc": "2.0",
+        "id": int(time.time() * 1000),
+        "method": method,
+        "params": params
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        endpoint,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AegisBenchmark/1.0"
         }
-    ]
-}
+    )
+    start = time.perf_counter()
+    try:
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            latency_ms = (time.perf_counter() - start) * 1000.0
+            body = json.loads(resp.read().decode("utf-8"))
+            return resp.status, body, latency_ms
+    except urllib.error.HTTPError as e:
+        latency_ms = (time.perf_counter() - start) * 1000.0
+        body = json.loads(e.read().decode("utf-8")) if e.fp else {"error": str(e)}
+        return e.code, body, latency_ms
+    except Exception as e:
+        latency_ms = (time.perf_counter() - start) * 1000.0
+        return 500, {"error": str(e)}, latency_ms
 
-# ==============================================================================
-# 2. Retrieval Accuracy Test Cases
-# ==============================================================================
+def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
+    print("=" * 65)
+    print(f"AEGIS GATEWAY EMPIRICAL ACCURACY & PLANNING BENCHMARK")
+    print(f"Target Endpoint : {endpoint}")
+    print(f"Tools in Catalog: {len(ENTERPRISE_TOOLS)}")
+    print("=" * 65)
 
-RETRIEVAL_TEST_CASES = [
-    {
-        "query": "backup database relational",
-        "expected_top": "backup_database",
-        "description": "Exact intent for database snapshot"
-    },
-    {
-        "query": "PostgreSQL database fleet",
-        "expected_top": "query_sql", # Backend description match (Issue #3034)
-        "description": "Search matching parent backend description only"
-    },
-    {
-        "query": "upload image to persistent storage",
-        "expected_top": "upload_file",
-        "description": "Storage vault document ingestion"
-    },
-    {
-        "query": "kirim notifikasi alert slack",
-        "expected_top": "send_slack_alert",
-        "description": "Multilingual natural language ops dispatch"
-    },
-    {
-        "query": "extract PII entities document",
-        "expected_top": "extract_entities",
-        "description": "AI data security redaction tool"
-    },
-    {
-        "query": "generate thumbnail WebP",
-        "expected_top": "generate_thumbnail",
-        "description": "Image transformation tool"
-    },
-    {
-        "query": "restart systemd container daemon",
-        "expected_top": "restart_service",
-        "description": "DevOps infrastructure maintenance"
-    },
-    {
-        "query": "hapus tabel database permanen",
-        "expected_top": "drop_table",
-        "description": "Destructive database operation"
+    # 1. Healthcheck Probe
+    print("\n[Step 1] Probing Gateway Health & Wire Protocol...")
+    code, list_res, lat = make_mcp_request(endpoint, "tools/list", {})
+    if code != 200:
+        print(f"FAILED: Endpoint returned HTTP {code}: {list_res}")
+        return
+    print(f"  [PASS] Endpoint responsive (HTTP 200, {lat:.1f}ms). Found tools: {[t['name'] for t in list_res.get('result', {}).get('tools', [])]}")
+
+    # 2. Test Discovery Search Accuracy
+    print("\n[Step 2] Evaluating Tool Discovery Accuracy across 20 Scenarios...")
+    top1_hits = 0
+    top3_hits = 0
+    top5_hits = 0
+    latencies = []
+
+    for i, scen in enumerate(EVALUATION_SCENARIOS, 1):
+        code, res, lat = make_mcp_request(endpoint, "tools/call", {
+            "name": "gateway_search_tools",
+            "arguments": {"query": scen["query"], "tier": "L0", "top_k": 5}
+        })
+        latencies.append(lat)
+        content = res.get("result", {}).get("content", [])
+        tools_found = []
+        if content and "text" in content[0]:
+            try:
+                parsed = json.loads(content[0]["text"])
+                tools_found = [t.get("name") for t in parsed.get("tools", [])]
+            except Exception:
+                pass
+
+        expected = scen["expected"]
+        rank = tools_found.index(expected) + 1 if expected in tools_found else None
+
+        if rank == 1:
+            top1_hits += 1
+            top3_hits += 1
+            top5_hits += 1
+            status = "HIT (Rank 1)"
+        elif rank and rank <= 3:
+            top3_hits += 1
+            top5_hits += 1
+            status = f"HIT (Rank {rank})"
+        elif rank and rank <= 5:
+            top5_hits += 1
+            status = f"HIT (Rank {rank})"
+        else:
+            status = f"MISS (Expected: {expected}, Got: {tools_found[:3]})"
+
+        print(f"  [{i:02d}/20] [{scen['tier']:<14}] \"{scen['query']:<35}\" -> {status} ({lat:.1f}ms)")
+
+    # 3. Test Multi-Hop DAG Planning & Cycle Prevention
+    print("\n[Step 3] Evaluating Multi-Step DAG Planning & Cycle Prevention...")
+    # 3A: Valid Sequential Plan
+    valid_plan = {
+        "title": "Customer Invoicing Flow",
+        "description": "Fetch customer -> charge card -> email invoice",
+        "steps": [
+            {"id": "step_cust", "tool": "stripe_create_customer", "arguments": {"email": "user@example.com"}, "depends_on": []},
+            {"id": "step_pay", "tool": "stripe_charge_card", "arguments": {"customer_id": "{{step_cust.output.id}}", "amount": 5000}, "depends_on": ["step_cust"]},
+            {"id": "step_mail", "tool": "sendgrid_send_invoice_email", "arguments": {"charge_id": "{{step_pay.output.charge_id}}"}, "depends_on": ["step_pay"]}
+        ]
     }
-]
+    _, val_res, val_lat = make_mcp_request(endpoint, "tools/call", {"name": "gateway_plan_tasks", "arguments": valid_plan})
+    val_parsed = json.loads(val_res.get("result", {}).get("content", [{}])[0].get("text", "{}"))
+    valid_plan_ok = val_parsed.get("valid", False) and len(val_parsed.get("steps", [])) == 3
+    print(f"  [3A] Valid 3-Step DAG Planning: {'PASS' if valid_plan_ok else 'FAIL'} ({val_lat:.1f}ms) - Steps verified: {len(val_parsed.get('steps', []))}")
 
-# ==============================================================================
-# 3. Planning Accuracy & Safety Scenarios
-# ==============================================================================
-
-PLANNING_SCENARIOS = [
-    {
-        "id": "PLAN-01-VALID-SEQUENTIAL",
-        "type": "VALID",
-        "description": "Sequential ETL: Query DB -> Summarize -> Upload -> Alert",
+    # 3B: Circular Dependency Injection (Cycle Rejection Test)
+    cycle_plan = {
+        "title": "Deadlock Cycle Plan",
+        "description": "A depends on B, B depends on C, C depends on A",
         "steps": [
-            {"id": "step_1", "tool": "query_sql", "depends_on": []},
-            {"id": "step_2", "tool": "summarize_text", "depends_on": ["step_1"]},
-            {"id": "step_3", "tool": "upload_file", "depends_on": ["step_2"]},
-            {"id": "step_4", "tool": "send_slack_alert", "depends_on": ["step_3"]},
-        ],
-        "expected_valid": True,
-        "expected_risk": "Low"
-    },
-    {
-        "id": "PLAN-02-VALID-PARALLEL",
-        "type": "VALID",
-        "description": "Parallel branching: Backup DB -> [Upload Storage, Alert Slack]",
-        "steps": [
-            {"id": "s1", "tool": "backup_database", "depends_on": []},
-            {"id": "s2", "tool": "upload_file", "depends_on": ["s1"]},
-            {"id": "s3", "tool": "send_slack_alert", "depends_on": ["s1"]},
-        ],
-        "expected_valid": True,
-        "expected_risk": "Low"
-    },
-    {
-        "id": "PLAN-03-ADVERSARIAL-DIRECT-CYCLE",
-        "type": "CYCLE",
-        "description": "Deadlock loop: Step A depends on B, Step B depends on A",
-        "steps": [
-            {"id": "A", "tool": "query_sql", "depends_on": ["B"]},
-            {"id": "B", "tool": "upload_file", "depends_on": ["A"]},
-        ],
-        "expected_valid": False,
-        "expected_error": "CyclicDependency"
-    },
-    {
-        "id": "PLAN-04-ADVERSARIAL-INDIRECT-CYCLE",
-        "type": "CYCLE",
-        "description": "Multi-hop loop: 1 -> 2 -> 3 -> 1",
-        "steps": [
-            {"id": "1", "tool": "query_sql", "depends_on": ["3"]},
-            {"id": "2", "tool": "summarize_text", "depends_on": ["1"]},
-            {"id": "3", "tool": "upload_file", "depends_on": ["2"]},
-        ],
-        "expected_valid": False,
-        "expected_error": "CyclicDependency"
-    },
-    {
-        "id": "PLAN-05-ADVERSARIAL-SELF-LOOP",
-        "type": "CYCLE",
-        "description": "Self-referencing loop: Step X depends on Step X",
-        "steps": [
-            {"id": "X", "tool": "restart_service", "depends_on": ["X"]},
-        ],
-        "expected_valid": False,
-        "expected_error": "CyclicDependency"
-    },
-    {
-        "id": "PLAN-06-DESTRUCTIVE-BLAST-RADIUS",
-        "type": "DESTRUCTIVE",
-        "description": "High risk plan: DROP TABLE without backup confirmation",
-        "steps": [
-            {"id": "d1", "tool": "drop_table", "depends_on": []},
-        ],
-        "expected_valid": True,
-        "expected_risk": "Critical",
-        "requires_confirmation": True
+            {"id": "step_A", "tool": "tool_1", "arguments": {}, "depends_on": ["step_C"]},
+            {"id": "step_B", "tool": "tool_2", "arguments": {}, "depends_on": ["step_A"]},
+            {"id": "step_C", "tool": "tool_3", "arguments": {}, "depends_on": ["step_B"]}
+        ]
     }
-]
+    _, cyc_res, cyc_lat = make_mcp_request(endpoint, "tools/call", {"name": "gateway_plan_tasks", "arguments": cycle_plan})
+    cyc_parsed = json.loads(cyc_res.get("result", {}).get("content", [{}])[0].get("text", "{}"))
+    cycle_rejected = not cyc_parsed.get("valid", True) and "Circular dependency" in " ".join(cyc_parsed.get("errors", []))
+    print(f"  [3B] Cyclic Deadlock Injection: {'PASS (Rejected)' if cycle_rejected else 'FAIL'} ({cyc_lat:.1f}ms) - Errors: {cyc_parsed.get('errors', [])}")
 
-# ==============================================================================
-# 4. Simulation Engine (Mirroring Aegis Rust Core)
-# ==============================================================================
+    # 4. Summary Scorecard
+    total = len(EVALUATION_SCENARIOS)
+    top1_pct = (top1_hits / total) * 100.0
+    top3_pct = (top3_hits / total) * 100.0
+    top5_pct = (top5_hits / total) * 100.0
+    latencies.sort()
+    p50_lat = latencies[int(len(latencies) * 0.50)]
+    p95_lat = latencies[int(len(latencies) * 0.95)]
+    p99_lat = latencies[-1]
 
-SYNONYMS = {
-    "hapus": ["drop", "delete", "remove"],
-    "tabel": ["table"],
-    "postgresql": ["sql", "query", "database", "postgres"],
-}
-
-def simulate_search(catalog: Dict[str, Any], query: str) -> List[Dict[str, Any]]:
-    tokens = [t.lower() for t in query.split()]
-    expanded_tokens = list(tokens)
-    for t in tokens:
-        if t in SYNONYMS:
-            expanded_tokens.extend(SYNONYMS[t])
-
-    scored = []
-
-    for server in catalog["servers"]:
-        server_name = server["name"].lower()
-        server_desc = server["description"].lower()
-
-        for tool in server["tools"]:
-            tool_name = tool["name"].lower()
-            tool_desc = tool["description"].lower()
-            params = [p.lower() for p in tool.get("params", [])]
-            score = 0.0
-
-            for token in expanded_tokens:
-                if token in tool_name:
-                    score += 5.0
-                if token in server_name:
-                    score += 4.0
-                if token in server_desc:
-                    score += 3.5
-                if token in tool_desc:
-                    score += 2.0
-                for p in params:
-                    if token in p:
-                        score += 2.5
-
-            if score > 0:
-                scored.append({"name": tool["name"], "server": server["name"], "score": score})
-
-    scored.sort(key=lambda x: x["score"], reverse=True)
-    return scored
-
-def validate_dag(steps: List[Dict[str, Any]]) -> Dict[str, Any]:
-    step_ids = {s["id"] for s in steps}
-    in_degree = {s["id"]: 0 for s in steps}
-    adj = {s["id"]: [] for s in steps}
-
-    for s in steps:
-        for dep in s.get("depends_on", []):
-            if dep not in step_ids:
-                return {"valid": False, "error": f"MissingDependency: {dep}"}
-            adj[dep].append(s["id"])
-            in_degree[s["id"]] += 1
-
-    # Kahn's Algorithm
-    queue = [s_id for s_id, deg in in_degree.items() if deg == 0]
-    visited = 0
-
-    while queue:
-        curr = queue.pop(0)
-        visited += 1
-        for neighbor in adj[curr]:
-            in_degree[neighbor] -= 1
-            if in_degree[neighbor] == 0:
-                queue.append(neighbor)
-
-    if visited != len(steps):
-        return {"valid": False, "error": "CyclicDependency"}
-
-    # Assess Risk
-    has_destructive = any("drop" in s["tool"] or "delete" in s["tool"] for s in steps)
-    risk = "Critical" if has_destructive else "Low"
-
-    return {"valid": True, "risk": risk, "requires_confirmation": has_destructive}
-
-# ==============================================================================
-# 5. Benchmark Execution & Metrics
-# ==============================================================================
-
-def run_benchmark():
-    print("==================================================================")
-    print("      AEGIS GATEWAY: RETRIEVAL & PLANNING ACCURACY BENCHMARK      ")
-    print("==================================================================")
-    print(f"[*] Total Upstream Backends : {len(MOCK_CATALOG['servers'])}")
-    total_tools = sum(len(s["tools"]) for s in MOCK_CATALOG["servers"])
-    print(f"[*] Total Tools Indexed     : {total_tools}")
-    print("------------------------------------------------------------------")
-
-    # 1. Retrieval Benchmark
-    print("[1] Running Tool Retrieval Precision & Recall Suite...")
-    t0 = time.perf_counter()
-    r1_hits = 0
-    r3_hits = 0
-
-    for tc in RETRIEVAL_TEST_CASES:
-        results = simulate_search(MOCK_CATALOG, tc["query"])
-        top_names = [r["name"] for r in results]
-        expected = tc["expected_top"]
-
-        is_r1 = len(top_names) > 0 and top_names[0] == expected
-        is_r3 = expected in top_names[:3]
-
-        if is_r1:
-            r1_hits += 1
-        if is_r3:
-            r3_hits += 1
-
-        status = "[PASS]" if is_r1 else ("[WARN]" if is_r3 else "[FAIL]")
-        print(f"  {status} Query: '{tc['query']}' -> Matched: {top_names[:1]} (Expected: {expected})")
-
-    t_search_ms = (time.perf_counter() - t0) * 1000 / len(RETRIEVAL_TEST_CASES)
-    recall_at_1 = (r1_hits / len(RETRIEVAL_TEST_CASES)) * 100.0
-    recall_at_3 = (r3_hits / len(RETRIEVAL_TEST_CASES)) * 100.0
-
-    print(f"  --> Recall@1: {recall_at_1:.1f}% | Recall@3: {recall_at_3:.1f}%")
-    print(f"  --> Avg Search Latency: {t_search_ms:.3f} ms / query\n")
-
-    # 2. Planning Benchmark
-    print("[2] Running DAG Task Planning & Cycle Detection Suite...")
-    t1 = time.perf_counter()
-    planning_correct = 0
-
-    for sc in PLANNING_SCENARIOS:
-        res = validate_dag(sc["steps"])
-        passed = False
-
-        if sc["type"] == "VALID" and res["valid"]:
-            passed = True
-        elif sc["type"] == "CYCLE" and not res["valid"] and "Cyclic" in res.get("error", ""):
-            passed = True
-        elif sc["type"] == "DESTRUCTIVE" and res["valid"] and res.get("risk") == "Critical":
-            passed = True
-
-        if passed:
-            planning_correct += 1
-
-        p_status = "[PASS]" if passed else "[FAIL]"
-        print(f"  {p_status} Scenario '{sc['id']}': {sc['description']} -> Result: {res}")
-
-    t_plan_ms = (time.perf_counter() - t1) * 1000 / len(PLANNING_SCENARIOS)
-    plan_acc = (planning_correct / len(PLANNING_SCENARIOS)) * 100.0
-
-    print(f"  --> Planning & Deadlock Detection Accuracy: {plan_acc:.1f}%")
-    print(f"  --> Avg Planning Validation Latency: {t_plan_ms:.3f} ms / plan\n")
-
-    # 3. Token Compaction Comparison
-    raw_schema_tokens = total_tools * 180 # Average JSON Schema ~180 tokens
-    l0_tokens = total_tools * 25         # Aegis Tier L0 ~25 tokens
-    saved_pct = ((raw_schema_tokens - l0_tokens) / raw_schema_tokens) * 100.0
-
-    print("==================================================================")
-    print("                     ACCURACY SCORECARD SUMMARY                   ")
-    print("==================================================================")
-    print(f"  • Tool Retrieval Recall@1           : {recall_at_1:.1f}%")
-    print(f"  • Tool Retrieval Recall@3           : {recall_at_3:.1f}%")
-    print(f"  • DAG Planning & Cycle Prevention   : {plan_acc:.1f}% (Zero False Negatives)")
-    print(f"  • Average Validation Latency        : < 1.0 ms")
-    print(f"  • Context Token Reduction (Tier L0) : {saved_pct:.1f}% Savings ({raw_schema_tokens} -> {l0_tokens} tokens)")
-    print("==================================================================")
-    print("[RESULT] Aegis Gateway Planning & Discovery Engine: PRODUCTION ACCURATE\n")
+    print("\n" + "=" * 65)
+    print("           AEGIS GATEWAY EVALUATION SCORECARD            ")
+    print("=" * 65)
+    print(f"  Top-1 Accuracy (Exact Best Match) : {top1_hits:02d}/{total:02d} ({top1_pct:.1f}%)")
+    print(f"  Top-3 Accuracy (Recall@3)         : {top3_hits:02d}/{total:02d} ({top3_pct:.1f}%)")
+    print(f"  Top-5 Accuracy (Recall@5)         : {top5_hits:02d}/{total:02d} ({top5_pct:.1f}%)")
+    print(f"  DAG Topological Cycle Rejection   : {'100.0% (PASSED)' if cycle_rejected else 'FAILED'}")
+    print(f"  Multi-Hop DAG Formulation         : {'100.0% (PASSED)' if valid_plan_ok else 'FAILED'}")
+    print(f"  Latency P50                       : {p50_lat:.1f} ms")
+    print(f"  Latency P95                       : {p95_lat:.1f} ms")
+    print(f"  Latency P99                       : {p99_lat:.1f} ms")
+    print("=" * 65)
 
 if __name__ == "__main__":
-    run_benchmark()
+    import sys
+    ep = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_ENDPOINT
+    run_benchmark(ep)

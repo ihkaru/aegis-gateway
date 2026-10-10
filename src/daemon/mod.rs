@@ -96,6 +96,10 @@ impl DaemonSupervisor {
             let tools = registry.discover_all_tools().await?;
             eprintln!("[AEGIS] Discovered {} tools across registered backends", tools.len());
             handler.register_tools(tools).await;
+        } else {
+            let defaults = crate::discovery::default_enterprise_catalog();
+            eprintln!("[AEGIS] Seeded {} foundational enterprise tools into catalog", defaults.len());
+            handler.register_tools(defaults).await;
         }
 
         Ok((gateway, handler, registry))

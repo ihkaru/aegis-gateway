@@ -110,6 +110,11 @@ impl McpProtocolHandler {
             "description": "List connected upstream backend MCP servers and operational status",
             "inputSchema": { "type": "object", "properties": {} }
         }));
+        tool_list.push(json!({
+            "name": "gateway_register_tools",
+            "description": "Dynamically register or update tool definitions into gateway catalog",
+            "inputSchema": { "type": "object", "properties": { "tools": { "type": "array" } }, "required": ["tools"] }
+        }));
 
         JsonRpcResponse::success(id, json!({ "tools": tool_list }))
     }
@@ -149,6 +154,9 @@ impl McpProtocolHandler {
         }
         if tool_name == "gateway_list_servers" {
             return self.handle_meta_list_servers(id).await;
+        }
+        if tool_name == "gateway_register_tools" {
+            return self.handle_meta_register(id, Some(arguments)).await;
         }
 
         let tool_info = {
@@ -278,6 +286,14 @@ impl McpProtocolHandler {
         };
         JsonRpcResponse::success(id, json!({ "servers": servers }))
     }
+
+    async fn handle_meta_register(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
+        let tools_val = params.and_then(|p| p.get("tools").cloned()).unwrap_or(Value::Array(Vec::new()));
+        let new_tools: Vec<ToolDefinition> = serde_json::from_value(tools_val).unwrap_or_default();
+        let count = new_tools.len();
+        self.register_tools(new_tools).await;
+        JsonRpcResponse::success(id, json!({ "status": "registered", "tools_count": count }))
+    }
 }
 
 #[async_trait]
@@ -313,6 +329,7 @@ impl WireProtocolHandler for McpProtocolHandler {
             "gateway_search_tools" => self.handle_meta_search(id, req.params).await,
             "gateway_plan_tasks" => self.handle_meta_plan(id, req.params).await,
             "gateway_list_servers" => self.handle_meta_list_servers(id).await,
+            "gateway_register_tools" => self.handle_meta_register(id, req.params).await,
             other => JsonRpcResponse::error(
                 id,
                 JsonRpcError::new(METHOD_NOT_FOUND, format!("Method '{other}' not implemented")),

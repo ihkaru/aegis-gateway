@@ -2,12 +2,15 @@
 
 use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
+pub mod bootstrap_catalog;
 pub mod catalog_index;
 pub mod hybrid_search;
 pub mod namespace;
 pub mod pipeline;
 pub mod planner;
 pub mod projector;
+
+pub use bootstrap_catalog::default_enterprise_catalog;
 
 pub use catalog_index::{
     BackendCatalogMetadata, BackendIndexStatus, CatalogSearchIndex, CatalogSearchResult,
