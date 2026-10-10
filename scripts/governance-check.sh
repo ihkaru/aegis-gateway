@@ -28,7 +28,11 @@ echo "Step 4: Running Legacy MCP Gateway Enterprise Complaints & Gaps Audit..."
 bash .agents/skills/mcp-enterprise-gap-auditor/scripts/audit_mcp_gaps.sh
 echo ""
 
-echo "Step 5: Running Rust Cargo Tests & Type Checks..."
+echo "Step 5: Running Zero-Downtime & Dynamic Control Plane Audit..."
+bash .agents/skills/zero-downtime-control-plane-auditor/scripts/audit_zero_downtime.sh
+echo ""
+
+echo "Step 6: Running Rust Cargo Tests & Type Checks..."
 cargo check --all-targets
 cargo test
 
