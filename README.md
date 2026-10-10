@@ -165,6 +165,27 @@ aegis-gateway serve --config aegis.yaml --stdio
 
 ---
 
+### 🛡️ 7. Enterprise Data Governance & In-Situ Analytics (Zero-Egress Clean Room)
+*Goal: Enforce GDPR / UU PDP compliance, prevent raw data exfiltration, and run high-speed in-situ analytics.*
+
+* **Configurable Policy Tiers (`AEGIS_POLICY_TIER`)**:
+  * `dev`: Permissive egress for friction-free developer experimentation.
+  * `hybrid`: Small files (<= 10MB) & derived artifacts pass; raw datasets (> 10MB) mandate in-situ analytics or HITL approval.
+  * `strict`: Zero-egress clean room; raw datasets are strictly confined to server memory.
+* **Smart Taxonomy & In-Situ Analytics (`execute_in_situ_query`)**: DuckDB / Polars / Python engine runs queries inside server RAM, returning aggregated summary tables (< 1KB) rather than 100MB+ raw files (>99.9% egress reduction).
+* **Preflight Egress Evaluation (`evaluate_data_egress`)**: Agents evaluate download rules and size thresholds before initiating transfers.
+
+---
+
+### 🤝 8. Human-in-the-Loop (HITL) Multi-Channel Approval & Zero-Lockin Resumption
+*Goal: Provide durable task suspension and interactive managerial approval across Slack, Microsoft Teams, and Webhooks without vendor lock-in.*
+
+* **Pluggable Dispatchers**: Interactive Slack Block Kit (Approve/Deny buttons), Microsoft Teams Adaptive Cards, Generic Webhook, and In-Band MCP prompts.
+* **Durable Cryptographic Resume (`resolve_approval`)**: Validates HMAC-SHA256 signature tokens to resume suspended workflows with non-repudiation audit trails.
+* **Zero-Knowledge Credential Proxy & Managed OAuth**: Infisical Universal Auth dynamic pulling, loopback transport proxy, and RFC 9728 PKCE authorization code lifecycle.
+
+---
+
 ## 🧪 Graduated Testing Framework & Parity Suite
 
 Aegis Gateway enforces real-world reliability through a progressive 6-Tier E2E matrix and legacy parity verification:
@@ -184,6 +205,8 @@ cargo test --test phase13_stream_buffer_reuse_oauth_resource_metadata_and_proces
 cargo test --test phase14_session_teardown_fence_configurable_oauth_callback_host_typed_ssrf_refusal_and_large_catalog_deep_indexing_test # Tier 12: Session Fence, OAuth Host & Deep Indexing
 cargo test --test phase15_runtime_dag_expression_interpolation_pipeline_and_hybrid_semantic_rrf_tool_retrieval_engine_test # Tier 13: DAG Interpolation & Hybrid RRF Search
 cargo test --test phase16_universal_code_sandbox_credential_broker_and_egress_firewall_test # Tier 14: Hermetic Code Sandbox, Credential Broker & Egress Firewall
+cargo test --test phase22_data_egress_and_in_situ_test # Tier 15: Policy Tiers & In-Situ Analytics
+cargo test --test phase23_multi_channel_approval_test  # Tier 16: Multi-Channel HITL & Durable Resume
 ```
 
 ---
