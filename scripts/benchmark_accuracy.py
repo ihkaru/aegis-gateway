@@ -218,6 +218,31 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
     cycle_rejected = not cyc_parsed.get("valid", True) and "Circular dependency" in " ".join(cyc_parsed.get("errors", []))
     print(f"  [3B] Cyclic Deadlock Injection: {'PASS (Rejected)' if cycle_rejected else 'FAIL'} ({cyc_lat:.1f}ms) - Errors: {cyc_parsed.get('errors', [])}")
 
+    # 3C: Autonomous Natural Language Goal Planning (Step-by-Step Multi-Tool Synthesis)
+    print("\n[Step 4] Evaluating Autonomous Multi-Tool Goal Synthesis across Complex Objectives...")
+    goal_scenarios = [
+        ("Ambil data transaksi ledger database, simpan berkas ke cloud storage, lalu kirim pesan alert ke tim ops", 3, ["query_postgresql_ledger", "upload_to_storage", "dispatch_slack_alert"]),
+        ("Register new paying customer on Stripe, charge customer credit card for order, then dispatch invoice email to customer inbox", 3, ["stripe_create_customer", "stripe_charge_card", "sendgrid_send_invoice_email"]),
+        ("Ambil data transaksi ledger database, transcode video hls streaming, simpan berkas ke cloud storage, buat pull request review kode, lalu kirim pesan alert ke tim ops", 5, ["query_postgresql_ledger", "transcode_media_video", "upload_to_storage", "github_create_pull_request", "dispatch_slack_alert"])
+    ]
+
+    goal_hits = 0
+    for idx, (goal_text, expected_steps, expected_tools) in enumerate(goal_scenarios, 1):
+        _, g_res, g_lat = make_mcp_request(endpoint, "tools/call", {"name": "gateway_plan_tasks", "arguments": {"goal": goal_text}})
+        g_parsed = g_res.get("result", {})
+        if not g_parsed and "content" in g_res.get("result", {}):
+            g_parsed = json.loads(g_res["result"]["content"][0]["text"])
+        plan_steps = g_parsed.get("plan", {}).get("steps", [])
+        actual_tools = [s.get("tool") for s in plan_steps]
+        is_ok = g_parsed.get("valid", False) and len(plan_steps) == expected_steps and actual_tools == expected_tools
+        if is_ok:
+            goal_hits += 1
+            g_status = f"PASS ({len(plan_steps)} steps, sequence: {actual_tools})"
+        else:
+            g_status = f"FAIL (Expected: {expected_tools}, Got: {actual_tools})"
+        print(f"  [4.{idx}] Goal: \"{goal_text[:50]}...\" -> {g_status} ({g_lat:.1f}ms)")
+
+
     # 4. Summary Scorecard
     total = len(EVALUATION_SCENARIOS)
     top1_pct = (top1_hits / total) * 100.0
@@ -236,6 +261,7 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
     print(f"  Top-5 Accuracy (Recall@5)         : {top5_hits:02d}/{total:02d} ({top5_pct:.1f}%)")
     print(f"  DAG Topological Cycle Rejection   : {'100.0% (PASSED)' if cycle_rejected else 'FAILED'}")
     print(f"  Multi-Hop DAG Formulation         : {'100.0% (PASSED)' if valid_plan_ok else 'FAILED'}")
+    print(f"  Autonomous Goal Plan Synthesis    : {goal_hits}/{len(goal_scenarios)} ({goal_hits/len(goal_scenarios)*100.0:.1f}%)")
     print(f"  Latency P50                       : {p50_lat:.1f} ms")
     print(f"  Latency P95                       : {p95_lat:.1f} ms")
     print(f"  Latency P99                       : {p99_lat:.1f} ms")
