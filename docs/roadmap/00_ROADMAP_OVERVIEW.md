@@ -53,6 +53,7 @@ flowchart LR
 | **Phase 26**| **AgentCert Trust & Evidence** | Ed25519 Agent Identity, URL Threat Intel Preflight & Opt-in CORS | `Completed` | [`26_PHASE_26_AGENT_CERT_TRUST_AND_THREAT_EVIDENCE_ENRICHMENT.md`](./26_PHASE_26_AGENT_CERT_TRUST_AND_THREAT_EVIDENCE_ENRICHMENT.md) |
 | **Phase 27**| **Dynamic Control Plane & Hot-Reload** | Zero-Downtime Hot-Reload, In-Memory Atomic Swapping & Admin API | `Completed` | [`27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md`](./27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md) |
 | **Phase 28**| **Distributed Cluster Sync & Pub/Sub** | Multi-Pod Cross-Node State Synchronization & Checksum Bus | `Completed` | [`28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md`](./28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md) |
+| **Phase 29**| **Modern MCP 2026-07-28 & Dual-Stack** | Stateless Header Routing, Anti-Desync Protection & Cache TTL | `Completed` | [`29_PHASE_29_MODERN_STATELESS_MCP_2026_07_28_AND_DUAL_STACK.md`](./29_PHASE_29_MODERN_STATELESS_MCP_2026_07_28_AND_DUAL_STACK.md) |
 
 ---
 

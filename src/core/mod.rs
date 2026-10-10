@@ -15,6 +15,7 @@ pub mod k8s;
 pub mod notification;
 pub mod oauth_connect;
 pub mod policy;
+pub mod protocol_negotiation;
 pub mod proxy;
 pub mod sandbox;
 pub mod secrets;
@@ -86,5 +87,10 @@ pub use control_plane::{
     RuntimeBackendUpdate, RuntimePolicyUpdate,
 };
 pub use cluster_sync::{ClusterSyncEngine, ClusterSyncMessage, ClusterSyncReceipt};
+pub use protocol_negotiation::{
+    AntiDesyncValidationResult, HeaderRoutingMetadata, McpProtocolNegotiator,
+    McpProtocolVersion, NegotiatedMcpContext,
+};
+
 
 
