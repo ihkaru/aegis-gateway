@@ -14,4 +14,9 @@ pub trait SecretStore: Send + Sync {
 
     /// Check if secret store is reachable
     async fn health_check(&self) -> AegisResult<bool>;
+
+    /// Invalidate in-memory cache entry for a given secret (optional/hot-rotation)
+    async fn invalidate(&self, _key: &str) -> AegisResult<()> {
+        Ok(())
+    }
 }

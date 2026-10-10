@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 
+pub mod approval;
 pub mod audit;
 pub mod backend;
+pub mod delegation;
 pub mod dlp;
 pub mod error;
 pub mod health;
 pub mod identity;
+pub mod oauth_connect;
 pub mod policy;
+pub mod proxy;
 pub mod sandbox;
 pub mod secrets;
 pub mod session;
@@ -14,6 +18,11 @@ pub mod skills;
 pub mod state;
 pub mod transport;
 pub mod types;
+
+pub use approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
+pub use delegation::{DelegatedToken, IdentityDelegationBroker, ResourceScoper};
+pub use oauth_connect::{AuthProviderConfig, AuthRequiredResponse, ConnectSession, OAuthConnectEngine};
+pub use proxy::{CredentialProxyEngine, ProxyBinding};
 
 pub use audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink, HashChainedEvent, OtelTraceContext};
 pub use backend::{AegisTopologyConfig, BackendConfig, BackendRegistry, BackendTransport};

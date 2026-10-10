@@ -22,11 +22,16 @@ pub mod transport;
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::core::approval::ApprovalGate;
 use crate::core::audit::{AuditAction, AuditEvent, AuditSink};
+use crate::core::delegation::IdentityDelegationBroker;
 use crate::core::dlp::DlpPipeline;
 use crate::core::error::{AegisError, AegisResult};
+use crate::core::oauth_connect::OAuthConnectEngine;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
+use crate::core::proxy::CredentialProxyEngine;
 use crate::core::sandbox::CodeSandboxEngine;
+use crate::core::secrets::SecretStore;
 use crate::core::skills::SkillRegistry;
 use crate::core::state::DistributedState;
 use crate::core::types::{
@@ -42,6 +47,11 @@ pub struct AegisGateway {
     skills: Arc<dyn SkillRegistry>,
     sandbox: Arc<dyn CodeSandboxEngine>,
     drain: Arc<state::DrainCoordinator>,
+    secret_store: Arc<dyn SecretStore>,
+    proxy: Arc<dyn CredentialProxyEngine>,
+    approval: Arc<dyn ApprovalGate>,
+    delegation: Arc<dyn IdentityDelegationBroker>,
+    oauth_connect: Arc<dyn OAuthConnectEngine>,
 }
 
 impl AegisGateway {
@@ -53,13 +63,18 @@ impl AegisGateway {
         skills: Arc<dyn SkillRegistry>,
     ) -> Self {
         let egress = Arc::new(sandbox::EgressFilterEngine::new());
-        let secret_store = Arc::new(policy::secrets::EnvSecretStore::new());
-        let broker = Arc::new(sandbox::VaultCredentialBroker::new(secret_store));
+        let secret_store: Arc<dyn SecretStore> = Arc::new(policy::secrets::EnvSecretStore::new());
+        let broker = Arc::new(sandbox::VaultCredentialBroker::new(secret_store.clone()));
         let default_sandbox = Arc::new(sandbox::HermeticProcessSandbox::new(
             egress,
             broker,
             audit.clone(),
         ));
+        let proxy = Arc::new(sandbox::LoopbackCredentialProxy::new(secret_store.clone()));
+        let approval = Arc::new(policy::ActionApprovalGate::new("aegis_default_approval_secret"));
+        let delegation = Arc::new(policy::UserIdentityDelegationBroker::new());
+        let oauth_connect = Arc::new(policy::VendorAgnosticOAuthRouter::new(delegation.clone()));
+
         Self {
             state,
             policy,
@@ -68,6 +83,11 @@ impl AegisGateway {
             skills,
             sandbox: default_sandbox,
             drain: Arc::new(state::DrainCoordinator::new()),
+            secret_store,
+            proxy,
+            approval,
+            delegation,
+            oauth_connect,
         }
     }
 
@@ -91,6 +111,26 @@ impl AegisGateway {
 
     pub fn drain_coordinator_arc(&self) -> &Arc<state::DrainCoordinator> {
         &self.drain
+    }
+
+    pub fn approval_gate(&self) -> &dyn ApprovalGate {
+        self.approval.as_ref()
+    }
+
+    pub fn oauth_connect(&self) -> &dyn OAuthConnectEngine {
+        self.oauth_connect.as_ref()
+    }
+
+    pub fn delegation_broker(&self) -> &dyn IdentityDelegationBroker {
+        self.delegation.as_ref()
+    }
+
+    pub fn credential_proxy(&self) -> &dyn CredentialProxyEngine {
+        self.proxy.as_ref()
+    }
+
+    pub fn secret_store(&self) -> &dyn SecretStore {
+        self.secret_store.as_ref()
     }
 
 

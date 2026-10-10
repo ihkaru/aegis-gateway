@@ -6,8 +6,12 @@ use serde_json::Value;
 use crate::core::error::AegisResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
+pub mod approval_gate;
+pub mod delegation;
 pub mod egress;
+pub mod infisical;
 pub mod oauth_callback;
+pub mod oauth_connect;
 pub mod oauth_metadata;
 pub mod oidc;
 pub mod opa;
@@ -15,8 +19,12 @@ pub mod revocation;
 pub mod secrets;
 pub mod ssrf;
 
+pub use approval_gate::ActionApprovalGate;
+pub use delegation::{UserIdentityDelegationBroker, VirtualResourceScoper};
 pub use egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
+pub use infisical::{ChainedSecretStore, InfisicalSecretStore, InfisicalTransport, LocalInfisicalTransport};
 pub use oauth_callback::{CallbackServerConfig, OAuthCallbackResolver};
+pub use oauth_connect::VendorAgnosticOAuthRouter;
 pub use oauth_metadata::ProtectedResourceMetadata;
 pub use oidc::{OidcClaims, OidcTokenValidator};
 pub use opa::{OpaRule, OpaPolicyEngine};
