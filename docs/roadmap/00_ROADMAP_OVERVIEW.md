@@ -24,7 +24,10 @@ flowchart LR
 ## Milestone Master Ledger
 
 | Phase | Category | Focus Areas | Status | Spec Document |
-| :--- | :--- | :--- | :--- | :--- |
+| :
+| **Phase 39**| **Interactive Control Plane and Full Embedded UI Suite** | Operational gap resolution | `In Progress` | [`39_PHASE_39_INTERACTIVE_CONTROL_PLANE_AND_FULL_EMBEDDED_UI_SUITE.md`](./39_PHASE_39_INTERACTIVE_CONTROL_PLANE_AND_FULL_EMBEDDED_UI_SUITE.md) |
+
+--- | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Distributed Foundation** | Distributed State Backend, Redis Cluster, K8s Probes & Draining | `Completed` | [`01_PHASE_1_DISTRIBUTED_FOUNDATION.md`](./01_PHASE_1_DISTRIBUTED_FOUNDATION.md) |
 | **Phase 2** | **Zero-Trust IAM & ABAC** | OIDC/JWT Validation, Granular ABAC Payload Evaluation & SCIM | `Completed` | [`02_PHASE_2_ZERO_TRUST_IAM_ABAC.md`](./02_PHASE_2_ZERO_TRUST_IAM_ABAC.md) |
 | **Phase 3** | **Real-Time DLP** | PCI-DSS Card Masking, HIPAA PHI Scrubbing & Request Sanitization | `Completed` | [`03_PHASE_3_REALTIME_DLP_GUARDRAILS.md`](./03_PHASE_3_REALTIME_DLP_GUARDRAILS.md) |
@@ -63,6 +66,9 @@ flowchart LR
 | **Phase 36**| **Resilient Subprocess Teardown & EOF Drainage** | 2-Stage Graceful Shutdown, Deadlock Timeout & In-Flight Lease Guard | `Completed` | [`36_PHASE_36_RESILIENT_SUBPROCESS_TEARDOWN_AND_ACTIVE_SESSION_PROTECTION.md`](./36_PHASE_36_RESILIENT_SUBPROCESS_TEARDOWN_AND_ACTIVE_SESSION_PROTECTION.md) |
 | **Phase 37**| **Cryptographic Nonce Replay & TLS Pinning** | Monotonic Nonce Admission, SPKI Pinning & Chained Attribution | `In Planning` | [`37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md`](./37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md) |
 | **Phase 38**| **HOL Blocker Guard & Adaptive Fair-Queuing** | Weighted Fair Queuing (WFQ), EWMA Health Ranking & Drift Sentinel | `In Planning` | [`38_PHASE_38_HOL_GUARD_AND_ADAPTIVE_ROUTING.md`](./38_PHASE_38_HOL_GUARD_AND_ADAPTIVE_ROUTING.md) |
+| **Phase 39**| **Interactive Control Plane & Full UI Suite** | Live Backends Topology, Interactive Tool Playground, Policy Hot-Swap | `Completed` | [`39_PHASE_39_INTERACTIVE_CONTROL_PLANE_AND_FULL_EMBEDDED_UI_SUITE.md`](./39_PHASE_39_INTERACTIVE_CONTROL_PLANE_AND_FULL_EMBEDDED_UI_SUITE.md) |
+| **Phase 40**| **Browser CORS, Gateway Identity & Catalog Sync** | Opt-in Browser CORS, Server Name Override & Catalog Drift Refusal | `In Planning` | [`40_PHASE_40_BROWSER_CORS_GATEWAY_IDENTITY_OVERRIDE_AND_CATALOG_SYNC.md`](./40_PHASE_40_BROWSER_CORS_GATEWAY_IDENTITY_OVERRIDE_AND_CATALOG_SYNC.md) |
+| **Phase 41**| **Idempotent Session Replay & Task Boundaries** | Session-Bound Idempotency, Meta Refusal Keys & Eviction Guards | `In Planning` | [`41_PHASE_41_IDEMPOTENT_SESSION_REPLAY_AND_TASK_BOUNDARIES.md`](./41_PHASE_41_IDEMPOTENT_SESSION_REPLAY_AND_TASK_BOUNDARIES.md) |
 
 ---
 

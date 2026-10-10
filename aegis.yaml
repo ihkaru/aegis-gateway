@@ -1,0 +1,12 @@
+mcp_servers:
+  postgres:
+    name: postgres
+    command: npx
+    args:
+    - -y
+    - '@modelcontextprotocol/server-postgres'
+    env: {}
+    url: null
+    timeout_secs: 30
+    enabled: true
+default_tenant: enterprise-corp

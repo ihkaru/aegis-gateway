@@ -10,13 +10,18 @@
     Terminal,
     Lock,
     Cpu,
+    FileText,
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
+  import BackendsTab from './lib/BackendsTab.svelte';
+  import ToolsTab from './lib/ToolsTab.svelte';
   import DlpTab from './lib/DlpTab.svelte';
   import HitlTab from './lib/HitlTab.svelte';
+  import PolicyTab from './lib/PolicyTab.svelte';
   import FinopsTab from './lib/FinopsTab.svelte';
+  import AuditTab from './lib/AuditTab.svelte';
 
-  type Tab = 'overview' | 'dlp' | 'hitl' | 'finops';
+  type Tab = 'overview' | 'backends' | 'tools' | 'dlp' | 'hitl' | 'policy' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
 
   let currentTab = $state<Tab>('overview');
@@ -121,6 +126,27 @@
         Overview & Metrics
       </button>
       <button
+        onclick={() => (currentTab = 'backends')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'backends' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <Server class="h-3.5 w-3.5 shrink-0" />
+        Backends
+      </button>
+      <button
+        onclick={() => (currentTab = 'tools')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'tools' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <Terminal class="h-3.5 w-3.5 shrink-0" />
+        Tools & Playground
+      </button>
+      <button
+        onclick={() => (currentTab = 'policy')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'policy' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <Lock class="h-3.5 w-3.5 shrink-0" />
+        Policy Control
+      </button>
+      <button
         onclick={() => (currentTab = 'dlp')}
         class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'dlp' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
@@ -132,14 +158,21 @@
         class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'hitl' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
         <Clock class="h-3.5 w-3.5 shrink-0" />
-        Suspended HITL Tasks
+        Suspended HITL
       </button>
       <button
         onclick={() => (currentTab = 'finops')}
         class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'finops' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
         <Layers class="h-3.5 w-3.5 shrink-0" />
-        Tenant FinOps Quotas
+        Tenant FinOps
+      </button>
+      <button
+        onclick={() => (currentTab = 'audit')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'audit' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <FileText class="h-3.5 w-3.5 shrink-0" />
+        SOC 2 Audit
       </button>
     </div>
   </nav>
@@ -148,12 +181,20 @@
   <main class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex-1 w-full max-w-full">
     {#if currentTab === 'overview'}
       <OverviewTab />
+    {:else if currentTab === 'backends'}
+      <BackendsTab />
+    {:else if currentTab === 'tools'}
+      <ToolsTab />
+    {:else if currentTab === 'policy'}
+      <PolicyTab />
     {:else if currentTab === 'dlp'}
       <DlpTab />
     {:else if currentTab === 'hitl'}
       <HitlTab />
     {:else if currentTab === 'finops'}
       <FinopsTab />
+    {:else if currentTab === 'audit'}
+      <AuditTab />
     {/if}
   </main>
 
@@ -164,10 +205,10 @@
         <Lock class="h-3 w-3 text-emerald-500 shrink-0" />
         <span>Pure-Rust #![deny(unsafe_code)]</span>
         <span class="text-border">|</span>
-        <span class="tabular-nums">Memory: 24.2 MB RSS</span>
+        <span class="tabular-nums">Zero-Downtime Dynamic Control Plane Active</span>
       </div>
       <div>
-        <span>Aegis Enterprise Control Plane v1.0.0</span>
+        <span>Aegis Enterprise Control Plane v1.34.0</span>
       </div>
     </div>
   </footer>
