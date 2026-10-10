@@ -3,6 +3,8 @@
 pub mod approval;
 pub mod audit;
 pub mod backend;
+pub mod cluster_sync;
+pub mod control_plane;
 pub mod data_governance;
 pub mod delegation;
 pub mod dlp;
@@ -79,4 +81,10 @@ pub use trust::{
     AgentCertEnvelope, AgentTrustLevel, AgentTrustVerifier, AgentVerificationOutcome,
     CorsEvaluationResult, CorsPolicyEnforcer, ThreatEvidenceEnricher, ThreatEvidenceReport,
 };
+pub use control_plane::{
+    ConfigurationWatcher, DynamicControlPlane, DynamicControlPlaneStatus,
+    RuntimeBackendUpdate, RuntimePolicyUpdate,
+};
+pub use cluster_sync::{ClusterSyncEngine, ClusterSyncMessage, ClusterSyncReceipt};
+
 

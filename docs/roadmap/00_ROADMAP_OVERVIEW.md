@@ -51,6 +51,8 @@ flowchart LR
 | **Phase 24**| **Multi-Modal Streaming Vault** | Zero-Buffer Chunking (TUS), Magic Byte Inspection & Ephemeral Egress | `Completed` | [`24_PHASE_24_MULTI_MODAL_STREAMING_AND_CHUNKED_BINARY_VAULT.md`](./24_PHASE_24_MULTI_MODAL_STREAMING_AND_CHUNKED_BINARY_VAULT.md) |
 | **Phase 25**| **Kubernetes Operator & CRDs** | Declarative GitOps Reconciler, CRD Specs & Mutating Sidecar Injection | `Completed` | [`25_PHASE_25_KUBERNETES_OPERATOR_AND_DECLARATIVE_CRD_ENGINE.md`](./25_PHASE_25_KUBERNETES_OPERATOR_AND_DECLARATIVE_CRD_ENGINE.md) |
 | **Phase 26**| **AgentCert Trust & Evidence** | Ed25519 Agent Identity, URL Threat Intel Preflight & Opt-in CORS | `Completed` | [`26_PHASE_26_AGENT_CERT_TRUST_AND_THREAT_EVIDENCE_ENRICHMENT.md`](./26_PHASE_26_AGENT_CERT_TRUST_AND_THREAT_EVIDENCE_ENRICHMENT.md) |
+| **Phase 27**| **Dynamic Control Plane & Hot-Reload** | Zero-Downtime Hot-Reload, In-Memory Atomic Swapping & Admin API | `Completed` | [`27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md`](./27_PHASE_27_DYNAMIC_RUNTIME_CONTROL_PLANE_AND_HOT_RELOAD.md) |
+| **Phase 28**| **Distributed Cluster Sync & Pub/Sub** | Multi-Pod Cross-Node State Synchronization & Checksum Bus | `Completed` | [`28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md`](./28_PHASE_28_DISTRIBUTED_CLUSTER_SYNC_AND_PUBSUB_CONTROL_BUS.md) |
 
 ---
 

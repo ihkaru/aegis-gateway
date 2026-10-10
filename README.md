@@ -210,6 +210,8 @@ cargo test --test phase23_multi_channel_approval_test  # Tier 16: Multi-Channel 
 cargo test --test phase24_binary_streaming_vault_test  # Tier 17: Multi-Modal Streaming Vault & Chunking
 cargo test --test phase25_k8s_operator_crd_test        # Tier 18: K8s Declarative CRD Operator & Webhooks
 cargo test --test phase26_agent_cert_and_threat_evidence_test # Tier 19: AgentCert Trust & Threat Intel
+cargo test --test phase27_dynamic_control_plane_and_hot_reload_test # Tier 20: Zero-Downtime Hot-Reload & Control Plane
+cargo test --test phase28_cluster_sync_engine_test     # Tier 21: Distributed Multi-Pod Cluster Sync
 ```
 
 ---
@@ -246,6 +248,8 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 24**| Multi-Modal Streaming Vault | Zero-Buffer Chunking (TUS), Magic Byte Inspection & Ephemeral Egress | `Completed` |
 | **Phase 25**| Kubernetes Operator & CRDs | Declarative GitOps Reconciler, CRD Specs & Mutating Sidecar Injection | `Completed` |
 | **Phase 26**| AgentCert Trust & Threat Evidence | Ed25519 Agent Identity, URL Threat Intel Preflight & Opt-in CORS | `Completed` |
+| **Phase 27**| Dynamic Control Plane & Hot-Reload | Zero-Downtime Hot-Reload, In-Memory Atomic Swapping & Admin API | `Completed` |
+| **Phase 28**| Distributed Cluster Sync & Pub/Sub | Multi-Pod Cross-Node State Synchronization & Checksum Bus | `Completed` |
 
 ---
 

@@ -9,6 +9,8 @@
 pub mod audit;
 pub mod backend;
 pub mod cli;
+pub mod cluster;
+pub mod control;
 pub mod core;
 pub mod daemon;
 pub mod discovery;
