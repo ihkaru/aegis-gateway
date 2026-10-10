@@ -59,6 +59,7 @@ flowchart LR
 | **Phase 32**| **Direct OTLP Telemetry Exporter** | CNCF OpenTelemetry Protocol (gRPC/HTTP) & Adaptive Sampler | `Completed` | [`32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md`](./32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md) |
 | **Phase 33**| **Single-Binary Embedded Admin Web UI** | Svelte 5, Bun, TypeScript, shadcn-svelte, Multi-Theme & Anti-Slop | `Completed` | [`33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md`](./33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md) |
 | **Phase 34**| **Embedded UI Enterprise Control Suite** | Interactive Backends, Live Policy Switcher, Tool Playground & SIEM Audit | `In Planning` | [`34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md`](./34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md) |
+| **Phase 35**| **Live Data Plane Binding & Zero-Mock UI** | Runtime Engine Dependency Injection, Live OS Telemetry & Zero-Mock UI | `In Progress` | [`35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md`](./35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md) |
 
 ---
 

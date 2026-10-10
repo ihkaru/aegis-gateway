@@ -162,5 +162,9 @@ pub struct UiArgs {
     /// Port for Admin Web UI server
     #[arg(short, long, default_value_t = 8485, env = "AEGIS_UI_PORT")]
     pub port: u16,
+
+    /// Path to topology configuration file (YAML/JSON)
+    #[arg(short, long, env = "AEGIS_CONFIG")]
+    pub config: Option<String>,
 }
 

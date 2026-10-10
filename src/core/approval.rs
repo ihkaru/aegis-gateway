@@ -53,4 +53,9 @@ pub trait ApprovalGate: Send + Sync {
         signature: &str,
         approved: bool,
     ) -> AegisResult<bool>;
+
+    /// List currently suspended pending tickets awaiting authorization
+    async fn list_pending_tickets(&self) -> AegisResult<Vec<ApprovalTicket>> {
+        Ok(vec![])
+    }
 }

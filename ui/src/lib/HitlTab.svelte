@@ -1,37 +1,88 @@
 <script lang="ts">
-  import { AlertTriangle, Check, X, ShieldAlert, KeyRound } from 'lucide-svelte';
+  import { onMount } from 'svelte';
+  import { Check, X, ShieldAlert, KeyRound, RefreshCw } from 'lucide-svelte';
 
-  let pendingTasks = $state([
-    {
-      ticketId: 'hitl_tkt_8091',
-      requestTime: '18:41:58',
-      agent: 'agent.finance.reconciler',
-      action: 'transfer_funds',
-      riskTier: 'CRITICAL',
-      payload: '{"recipient_iban": "DE89370400440532013000", "amount_eur": 125000.00}',
-      hmacSignature: 'sha256:d8a9f012...890c',
-    },
-    {
-      ticketId: 'hitl_tkt_8092',
-      requestTime: '18:38:22',
-      agent: 'agent.devops.deployer',
-      action: 'drop_database_table',
-      riskTier: 'HIGH',
-      payload: '{"target_table": "customers_staging", "cascade": true}',
-      hmacSignature: 'sha256:44b1c90a...11ef',
-    },
-  ]);
-
-  function handleDecision(ticketId: string, decision: 'APPROVED' | 'REJECTED') {
-    pendingTasks = pendingTasks.filter((t) => t.ticketId !== ticketId);
+  interface HitlTask {
+    ticketId: string;
+    requestTime: string;
+    agent: string;
+    action: string;
+    riskTier: string;
+    payload: string;
+    hmacSignature: string;
   }
+
+  let pendingTasks = $state<HitlTask[]>([]);
+  let loading = $state(true);
+  let actionMessage = $state<string | null>(null);
+
+  async function fetchQueue() {
+    try {
+      const res = await fetch('/api/v1/hitl/queue');
+      if (res.ok) {
+        pendingTasks = await res.json();
+      }
+    } catch {
+      // Retain existing state during network jitter
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function handleDecision(task: HitlTask, decision: 'APPROVED' | 'REJECTED') {
+    try {
+      const res = await fetch('/api/v1/hitl/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket_id: task.ticketId,
+          signature: task.hmacSignature,
+          approved: decision === 'APPROVED',
+        }),
+      });
+
+      if (res.ok) {
+        actionMessage = `Ticket ${task.ticketId} successfully ${decision.toLowerCase()}.`;
+        pendingTasks = pendingTasks.filter((t) => t.ticketId !== task.ticketId);
+        setTimeout(() => (actionMessage = null), 4000);
+      } else {
+        const err = await res.json();
+        actionMessage = `Resolution error: ${err.error || 'Request failed'}`;
+      }
+    } catch (e: any) {
+      actionMessage = `Network error: ${e.message}`;
+    }
+  }
+
+  onMount(() => {
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 3000);
+    return () => clearInterval(interval);
+  });
 </script>
 
-<div class="space-y-4">
-  <div class="rounded-lg border border-border bg-card p-4">
-    <h3 class="text-sm font-semibold tracking-tight">Suspended Task Human-in-the-Loop (HITL) Queue</h3>
-    <p class="text-xs text-muted-foreground">High-risk actions intercepted before execution. Approvals require cryptographic HMAC verification.</p>
+<div class="space-y-4 font-sans">
+  <div class="rounded-lg border border-border bg-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+    <div>
+      <h3 class="text-sm font-semibold tracking-tight">Suspended Task Human-in-the-Loop (HITL) Queue</h3>
+      <p class="text-xs text-muted-foreground">High-risk actions intercepted before execution. Approvals require cryptographic HMAC verification.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        onclick={fetchQueue}
+        class="inline-flex items-center gap-1.5 rounded border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+      >
+        <RefreshCw class="h-3 w-3 shrink-0 {loading ? 'animate-spin' : ''}" />
+        Refresh
+      </button>
+    </div>
   </div>
+
+  {#if actionMessage}
+    <div class="rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs font-medium text-primary">
+      {actionMessage}
+    </div>
+  {/if}
 
   {#if pendingTasks.length === 0}
     <div class="rounded-lg border border-dashed border-border p-8 text-center text-xs text-muted-foreground font-sans">
@@ -72,14 +123,14 @@
 
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-1">
             <button
-              onclick={() => handleDecision(task.ticketId, 'REJECTED')}
+              onclick={() => handleDecision(task, 'REJECTED')}
               class="inline-flex items-center justify-center gap-1.5 rounded border border-border bg-muted/60 px-3 py-2 sm:py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
             >
               <X class="h-3.5 w-3.5 text-rose-500 shrink-0" />
               Reject Execution
             </button>
             <button
-              onclick={() => handleDecision(task.ticketId, 'APPROVED')}
+              onclick={() => handleDecision(task, 'APPROVED')}
               class="inline-flex items-center justify-center gap-1.5 rounded bg-primary text-primary-foreground px-3 py-2 sm:py-1.5 text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
             >
               <Check class="h-3.5 w-3.5 shrink-0" />

@@ -252,7 +252,11 @@ fn check_command_exists(cmd: &str) -> bool {
 }
 
 pub async fn run_ui(args: UiArgs) -> AegisResult<()> {
-    let server = crate::control::web_ui::EmbeddedAdminServer::new(args.port, true);
+    let (gateway, _handler, registry) = DaemonSupervisor::bootstrap(args.config.as_deref()).await?;
+    let server = crate::control::web_ui::EmbeddedAdminServer::new(args.port, true)
+        .with_gateway(gateway)
+        .with_registry(registry);
+
     println!("============================================================");
     println!("      AEGIS GATEWAY: EMBEDDED ADMIN WEB UI CONTROL PLANE    ");
     println!("============================================================");

@@ -130,4 +130,15 @@ impl ApprovalGate for ActionApprovalGate {
         write.remove(ticket_id);
         Ok(approved)
     }
+
+    async fn list_pending_tickets(&self) -> AegisResult<Vec<ApprovalTicket>> {
+        let read = self.tickets.read().await;
+        let now_epoch = chrono::Utc::now().timestamp() as u64;
+        let active: Vec<ApprovalTicket> = read
+            .values()
+            .filter(|t| t.expires_at_epoch_secs > now_epoch)
+            .cloned()
+            .collect();
+        Ok(active)
+    }
 }
