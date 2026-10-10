@@ -7,11 +7,12 @@ description: Autonomous skill to detect functional and operational gaps between 
 
 This skill equips coding agents with an end-to-end autonomous workflow to:
 1. Conduct real-time research into open and closed GitHub issues of legacy/first-generation MCP gateways, primarily [MikkoParkkola/mcp-gateway](https://github.com/MikkoParkkola/mcp-gateway) (the canonical Rust reference gateway under PolyForm Noncommercial license), as well as `docker/mcp-gateway` and `microsoft/mcp-gateway`.
-2. Cross-reference detected issues (over 390+ real community reports, crashes, and PRs) against Aegis Gateway to identify unaddressed edge cases, bugs, and functional gaps.
+2. **Deduplication Invariant (Zero Re-evaluation of Resolved Issues)**: Cross-reference detected issues against `docs/ISSUES_PARITY_MATRIX.md` to automatically filter out all previously resolved bugs. Agents MUST NOT waste tokens re-searching or re-evaluating issues already resolved in Aegis Gateway.
 3. Formulate and scaffold structured roadmap milestones (`docs/roadmap/NN_PHASE_NN_*.md`).
 4. Implement genuine, enterprise-grade Rust code adhering to SOLID principles, `< 350 lines per file`, `#![deny(unsafe_code)]`, and zero mock closures under a 100% permissive MIT license.
 5. Generate graduated test suites verifying real operational behavior under both golden and adversarial conditions.
 6. Enforce zero-mock integrity via automated audit gates.
+7. Record resolved issues in the permanent enterprise parity ledger (`docs/ISSUES_PARITY_MATRIX.md`).
 
 ---
 
@@ -20,12 +21,12 @@ This skill equips coding agents with an end-to-end autonomous workflow to:
 ```
 +-------------------+      +--------------------+      +--------------------+
 | 1. Live Research  | ---> | 2. Gap Taxonomy &  | ---> | 3. Phase & Test    |
-|    GitHub Issues  |      |    Prioritization  |      |    Scaffolding     |
+|    (--exclude-res)|      |    Prioritization  |      |    Scaffolding     |
 +-------------------+      +--------------------+      +--------------------+
                                                                   |
 +-------------------+      +--------------------+      +----------v---------+
-| 6. Documentation  | <--- | 5. Zero-Mock & CI  | <--- | 4. Interface-First |
-|    & Remote Push  |      |    Verification    |      |    Implementation  |
+| 7. Enterprise     | <--- | 6. Zero-Mock & CI  | <--- | 4. Interface-First |
+|    Ledger Record  |      |    Verification    |      |    Implementation  |
 +-------------------+      +--------------------+      +--------------------+
 ```
 
@@ -33,23 +34,25 @@ This skill equips coding agents with an end-to-end autonomous workflow to:
 
 ### Step 1: Live GitHub Research & Gap Detection
 
-Query live GitHub issues from target repositories, prioritizing `MikkoParkkola/mcp-gateway`:
+Query live GitHub issues from target repositories, automatically excluding already resolved items:
 
 ```bash
-# General scan of latest 30 issues across primary reference and secondary gateways
+# 1. Scan only unresolved gaps (filters out issues cataloged in docs/ISSUES_PARITY_MATRIX.md)
 python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
   --repo MikkoParkkola/mcp-gateway,docker/mcp-gateway,microsoft/mcp-gateway \
   --state all \
   --limit 30 \
+  --exclude-resolved \
   --local-root /root/projects/aegis-gateway
 
-# Targeted scan for specific operational keywords on primary benchmark
+# 2. Targeted search for specific keywords excluding resolved issues
 python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
   --repo MikkoParkkola/mcp-gateway \
   --query "leak" \
-  --limit 15
+  --limit 15 \
+  --exclude-resolved
 
-# Audit local test coverage of canonical complaints
+# 3. Audit current parity coverage and ledger integrity
 python3 .agents/skills/mcp-gap-resolver/scripts/audit_gap_coverage.py
 ```
 
@@ -65,7 +68,7 @@ Classify identified issues using [`references/GAP_TAXONOMY.md`](references/GAP_T
 - `SEC`: Security & Governance (payload ABAC, refusal audit logging, DLP).
 - `OPS`: Operational HA & Resilience (circuit breakers, timeouts, drain).
 - `DISC`: Discovery & Planning (progressive disclosure, DAG cycle checks).
-- `SANDBOX_SEC`: Hermetic Sandboxing, Zero-Knowledge Credential Brokerage & Egress Firewall (RCE isolation, SSRF prevention, output secret scrubbing, cryptographic audit attestation).
+- `SANDBOX_SEC`: Hermetic Sandboxing, Zero-Knowledge Credential Brokerage & Egress Firewall.
 
 Group 2 to 4 related gaps into a coherent theme for the next implementation phase.
 
@@ -86,6 +89,7 @@ This automatically generates:
 1. `docs/roadmap/<NN>_PHASE_<NN>_<TITLE>.md` (Milestone specification).
 2. `tests/phase<NN>_<title>_test.rs` (Integration test suite skeleton).
 3. Updates `docs/roadmap/00_ROADMAP_OVERVIEW.md` ledger.
+4. Outputs ready-to-use template snippets for `docs/ISSUES_PARITY_MATRIX.md`.
 
 ---
 
@@ -94,8 +98,7 @@ This automatically generates:
 When implementing the code to resolve the gaps:
 
 1. **Define Core Traits First**:
-   - If introducing new abstractions, define them in `src/core/` before writing structs.
-   - Example: `pub trait ToolOutcomeVerifier: Send + Sync { ... }`.
+   - Define trait abstractions in `src/core/` before writing structs.
 2. **Implement Production Drivers**:
    - Place drivers in appropriate submodules (`src/transport/`, `src/lifecycle/`, `src/security/`).
    - Invert dependencies: orchestrators accept `Arc<dyn Trait>` via constructors.
@@ -111,11 +114,11 @@ When implementing the code to resolve the gaps:
 Implement graduated test cases in `tests/phase<NN>_<title>_test.rs`:
 1. **Happy Path (Golden Standard)**: Validate expected success behavior under compliant input.
 2. **Negative & Boundary**: Validate handling of malformed inputs, timeouts, or abrupt socket drops.
-3. **Security & Refusal Integrity**: If testing access denials or refused calls (e.g. Issue #591), verify that audit logs record explicit `AuditAction::Blocked` events with cause metadata.
+3. **Security & Refusal Integrity**: Verify explicit refusal audit events (`AuditAction::Blocked`) with rejection rule metadata.
 
 Execute test suite:
 ```bash
-cargo test --test phase<NN>_<title>_test
+cargo nextest run --test phase<NN>_<title>_test
 ```
 
 ---
@@ -125,31 +128,36 @@ cargo test --test phase<NN>_<title>_test
 Run the comprehensive audit battery:
 
 ```bash
-# 1. Verify 100% zero-mock compliance
+# 1. Verify 100% zero-mock compliance and structured waivers
 bash scripts/audit_mock_detection.sh
 
-# 2. Verify all test suites and line limits
-bash scripts/governance-check.sh
+# 2. Verify parity matrix integrity & test proof
+python3 .agents/skills/mcp-gap-resolver/scripts/audit_gap_coverage.py
 
-# 3. Verify AGY stop hook permits task completion
-bash scripts/agy_stop_hook.sh
+# 3. Verify all test suites and line limits in parallel
+bash scripts/governance-check.sh
 ```
 
 All commands must exit with status `0`.
 
 ---
 
-### Step 7: Documentation & Remote Synchronization
+### Step 7: Enterprise Resolution Ledger Recording Standard
 
-1. Update `README.md`:
-   - Add new persona capability or gap parity highlight.
-   - Add the new test command to the graduated testing list.
-   - Update the Enterprise Roadmap table with the completed phase.
-2. Update `/root/GEMINI.md`:
-   - Add checklist entry under the mandatory roadmap section.
-3. Commit and push:
+Once a phase is implemented and verified, agents **MUST** execute the four-tier recording protocol:
+
+1. **Update Master Parity Matrix (`docs/ISSUES_PARITY_MATRIX.md`)**:
+   Add resolved issues to `## 2. Comprehensive Issue Resolution Ledger`:
+   ```markdown
+   | `<UpstreamRepo>` | [#{NUM}](https://github.com/<UpstreamRepo>/issues/{NUM}) | `{CAT}` | {Deficit Summary} | {Aegis Resolution} | `{src_path}` | `{test_path}` |
+   ```
+2. **Synchronize Roadmap**:
+   Update `docs/roadmap/00_ROADMAP_OVERVIEW.md` and the phase file to `Completed`.
+3. **Run Audit Verifier**:
+   Execute `python3 .agents/skills/mcp-gap-resolver/scripts/audit_gap_coverage.py`. It confirms that the newly registered source and test files exist on disk with 100% integrity.
+4. **Semantic Git Commit & Push**:
    ```bash
-   git add .
-   git commit -m "feat(phase-<NN>): resolve <gaps> (<issue-refs>)"
+   git add -A
+   git commit -m "feat(phase-<NN>): resolve <gaps> (fixes <repo>#<NUM>)"
    git push origin main
    ```

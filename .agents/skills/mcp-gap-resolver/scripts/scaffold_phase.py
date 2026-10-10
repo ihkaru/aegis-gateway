@@ -123,5 +123,14 @@ def main():
     # 3. Update Overview
     update_overview_table(args.phase_num, args.title, doc_file, args.local_root)
 
+    # 4. Print Parity Matrix Snippet
+    if issues:
+        print("\n[+] Enterprise Ledger Snippet for docs/ISSUES_PARITY_MATRIX.md (record after completion):")
+        for iss in issues:
+            parts = iss.split("#")
+            repo = parts[0] if len(parts) > 1 else "MikkoParkkola/mcp-gateway"
+            num = parts[1] if len(parts) > 1 else iss
+            print(f"| `{repo}` | [#{num}](https://github.com/{repo}/issues/{num}) | `OPS` | <Deficit> | <Resolution> | `src/...` | `tests/{test_file}` |")
+
 if __name__ == "__main__":
     main()
