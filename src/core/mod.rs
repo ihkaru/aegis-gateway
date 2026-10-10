@@ -48,7 +48,7 @@ pub use backend::{AegisTopologyConfig, BackendConfig, BackendRegistry, BackendTr
 pub use dlp::{ComplianceProfile, DlpFinding, DlpPipeline, FastPatternMatcher, MaskingStrategy, SensitivityLevel};
 pub use error::{AegisError, AegisResult};
 pub use health::{HealthProbe, HealthReport, ProbeState};
-pub use identity::TokenValidator;
+pub use identity::{GatewayServerIdentity, TokenValidator};
 
 pub use policy::{PolicyContext, PolicyDecision, PolicyEngine};
 pub use sandbox::{

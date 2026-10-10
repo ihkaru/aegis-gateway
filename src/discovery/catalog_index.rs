@@ -9,6 +9,7 @@ use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 pub enum BackendIndexStatus {
     Indexed,
     Initializing,
+    Degraded,
     Unreachable,
 }
 
@@ -81,6 +82,51 @@ impl CatalogSearchIndex {
                 },
             );
         }
+    }
+
+    /// Safely register or refresh tools using CatalogSyncSentinel
+    /// Resolves docker/mcp-gateway#561 (Catalog synchronization zero-tool drop refusal)
+    pub fn safe_index_tools_for_backend(
+        &mut self,
+        server: &str,
+        new_tools: Vec<ToolDefinition>,
+        sentinel: &dyn crate::discovery::CatalogSyncSentinel,
+        is_explicit_purge: bool,
+    ) -> crate::discovery::CatalogSyncOutcome {
+        let current_server_tools: Vec<ToolDefinition> = self
+            .tools
+            .iter()
+            .filter(|t| t.server == server)
+            .cloned()
+            .collect();
+
+        let outcome = sentinel.evaluate_sync(
+            server,
+            &current_server_tools,
+            &new_tools,
+            is_explicit_purge,
+        );
+
+        match &outcome {
+            crate::discovery::CatalogSyncOutcome::Accepted { .. } => {
+                self.tools.retain(|t| t.server != server);
+                self.tools.extend(new_tools);
+                if let Some(meta) = self.backends.get_mut(server) {
+                    meta.status = BackendIndexStatus::Indexed;
+                }
+            }
+            crate::discovery::CatalogSyncOutcome::ExplicitPurge { .. } => {
+                self.tools.retain(|t| t.server != server);
+                if let Some(meta) = self.backends.get_mut(server) {
+                    meta.status = BackendIndexStatus::Degraded;
+                }
+            }
+            crate::discovery::CatalogSyncOutcome::RefusedEmptySync { .. } => {
+                // Keep preserved tools untouched; prevent zero-tool drop!
+            }
+        }
+
+        outcome
     }
 
     pub fn total_tools(&self) -> usize {

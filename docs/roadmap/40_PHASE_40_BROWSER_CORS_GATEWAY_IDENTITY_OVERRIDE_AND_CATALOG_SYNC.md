@@ -1,7 +1,7 @@
 # Phase 40: Browser CORS, Gateway Identity Override & Catalog Sync Sentinel
 
 > **Milestone Tag**: `v1.40.0-browser_cors_identity_override_and_catalog_sync`  
-> **Status**: `In Planning`  
+> **Status**: `Completed`  
 > **Target Gaps & Standards**:
 > - Resolves `docker/mcp-gateway#544` (Opt-in browser CORS for Streamable HTTP MCP clients)
 > - Resolves `docker/mcp-gateway#583` (Configurable `serverInfo.name` identity override via CLI / Config)

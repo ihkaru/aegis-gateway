@@ -11,6 +11,7 @@ use crate::core::transport::{
     JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, WireProtocolHandler,
     INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
 };
+use crate::core::identity::GatewayServerIdentity;
 use crate::core::types::{
     CallerContext, TenantId, ToolCallRequest, ToolDefinition,
 };
@@ -24,8 +25,7 @@ pub struct McpProtocolHandler {
     registry: Option<Arc<dyn BackendRegistry>>,
     planner: ExecutionPlanner,
     tools: Arc<RwLock<Vec<ToolDefinition>>>,
-    server_name: String,
-    server_version: String,
+    server_identity: Arc<RwLock<GatewayServerIdentity>>,
 }
 
 impl McpProtocolHandler {
@@ -33,18 +33,34 @@ impl McpProtocolHandler {
         Self::with_registry(gateway, None)
     }
 
-    pub fn with_registry(
+    pub fn with_identity(
         gateway: Arc<AegisGateway>,
         registry: Option<Arc<dyn BackendRegistry>>,
+        identity: GatewayServerIdentity,
     ) -> Self {
         Self {
             gateway,
             registry,
             planner: ExecutionPlanner::new(),
             tools: Arc::new(RwLock::new(Vec::new())),
-            server_name: "aegis-gateway".to_string(),
-            server_version: "0.9.0".to_string(),
+            server_identity: Arc::new(RwLock::new(identity)),
         }
+    }
+
+    pub fn with_registry(
+        gateway: Arc<AegisGateway>,
+        registry: Option<Arc<dyn BackendRegistry>>,
+    ) -> Self {
+        Self::with_identity(gateway, registry, GatewayServerIdentity::default())
+    }
+
+    pub async fn set_server_identity(&self, identity: GatewayServerIdentity) {
+        let mut id = self.server_identity.write().await;
+        *id = identity;
+    }
+
+    pub async fn server_identity(&self) -> GatewayServerIdentity {
+        self.server_identity.read().await.clone()
     }
 
     pub async fn register_tools(&self, new_tools: Vec<ToolDefinition>) {
@@ -67,16 +83,17 @@ impl McpProtocolHandler {
     }
 
     async fn handle_initialize(&self, id: JsonRpcId) -> JsonRpcResponse {
+        let identity = self.server_identity().await;
         let result = json!({
-            "protocolVersion": "2024-11-05",
+            "protocolVersion": identity.protocol_version,
             "capabilities": {
                 "tools": { "listChanged": true },
                 "resources": {},
                 "prompts": {}
             },
             "serverInfo": {
-                "name": self.server_name,
-                "version": self.server_version
+                "name": identity.name,
+                "version": identity.version
             }
         });
         JsonRpcResponse::success(id, result)

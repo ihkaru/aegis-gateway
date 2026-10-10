@@ -12,11 +12,13 @@ use serde_json::json;
 use crate::core::error::AegisResult;
 use crate::core::transport::WireProtocolHandler;
 use crate::state::DrainCoordinator;
+use crate::transport::cors::{AegisCorsPolicy, CorsPolicyEnforcer};
 
 #[derive(Clone)]
 struct AppState {
     handler: Arc<dyn WireProtocolHandler>,
     drain: Arc<DrainCoordinator>,
+    cors: Arc<dyn CorsPolicyEnforcer>,
 }
 
 /// Live Axum-based Streamable HTTP server for network-attached AI clients & Kubernetes
@@ -32,13 +34,23 @@ impl LiveHttpServer {
         host: &str,
         port: u16,
     ) -> AegisResult<Self> {
+        Self::with_cors(handler, drain, Arc::new(AegisCorsPolicy::default()), host, port)
+    }
+
+    pub fn with_cors(
+        handler: Arc<dyn WireProtocolHandler>,
+        drain: Arc<DrainCoordinator>,
+        cors: Arc<dyn CorsPolicyEnforcer>,
+        host: &str,
+        port: u16,
+    ) -> AegisResult<Self> {
         let addr_str = format!("{host}:{port}");
         let listen_addr: SocketAddr = addr_str
             .parse()
             .map_err(|e| crate::core::error::AegisError::Internal(format!("Invalid socket address '{addr_str}': {e}")))?;
 
         Ok(Self {
-            state: AppState { handler, drain },
+            state: AppState { handler, drain, cors },
             listen_addr,
         })
     }
@@ -49,8 +61,17 @@ impl LiveHttpServer {
 
     pub fn router(&self) -> Router {
         Router::new()
-            .route("/mcp", post(handle_post_mcp).get(handle_sse))
-            .route("/sse", get(handle_sse))
+            .route(
+                "/mcp",
+                post(handle_post_mcp)
+                    .get(handle_sse)
+                    .options(handle_options),
+            )
+            .route(
+                "/sse",
+                get(handle_sse)
+                    .options(handle_options),
+            )
             .route("/health", get(handle_health))
             .route("/healthz", get(handle_health))
             .route("/readyz", get(handle_ready))
@@ -81,11 +102,30 @@ impl LiveHttpServer {
     }
 }
 
+async fn handle_options(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> Response {
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+    let req_method = headers
+        .get("access-control-request-method")
+        .and_then(|v| v.to_str().ok());
+    let req_headers = headers
+        .get("access-control-request-headers")
+        .and_then(|v| v.to_str().ok());
+
+    let (status, resp_headers) = state.cors.evaluate_preflight(origin, req_method, req_headers);
+    let mut resp = status.into_response();
+    *resp.headers_mut() = resp_headers;
+    resp
+}
+
 async fn handle_post_mcp(
     State(state): State<AppState>,
     headers: axum::http::HeaderMap,
     body: String,
 ) -> Response {
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
     if let Some(ver) = headers.get("mcp-protocol-version").and_then(|v| v.to_str().ok()) {
         if !matches!(ver, "2024-11-05" | "2025-11-25" | "2024-10-07") {
             let err_body = json!({
@@ -96,27 +136,31 @@ async fn handle_post_mcp(
                     "message": format!("Unsupported MCP protocol version '{ver}'. Supported versions: 2024-11-05, 2025-11-25, 2024-10-07")
                 }
             }).to_string();
-            return (
+            let mut resp = (
                 StatusCode::BAD_REQUEST,
                 [("content-type", "application/json")],
                 err_body,
             )
                 .into_response();
+            state.cors.apply_cors_headers(resp.headers_mut(), origin);
+            return resp;
         }
     }
 
     let _guard = match state.drain.acquire_slot() {
         Ok(g) => g,
         Err(_) => {
-            return (
+            let mut resp = (
                 StatusCode::SERVICE_UNAVAILABLE,
                 "Gateway is shutting down",
             )
                 .into_response();
+            state.cors.apply_cors_headers(resp.headers_mut(), origin);
+            return resp;
         }
     };
 
-    match state.handler.handle_message(&body).await {
+    let mut response = match state.handler.handle_message(&body).await {
         Ok(Some(resp_json)) => (
             StatusCode::OK,
             [("content-type", "application/json")],
@@ -129,11 +173,17 @@ async fn handle_post_mcp(
             format!("Internal error: {e}"),
         )
             .into_response(),
-    }
+    };
+    state.cors.apply_cors_headers(response.headers_mut(), origin);
+    response
 }
 
-async fn handle_sse() -> Response {
-    (
+async fn handle_sse(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> Response {
+    let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+    let mut resp = (
         StatusCode::OK,
         [
             ("content-type", "text/event-stream"),
@@ -141,7 +191,9 @@ async fn handle_sse() -> Response {
         ],
         "event: endpoint\ndata: /mcp\n\n",
     )
-        .into_response()
+        .into_response();
+    state.cors.apply_cors_headers(resp.headers_mut(), origin);
+    resp
 }
 
 async fn handle_health() -> Response {

@@ -4,6 +4,7 @@ use crate::core::types::{DisclosureTier, ProjectedTool, ToolDefinition};
 
 pub mod bootstrap_catalog;
 pub mod catalog_index;
+pub mod catalog_sentinel;
 pub mod goal_planner;
 pub mod hybrid_search;
 pub mod namespace;
@@ -12,6 +13,7 @@ pub mod planner;
 pub mod projector;
 
 pub use bootstrap_catalog::default_enterprise_catalog;
+pub use catalog_sentinel::{AegisCatalogSyncSentinel, CatalogSyncOutcome, CatalogSyncSentinel};
 pub use goal_planner::GoalPlanner;
 
 pub use catalog_index::{
