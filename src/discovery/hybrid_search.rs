@@ -71,7 +71,7 @@ impl HybridSearchEngine {
                 vec[1] += 1.0;
             }
             // Action Read / Query (dim 4, 5)
-            if word.contains("query") || word.contains("select") || word.contains("read") || word.contains("fetch") || word.contains("cari") || word.contains("ambil") {
+            if word.contains("query") || word.contains("select") || word.contains("read") || word.contains("fetch") || word.contains("cari") || word.contains("ambil") || word.contains("retrieve") {
                 vec[4] += 2.5;
                 vec[5] += 2.0;
             }

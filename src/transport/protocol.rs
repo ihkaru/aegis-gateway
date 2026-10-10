@@ -14,7 +14,7 @@ use crate::core::transport::{
 use crate::core::types::{
     CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition,
 };
-use crate::discovery::{ExecutionPlan, ExecutionPlanner};
+use crate::discovery::ExecutionPlanner;
 use crate::AegisGateway;
 
 /// Core MCP wire protocol engine handling standard JSON-RPC 2.0 lifecycle
@@ -255,27 +255,23 @@ impl McpProtocolHandler {
             None => {
                 return JsonRpcResponse::error(
                     id,
-                    JsonRpcError::new(INVALID_PARAMS, "Missing plan definition in arguments"),
-                );
-            }
-        };
-        let plan: ExecutionPlan = match serde_json::from_value(plan_val) {
-            Ok(p) => p,
-            Err(e) => {
-                return JsonRpcResponse::error(
-                    id,
-                    JsonRpcError::new(INVALID_PARAMS, format!("Invalid execution plan schema: {e}")),
+                    JsonRpcError::new(INVALID_PARAMS, "Missing plan definition or goal in arguments"),
                 );
             }
         };
 
         let read = self.tools.read().await;
         let caller = Self::default_caller();
-        let validation = self
-            .planner
-            .validate_plan(&plan, &read, self.gateway.policy(), &caller)
-            .await;
-        JsonRpcResponse::success(id, serde_json::to_value(validation).unwrap_or_else(|_| json!({})))
+        match crate::discovery::GoalPlanner::process_planning_request(
+            &plan_val,
+            &read,
+            &self.planner,
+            self.gateway.policy(),
+            &caller,
+        ).await {
+            Ok(result) => JsonRpcResponse::success(id, result),
+            Err(e) => JsonRpcResponse::error(id, JsonRpcError::new(INVALID_PARAMS, e.to_string())),
+        }
     }
 
     async fn handle_meta_list_servers(&self, id: JsonRpcId) -> JsonRpcResponse {

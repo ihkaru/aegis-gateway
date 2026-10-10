@@ -133,6 +133,10 @@ impl CatalogSearchIndex {
                             || (token.starts_with("table") && field.contains("tabel"))
                             || (token.starts_with("berkas") && field.contains("file"))
                             || (token.starts_with("file") && field.contains("berkas"))
+                            || (token.starts_with("database") && field.contains("db"))
+                            || (token.starts_with("transaksi") && field.contains("transaction"))
+                            || (token.starts_with("transaction") && field.contains("transaksi"))
+                            || (token.starts_with("ambil") && field.contains("query"))
                     };
 
                     if matches_field(&name_lower) {
