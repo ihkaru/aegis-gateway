@@ -15,10 +15,11 @@ echo ""
 echo "Step 2: Running Unified Parallel Test & Governance Battery (151 tests)..."
 if command -v cargo-nextest >/dev/null 2>&1; then
   echo "Using cargo-nextest for ultra-fast work-stealing parallel execution..."
+  cargo test --no-run -j 2
   CI=1 cargo nextest run
 else
   echo "Running standard cargo test runner..."
-  cargo test
+  cargo test -j 2
 fi
 
 echo ""

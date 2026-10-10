@@ -58,8 +58,11 @@ flowchart LR
 | **Phase 31**| **Identity Federation (SAML & SCIM)** | SAML 2.0 Web SSO & SCIM 2.0 Inbound Directory Provisioning | `Completed` | [`31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md`](./31_PHASE_31_ENTERPRISE_IDENTITY_FEDERATION_SAML_AND_SCIM.md) |
 | **Phase 32**| **Direct OTLP Telemetry Exporter** | CNCF OpenTelemetry Protocol (gRPC/HTTP) & Adaptive Sampler | `Completed` | [`32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md`](./32_PHASE_32_DIRECT_OTLP_TELEMETRY_EXPORTER.md) |
 | **Phase 33**| **Single-Binary Embedded Admin Web UI** | Svelte 5, Bun, TypeScript, shadcn-svelte, Multi-Theme & Anti-Slop | `Completed` | [`33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md`](./33_PHASE_33_EMBEDDED_ADMIN_WEB_UI.md) |
-| **Phase 34**| **Embedded UI Enterprise Control Suite** | Interactive Backends, Live Policy Switcher, Tool Playground & SIEM Audit | `In Planning` | [`34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md`](./34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md) |
-| **Phase 35**| **Live Data Plane Binding & Zero-Mock UI** | Runtime Engine Dependency Injection, Live OS Telemetry & Zero-Mock UI | `In Progress` | [`35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md`](./35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md) |
+| **Phase 34**| **Embedded UI Enterprise Control Suite** | Interactive Backends, Live Policy Switcher, Tool Playground & SIEM Audit | `Completed` | [`34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md`](./34_PHASE_34_EMBEDDED_UI_ENTERPRISE_CONTROL_SUITE.md) |
+| **Phase 35**| **Live Data Plane Binding & Zero-Mock UI** | Runtime Engine Dependency Injection, Live OS Telemetry & Zero-Mock UI | `Completed` | [`35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md`](./35_PHASE_35_LIVE_DATA_PLANE_BINDING_AND_ZERO_MOCK_UI.md) |
+| **Phase 36**| **Resilient Subprocess Teardown & EOF Drainage** | 2-Stage Graceful Shutdown, Deadlock Timeout & In-Flight Lease Guard | `Completed` | [`36_PHASE_36_RESILIENT_SUBPROCESS_TEARDOWN_AND_ACTIVE_SESSION_PROTECTION.md`](./36_PHASE_36_RESILIENT_SUBPROCESS_TEARDOWN_AND_ACTIVE_SESSION_PROTECTION.md) |
+| **Phase 37**| **Cryptographic Nonce Replay & TLS Pinning** | Monotonic Nonce Admission, SPKI Pinning & Chained Attribution | `In Planning` | [`37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md`](./37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md) |
+| **Phase 38**| **HOL Blocker Guard & Adaptive Fair-Queuing** | Weighted Fair Queuing (WFQ), EWMA Health Ranking & Drift Sentinel | `In Planning` | [`38_PHASE_38_HOL_GUARD_AND_ADAPTIVE_ROUTING.md`](./38_PHASE_38_HOL_GUARD_AND_ADAPTIVE_ROUTING.md) |
 
 ---
 

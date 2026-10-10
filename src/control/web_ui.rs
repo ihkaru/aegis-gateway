@@ -1,7 +1,6 @@
 use std::sync::Arc;
 use std::time::Instant;
 use rust_embed::RustEmbed;
-use serde_json::json;
 
 use crate::core::backend::BackendRegistry;
 use crate::AegisGateway;
@@ -20,6 +19,7 @@ pub struct EmbeddedAdminServer {
     registry: Option<Arc<dyn BackendRegistry>>,
     recent_invocations: Arc<std::sync::RwLock<Vec<serde_json::Value>>>,
     recent_dlp_events: Arc<std::sync::RwLock<Vec<serde_json::Value>>>,
+    current_tier: Arc<std::sync::RwLock<String>>,
 }
 
 impl Default for EmbeddedAdminServer {
@@ -38,6 +38,7 @@ impl EmbeddedAdminServer {
             registry: None,
             recent_invocations: Arc::new(std::sync::RwLock::new(Vec::new())),
             recent_dlp_events: Arc::new(std::sync::RwLock::new(Vec::new())),
+            current_tier: Arc::new(std::sync::RwLock::new("Hybrid".to_string())),
         }
     }
 
@@ -84,9 +85,19 @@ impl EmbeddedAdminServer {
             );
         }
 
-        // 1. Dispatch REST API Endpoints
+        // 1. Dispatch REST API Endpoints via WebApiDispatcher (SRP Pattern)
         if path.starts_with("/api/v1/") {
-            return self.handle_api(method, path, body).await;
+            return crate::control::web_api::WebApiDispatcher::dispatch(
+                method,
+                path,
+                body,
+                self.start_time,
+                self.gateway.as_ref(),
+                self.registry.as_ref(),
+                &self.recent_invocations,
+                &self.recent_dlp_events,
+                &self.current_tier,
+            ).await;
         }
 
         // 2. Serve Static Frontend SPA Assets with SPA Fallback
@@ -101,113 +112,9 @@ impl EmbeddedAdminServer {
             let mime = guess_mime(target_file);
             (200, asset.data.to_vec(), mime)
         } else if let Some(index) = AdminUiAssets::get("index.html") {
-            // Client-side SPA fallback for paths like /dashboard, /dlp, /hitl, /finops
             (200, index.data.to_vec(), "text/html; charset=utf-8")
         } else {
             (404, b"Asset not found in embedded bundle".to_vec(), "text/plain")
-        }
-    }
-
-    async fn handle_api(&self, method: &str, path: &str, body_bytes: &[u8]) -> (u16, Vec<u8>, &'static str) {
-        match (method, path) {
-            ("GET", "/api/v1/overview") => {
-                let memory_rss_mb = get_process_memory_mb();
-                let active_backends = if let Some(reg) = &self.registry {
-                    reg.list_backends().await.unwrap_or_default().len()
-                } else {
-                    0
-                };
-                let total_tools = if let Some(reg) = &self.registry {
-                    reg.discover_all_tools().await.unwrap_or_default().len()
-                } else {
-                    4
-                };
-                let payload = json!({
-                    "status": "HEALTHY",
-                    "uptime_secs": self.start_time.elapsed().as_secs(),
-                    "rps": 0,
-                    "p99_latency_ms": 0.38,
-                    "active_agents": active_backends,
-                    "active_backends": active_backends,
-                    "total_tools": total_tools,
-                    "memory_rss_mb": memory_rss_mb,
-                    "mtls_enforced": true,
-                    "policy_tier": "Hybrid"
-                });
-                (200, payload.to_string().into_bytes(), "application/json")
-            }
-            ("GET", "/api/v1/recent_calls") | ("GET", "/api/v1/invocations") => {
-                let calls = self.recent_invocations.read().map(|r| r.clone()).unwrap_or_default();
-                (200, json!(calls).to_string().into_bytes(), "application/json")
-            }
-            ("GET", "/api/v1/dlp/events") => {
-                let evts = self.recent_dlp_events.read().map(|r| r.clone()).unwrap_or_default();
-                (200, json!(evts).to_string().into_bytes(), "application/json")
-            }
-            ("GET", "/api/v1/hitl/queue") => {
-                let mut tickets_json = Vec::new();
-                if let Some(gw) = &self.gateway {
-                    if let Ok(tickets) = gw.approval_gate().list_pending_tickets().await {
-                        for t in tickets {
-                            tickets_json.push(json!({
-                                "ticketId": t.ticket_id,
-                                "requestTime": chrono::DateTime::from_timestamp(t.expires_at_epoch_secs as i64 - 900, 0)
-                                    .map(|dt| dt.format("%H:%M:%S").to_string())
-                                    .unwrap_or_else(|| "12:00:00".to_string()),
-                                "agent": t.caller_id,
-                                "action": t.tool_name,
-                                "riskTier": format!("{:?}", t.risk_tier).to_uppercase(),
-                                "payload": t.action_summary,
-                                "hmacSignature": t.hmac_signature
-                            }));
-                        }
-                    }
-                }
-                (200, json!(tickets_json).to_string().into_bytes(), "application/json")
-            }
-            ("POST", "/api/v1/hitl/resolve") => {
-                if let Ok(parsed) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
-                    let ticket_id = parsed["ticket_id"].as_str().unwrap_or_default();
-                    let sig = parsed["signature"].as_str().unwrap_or_default();
-                    let approved = parsed["approved"].as_bool().unwrap_or(false);
-                    if let Some(gw) = &self.gateway {
-                        match gw.approval_gate().resolve_ticket(ticket_id, sig, approved).await {
-                            Ok(res) => (
-                                200,
-                                json!({ "status": "resolved", "approved": res, "ticket_id": ticket_id }).to_string().into_bytes(),
-                                "application/json",
-                            ),
-                            Err(e) => (
-                                400,
-                                json!({ "error": e.to_string() }).to_string().into_bytes(),
-                                "application/json",
-                            ),
-                        }
-                    } else {
-                        (200, json!({ "status": "resolved", "approved": approved }).to_string().into_bytes(), "application/json")
-                    }
-                } else {
-                    (400, json!({ "error": "Invalid JSON payload" }).to_string().into_bytes(), "application/json")
-                }
-            }
-            ("GET", "/api/v1/finops") => {
-                let payload = json!({
-                    "tenants_count": 0,
-                    "tenants": [],
-                    "frozen_tenants": [],
-                    "total_tokens_metered": "0"
-                });
-                (200, payload.to_string().into_bytes(), "application/json")
-            }
-            ("GET", "/api/v1/backends") => {
-                let list = if let Some(reg) = &self.registry {
-                    reg.list_backends().await.unwrap_or_default()
-                } else {
-                    vec![]
-                };
-                (200, json!(list).to_string().into_bytes(), "application/json")
-            }
-            _ => (404, json!({"error": "Endpoint not found"}).to_string().into_bytes(), "application/json"),
         }
     }
 
@@ -251,22 +158,6 @@ impl EmbeddedAdminServer {
         axum::serve(listener, app).await?;
         Ok(())
     }
-}
-
-fn get_process_memory_mb() -> f64 {
-    if let Ok(status) = std::fs::read_to_string("/proc/self/status") {
-        for line in status.lines() {
-            if line.starts_with("VmRSS:") {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 2 {
-                    if let Ok(kb) = parts[1].parse::<f64>() {
-                        return (kb / 1024.0 * 100.0).round() / 100.0;
-                    }
-                }
-            }
-        }
-    }
-    0.0
 }
 
 fn guess_mime(path: &str) -> &'static str {

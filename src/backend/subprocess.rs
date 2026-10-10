@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::process::Stdio;
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::Mutex;
 
@@ -207,7 +207,25 @@ impl BackendTransport for HermeticSubprocessBackend {
     async fn stop(&self) -> AegisResult<()> {
         let mut guard = self.handle.lock().await;
         if let Some(mut proc) = guard.take() {
-            let _ = proc.child.kill().await;
+            // Stage 1: Explicitly drop stdin to signal EOF to the child process (Issue #2530)
+            drop(proc.stdin);
+
+            // Stage 2: Time-bounded wait for child exit before escalating to SIGKILL
+            let wait_fut = proc.child.wait();
+            let timeout = std::time::Duration::from_millis(1500);
+
+            if (tokio::time::timeout(timeout, wait_fut).await).is_err() {
+                // Stage 3: Escalation to SIGKILL on deadline expiration
+                let _ = proc.child.kill().await;
+            }
+
+            // Stage 4: Drain any remaining stdout bytes to avoid corrupted buffers (Issue #2573)
+            let mut buf = String::new();
+            let _ = tokio::time::timeout(
+                std::time::Duration::from_millis(500),
+                proc.reader.read_to_string(&mut buf),
+            )
+            .await;
         }
         Ok(())
     }
