@@ -16,55 +16,57 @@
   ];
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- Top Metric Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     {#each metrics as m}
-      <div class="rounded-lg border border-border bg-card p-4 transition-colors hover:border-muted-foreground/30">
+      <div class="rounded-lg border border-border bg-card p-4 transition-colors hover:border-muted-foreground/30 shadow-xs">
         <div class="flex items-center justify-between text-muted-foreground text-xs font-medium">
           <span>{m.label}</span>
-          <svelte:component this={m.icon} class="h-4 w-4" />
+          <svelte:component this={m.icon} class="h-4 w-4 shrink-0 text-muted-foreground/80" />
         </div>
-        <div class="mt-2 text-2xl font-bold font-mono tracking-tight">{m.value}</div>
-        <div class="mt-1 flex items-center text-xs text-muted-foreground font-mono">
-          <span class="text-emerald-500 font-medium">{m.change}</span>
+        <div class="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground tabular-nums">
+          {m.value}
+        </div>
+        <div class="mt-1 flex items-center text-xs text-muted-foreground">
+          <span class="text-emerald-500 font-medium tabular-nums">{m.change}</span>
         </div>
       </div>
     {/each}
   </div>
 
   <!-- Realtime Invocations Table -->
-  <div class="rounded-lg border border-border bg-card overflow-hidden">
-    <div class="p-4 border-b border-border flex items-center justify-between">
+  <div class="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+    <div class="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
-        <h3 class="text-sm font-semibold tracking-tight">Recent MCP Wire Invocations</h3>
-        <p class="text-xs text-muted-foreground">Live request traces evaluated via stateless HTTP headers and zero-knowledge proxy.</p>
+        <h3 class="text-sm font-semibold tracking-tight">Recent Wire Invocations</h3>
+        <p class="text-xs text-muted-foreground">Request traces evaluated via stateless headers and credential proxy.</p>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-mono font-medium text-emerald-500">
+      <div class="flex items-center gap-2 self-start sm:self-auto">
+        <span class="inline-flex items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-500 tabular-nums">
           ALPN h2 / TLS 1.3
         </span>
       </div>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs font-mono">
-        <thead class="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
+    <div class="overflow-x-auto w-full">
+      <table class="w-full text-left text-xs min-w-[520px]">
+        <thead class="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
           <tr>
-            <th class="p-3">Timestamp</th>
+            <th class="p-3 whitespace-nowrap">Timestamp</th>
             <th class="p-3">Agent Identity</th>
             <th class="p-3">Tool Invocated</th>
-            <th class="p-3">Latency</th>
+            <th class="p-3 whitespace-nowrap">Latency</th>
             <th class="p-3">Status</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border">
           {#each recentCalls as call}
             <tr class="hover:bg-muted/30 transition-colors">
-              <td class="p-3 text-muted-foreground">{call.time}</td>
-              <td class="p-3 font-semibold text-foreground">{call.agent}</td>
-              <td class="p-3 text-primary">{call.tool}</td>
-              <td class="p-3 text-muted-foreground">{call.duration}</td>
-              <td class="p-3">
+              <td class="p-3 text-muted-foreground tabular-nums whitespace-nowrap">{call.time}</td>
+              <td class="p-3 font-semibold text-foreground break-all">{call.agent}</td>
+              <td class="p-3 text-primary font-medium break-all">{call.tool}</td>
+              <td class="p-3 text-muted-foreground tabular-nums whitespace-nowrap">{call.duration}</td>
+              <td class="p-3 whitespace-nowrap">
                 {#if call.status === 'SUCCESS'}
                   <span class="inline-flex items-center rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-500">
                     OK

@@ -40,56 +40,56 @@
 
 <div class="min-h-screen bg-background text-foreground flex flex-col font-sans">
   <!-- Top Global Navigation Bar -->
-  <header class="border-b border-border bg-card/60 backdrop-blur sticky top-0 z-50">
-    <div class="container mx-auto px-4 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="h-7 w-7 rounded bg-primary text-primary-foreground flex items-center justify-center font-mono font-bold text-xs tracking-tighter">
+  <header class="border-b border-border bg-card/70 backdrop-blur sticky top-0 z-50">
+    <div class="container mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="h-7 w-7 shrink-0 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs tracking-tight shadow-sm">
           AG
         </div>
-        <div>
-          <span class="font-bold text-sm tracking-tight">AEGIS GATEWAY</span>
-          <span class="ml-2 text-[10px] font-mono uppercase text-muted-foreground border border-border px-1.5 py-0.5 rounded">
+        <div class="flex items-center gap-2 truncate">
+          <span class="font-bold text-sm tracking-tight truncate">AEGIS GATEWAY</span>
+          <span class="hidden sm:inline-block text-[10px] font-medium tracking-wide uppercase text-muted-foreground border border-border px-1.5 py-0.5 rounded">
             CONTROL PLANE
           </span>
         </div>
       </div>
 
       <!-- Center Status Telemetry -->
-      <div class="hidden lg:flex items-center gap-3 text-[11px] font-mono text-muted-foreground">
+      <div class="hidden lg:flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
         <div class="flex items-center gap-1.5">
           <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-foreground font-medium">HEALTH: 100% OK</span>
+          <span class="text-foreground font-semibold">HEALTH: 100% OK</span>
         </div>
         <span class="text-border">|</span>
-        <span>LATENCY: 0.38ms (P99)</span>
+        <span class="tabular-nums">LATENCY: 0.38ms (P99)</span>
         <span class="text-border">|</span>
-        <span>SECURITY: ZERO-TRUST mTLS</span>
+        <span>ZERO-TRUST mTLS</span>
       </div>
 
       <!-- Right Theme Controls -->
-      <div class="flex items-center gap-2">
-        <div class="flex items-center rounded border border-border bg-muted/40 p-0.5 text-xs font-mono">
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div class="flex items-center rounded border border-border bg-muted/40 p-0.5 text-xs font-medium">
           <button
             onclick={() => setTheme('zinc')}
-            class="px-2 py-0.5 rounded text-[11px] font-medium transition-colors {currentTheme === 'zinc' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'zinc' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
           >
             Zinc
           </button>
           <button
             onclick={() => setTheme('slate')}
-            class="px-2 py-0.5 rounded text-[11px] font-medium transition-colors {currentTheme === 'slate' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'slate' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
           >
             Slate
           </button>
           <button
             onclick={() => setTheme('neutral')}
-            class="px-2 py-0.5 rounded text-[11px] font-medium transition-colors {currentTheme === 'neutral' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'neutral' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
           >
             Neutral
           </button>
           <button
             onclick={() => setTheme('oled')}
-            class="px-2 py-0.5 rounded text-[11px] font-medium transition-colors {currentTheme === 'oled' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'oled' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
           >
             OLED
           </button>
@@ -97,13 +97,13 @@
 
         <button
           onclick={toggleMode}
-          class="h-8 w-8 rounded border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          class="h-7 w-7 sm:h-8 sm:w-8 rounded border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
           title="Toggle Dark/Light Mode"
         >
           {#if isDark}
-            <Sun class="h-4 w-4" />
+            <Sun class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           {:else}
-            <Moon class="h-4 w-4" />
+            <Moon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           {/if}
         </button>
       </div>
@@ -112,40 +112,40 @@
 
   <!-- Secondary Tab Bar -->
   <nav class="border-b border-border bg-muted/20">
-    <div class="container mx-auto px-4 flex items-center gap-1 overflow-x-auto text-xs font-medium">
+    <div class="container mx-auto px-2 sm:px-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap text-xs font-medium scrollbar-none">
       <button
         onclick={() => (currentTab = 'overview')}
-        class="flex items-center gap-2 py-3 px-3.5 border-b-2 font-mono transition-colors {currentTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'overview' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
-        <Activity class="h-3.5 w-3.5" />
+        <Activity class="h-3.5 w-3.5 shrink-0" />
         Overview & Metrics
       </button>
       <button
         onclick={() => (currentTab = 'dlp')}
-        class="flex items-center gap-2 py-3 px-3.5 border-b-2 font-mono transition-colors {currentTab === 'dlp' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'dlp' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
-        <Shield class="h-3.5 w-3.5" />
+        <Shield class="h-3.5 w-3.5 shrink-0" />
         DLP Security Stream
       </button>
       <button
         onclick={() => (currentTab = 'hitl')}
-        class="flex items-center gap-2 py-3 px-3.5 border-b-2 font-mono transition-colors {currentTab === 'hitl' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'hitl' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
-        <Clock class="h-3.5 w-3.5" />
+        <Clock class="h-3.5 w-3.5 shrink-0" />
         Suspended HITL Tasks
       </button>
       <button
         onclick={() => (currentTab = 'finops')}
-        class="flex items-center gap-2 py-3 px-3.5 border-b-2 font-mono transition-colors {currentTab === 'finops' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'finops' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
-        <Layers class="h-3.5 w-3.5" />
+        <Layers class="h-3.5 w-3.5 shrink-0" />
         Tenant FinOps Quotas
       </button>
     </div>
   </nav>
 
   <!-- Main Content Viewport -->
-  <main class="container mx-auto px-4 py-6 flex-1">
+  <main class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex-1 w-full max-w-full">
     {#if currentTab === 'overview'}
       <OverviewTab />
     {:else if currentTab === 'dlp'}
@@ -158,16 +158,16 @@
   </main>
 
   <!-- Bottom Technical Footer -->
-  <footer class="border-t border-border bg-card/40 py-3 text-[11px] font-mono text-muted-foreground">
-    <div class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <Lock class="h-3 w-3 text-emerald-500" />
+  <footer class="border-t border-border bg-card/40 py-3 text-[11px] text-muted-foreground">
+    <div class="container mx-auto px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+      <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+        <Lock class="h-3 w-3 text-emerald-500 shrink-0" />
         <span>Pure-Rust #![deny(unsafe_code)]</span>
         <span class="text-border">|</span>
-        <span>Memory Consumption: 24.2 MB RSS</span>
+        <span class="tabular-nums">Memory: 24.2 MB RSS</span>
       </div>
       <div>
-        <span>Aegis Enterprise Control Plane v1.0.0 (Phase 33 Standard)</span>
+        <span>Aegis Enterprise Control Plane v1.0.0</span>
       </div>
     </div>
   </footer>

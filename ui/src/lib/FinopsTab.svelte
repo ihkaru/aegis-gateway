@@ -38,31 +38,31 @@
     <p class="text-xs text-muted-foreground">Real-time token metering with automatic hard freeze cutoff preventing runaway agent budget depletion.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 font-sans">
     {#each tenants as t}
-      <div class="rounded-lg border border-border bg-card p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold text-foreground truncate">{t.name}</span>
+      <div class="rounded-lg border border-border bg-card p-4 space-y-3 shadow-xs">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-foreground truncate">{t.name}</span>
           {#if t.status === 'HARD_FROZEN'}
-            <span class="rounded bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-500 flex items-center gap-1">
+            <span class="shrink-0 rounded bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-500 flex items-center gap-1">
               <Ban class="h-3 w-3" />
               FROZEN
             </span>
           {:else if t.status === 'SOFT_WARNING'}
-            <span class="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
+            <span class="shrink-0 rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
               WARNING
             </span>
           {:else}
-            <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500">
+            <span class="shrink-0 rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500">
               ACTIVE
             </span>
           {/if}
         </div>
 
-        <div class="space-y-1">
+        <div class="space-y-1.5">
           <div class="flex justify-between text-xs text-muted-foreground">
             <span>Budget Consumption</span>
-            <span class="font-bold text-foreground">{t.spentUsd} / {t.limitUsd}</span>
+            <span class="font-bold text-foreground tabular-nums">{t.spentUsd} / {t.limitUsd}</span>
           </div>
           <div class="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
@@ -73,8 +73,8 @@
         </div>
 
         <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
-          <span>Total Metered Tokens:</span>
-          <span class="font-semibold text-foreground">{t.tokensUsed}</span>
+          <span>Metered Tokens:</span>
+          <span class="font-semibold text-foreground tabular-nums">{t.tokensUsed}</span>
         </div>
       </div>
     {/each}

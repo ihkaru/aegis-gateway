@@ -24,8 +24,14 @@ audit_complaint() {
 
   echo "--> [$num/9] Enterprise Flaw: $name"
 
+  local search_contract="$target_file"
+  [ ! -e "$search_contract" ] && search_contract="src/core"
+
+  local search_prod="$prod_file"
+  [ ! -e "$search_prod" ] && search_prod="src"
+
   # Check foundational architectural contract
-  if grep -rq "$contract_pattern" "$target_file" 2>/dev/null; then
+  if grep -rq "$contract_pattern" "$search_contract" 2>/dev/null; then
     echo "  [CONTRACT RESOLVED] Found foundational contract: '$contract_pattern'"
     CONTRACTS_RESOLVED=$((CONTRACTS_RESOLVED + 1))
   else
@@ -33,7 +39,7 @@ audit_complaint() {
   fi
 
   # Check production-level milestone driver
-  if grep -rq "$prod_indicator" "$prod_file" 2>/dev/null; then
+  if grep -rq "$prod_indicator" "$search_prod" 2>/dev/null; then
     echo "  [PROD DRIVER READY] '$prod_indicator' implemented in $prod_file"
     PROD_DRIVERS_READY=$((PROD_DRIVERS_READY + 1))
   else

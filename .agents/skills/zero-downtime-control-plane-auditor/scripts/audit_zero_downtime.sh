@@ -64,7 +64,11 @@ done
 echo " [OK] All control plane and cluster files strictly <= 350 lines."
 
 echo "Check 5: Running Empirical Zero-Downtime Hot-Reload Regression Tests..."
-cargo test --test phase27_dynamic_control_plane_and_hot_reload_test --test phase28_cluster_sync_engine_test --quiet
+if command -v cargo-nextest >/dev/null 2>&1; then
+  CI=1 cargo nextest run --test phase27_dynamic_control_plane_and_hot_reload_test --test phase28_cluster_sync_engine_test
+else
+  cargo test --test phase27_dynamic_control_plane_and_hot_reload_test --test phase28_cluster_sync_engine_test --quiet
+fi
 
 echo "============================================================"
 echo " [PASSED] ZERO-DOWNTIME & DYNAMIC CONTROL PLANE AUDIT PASSED"

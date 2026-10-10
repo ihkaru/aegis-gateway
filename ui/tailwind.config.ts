@@ -44,8 +44,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Geist Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['Geist Mono', 'JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['"Google Sans Flex"', '"Google Sans"', 'Roboto', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        mono: ['"Google Sans Code"', '"Google Sans Flex"', 'monospace'],
       },
       borderRadius: {
         lg: 'var(--radius)',

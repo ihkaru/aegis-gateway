@@ -11,13 +11,14 @@ cd "$PROJECT_ROOT"
 FAILURES=0
 
 echo "--> 1. Verifying Maximum File Length (Limit: <= 350 lines per file)..."
-OVERSIZED=$(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | awk '$1 > 350 && $2 != "total" { print "  [FAIL] File " $2 " exceeds limit: " $1 " lines (Max: 350)!"; failed++ } END { exit (failed > 0 ? 1 : 0) }' || true)
+SCAN_DIRS="src tests scripts .agents ui/src docs"
+OVERSIZED=$(find $SCAN_DIRS -type d \( -name "node_modules" -o -name "dist" -o -name "target" -o -name ".git" \) -prune -o -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" -o -name "*.svelte" -o -name "*.ts" \) -exec wc -l {} + | awk '$1 > 350 && $2 != "total" { print "  [FAIL] File " $2 " exceeds limit: " $1 " lines (Max: 350)!"; failed++ } END { exit (failed > 0 ? 1 : 0) }' || true)
 
 if [ -n "$OVERSIZED" ]; then
   echo "$OVERSIZED"
   FAILURES=$((FAILURES + 1))
 else
-  MAX_FILE=$(find src tests scripts .agents -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" \) -exec wc -l {} + | grep -v " total$" | sort -n | tail -n 1)
+  MAX_FILE=$(find $SCAN_DIRS -type d \( -name "node_modules" -o -name "dist" -o -name "target" -o -name ".git" \) -prune -o -type f \( -name "*.rs" -o -name "*.sh" -o -name "*.md" -o -name "*.toml" -o -name "*.svelte" -o -name "*.ts" \) -exec wc -l {} + | grep -v " total$" | sort -n | tail -n 1)
   echo "  [PASS] All files within <= 350 lines limit (Largest: $MAX_FILE)"
 fi
 
