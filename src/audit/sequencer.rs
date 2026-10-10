@@ -142,3 +142,11 @@ impl AuditChainVerifier for HashChainSequencer {
         Ok(true)
     }
 }
+
+#[async_trait::async_trait]
+impl crate::core::audit::AuditSink for HashChainSequencer {
+    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+        self.record(event.clone()).await;
+        Ok(())
+    }
+}

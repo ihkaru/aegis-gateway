@@ -55,3 +55,14 @@ This reference guide categorizes common functional gaps, edge-case failures, and
 | `DISC-01` | **Schema Token Bloat** | Registering 100+ tools consumes 30k+ prompt tokens per invocation. | Progressive Disclosure (L0 Purpose, L1 Signature, L2 Full Schema). |
 | `DISC-02` | **Server Name Blindness** | User asking for "postgres tool" gets empty match if tool description omits server (Issue #2317). | Multi-attribute search indexing server names, descriptions, and tags. |
 | `DISC-03` | **Autonomous Plan Cycles** | Multi-tool autonomous agents get trapped in circular DAG execution chains. | `ExecutionPlanner` DFS cycle detection and preflight ABAC validation. |
+
+---
+
+## 6. Code Execution, Credential Brokerage & Egress Firewall (SANDBOX_SEC)
+
+| Code | Subcategory | Real-World Failure Mode | Enterprise Remediation Standard |
+| :--- | :--- | :--- | :--- |
+| `SANDBOX-01` | **Unconstrained RCE** | Arbitrary bash/python execution on host machine leads to root compromise, persistent malware, and resource hijacking. | Hermetic execution sandbox with ephemeral tempfs, `env_clear()`, cap-drop, hard timeouts, and buffer truncation. |
+| `SANDBOX-02` | **SSRF & Data Exfiltration** | Python scripts connect to cloud metadata (`169.254.169.254`), private VPCs (`10.0.0.0/8`), or exfiltrate secrets to evil servers. | Preflight code & network inspection with default-deny egress firewall and strict destination domain whitelisting. |
+| `SANDBOX-03` | **Credential Leakage & Scope Creep** | Long-lived refresh tokens or master secrets exposed in prompt context or printed via `print(os.environ)`. | Zero-knowledge agent model with short-lived scoped RAM injection and automatic bidirectional output secret redaction. |
+| `SANDBOX-04` | **Non-Repudiation Deficit** | Dynamic code runs with zero immutable audit trail, failing SOC 2 Type II, ISO 27001, and PCI-DSS compliance audits. | Pre-execution SHA-256 script hashing, caller attestation, and cryptographic ledger recording in Aegis AuditSink. |

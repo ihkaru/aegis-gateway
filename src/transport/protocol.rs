@@ -12,9 +12,10 @@ use crate::core::transport::{
     INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
 };
 use crate::core::types::{
-    CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition,
+    CallerContext, TenantId, ToolCallRequest, ToolDefinition,
 };
 use crate::discovery::ExecutionPlanner;
+use crate::transport::meta_handlers::MetaToolDispatcher;
 use crate::AegisGateway;
 
 /// Core MCP wire protocol engine handling standard JSON-RPC 2.0 lifecycle
@@ -94,7 +95,36 @@ impl McpProtocolHandler {
             })
             .collect();
 
-        // Advertise first-class built-in meta-tools
+        // Advertise first-class built-in meta-tools and sandbox
+        tool_list.push(json!({
+            "name": "execute_code",
+            "description": "Execute context-agnostic Python/Bash/Node code in hermetic sandbox with zero-knowledge credential broker and egress firewall",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "code": { "type": "string", "description": "The script source code to execute" },
+                    "language": { "type": "string", "description": "Execution language: python (default), bash, javascript" },
+                    "services": { "type": "array", "items": { "type": "string" }, "description": "Services requiring brokered credentials (e.g. ['google', 'github', 'aws'])" },
+                    "timeout_secs": { "type": "integer", "description": "Maximum execution time in seconds (default 30)" },
+                    "env_vars": { "type": "object", "description": "Optional environment variables" }
+                },
+                "required": ["code"]
+            }
+        }));
+        tool_list.push(json!({
+            "name": "gateway_execute_code",
+            "description": "Execute context-agnostic code in hermetic sandbox (alias for execute_code)",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "code": { "type": "string" },
+                    "language": { "type": "string" },
+                    "services": { "type": "array", "items": { "type": "string" } },
+                    "timeout_secs": { "type": "integer" }
+                },
+                "required": ["code"]
+            }
+        }));
         tool_list.push(json!({
             "name": "gateway_search_tools",
             "description": "Progressive tool discovery across active MCP backend servers",
@@ -145,15 +175,25 @@ impl McpProtocolHandler {
             .cloned()
             .unwrap_or_else(|| json!({}));
 
-        // Handle meta-tools directly
+        // Handle meta-tools and sandbox directly
+        if tool_name == "execute_code" || tool_name == "gateway_execute_code" {
+            return MetaToolDispatcher::handle_execute_code(id, &self.gateway, Some(arguments)).await;
+        }
         if tool_name == "gateway_search_tools" {
-            return self.handle_meta_search(id, Some(arguments)).await;
+            return MetaToolDispatcher::handle_search(id, self.tools.clone(), Some(arguments)).await;
         }
         if tool_name == "gateway_plan_tasks" {
-            return self.handle_meta_plan(id, Some(arguments)).await;
+            return MetaToolDispatcher::handle_plan(
+                id,
+                self.tools.clone(),
+                &self.gateway,
+                &self.planner,
+                Some(arguments),
+            )
+            .await;
         }
         if tool_name == "gateway_list_servers" {
-            return self.handle_meta_list_servers(id).await;
+            return MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await;
         }
         if tool_name == "gateway_register_tools" {
             return self.handle_meta_register(id, Some(arguments)).await;
@@ -227,62 +267,6 @@ impl McpProtocolHandler {
         }
     }
 
-    async fn handle_meta_search(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
-        let query = params
-            .as_ref()
-            .and_then(|p| p.get("query").or_else(|| p.get("arguments").and_then(|a| a.get("query"))))
-            .and_then(|q| q.as_str())
-            .unwrap_or("");
-
-        let read = self.tools.read().await;
-        let mut engine = crate::discovery::HybridSearchEngine::new();
-        engine.index_tools("default", read.clone());
-        let res = engine.search(query, DisclosureTier::L0, 20);
-        JsonRpcResponse::success(
-            id,
-            json!({
-                "tools": res.tools,
-                "total_matches": res.total_candidates,
-                "lexical_hits": res.lexical_hits,
-                "semantic_hits": res.semantic_hits,
-            }),
-        )
-    }
-
-    async fn handle_meta_plan(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
-        let plan_val = match params {
-            Some(p) => p,
-            None => {
-                return JsonRpcResponse::error(
-                    id,
-                    JsonRpcError::new(INVALID_PARAMS, "Missing plan definition or goal in arguments"),
-                );
-            }
-        };
-
-        let read = self.tools.read().await;
-        let caller = Self::default_caller();
-        match crate::discovery::GoalPlanner::process_planning_request(
-            &plan_val,
-            &read,
-            &self.planner,
-            self.gateway.policy(),
-            &caller,
-        ).await {
-            Ok(result) => JsonRpcResponse::success(id, result),
-            Err(e) => JsonRpcResponse::error(id, JsonRpcError::new(INVALID_PARAMS, e.to_string())),
-        }
-    }
-
-    async fn handle_meta_list_servers(&self, id: JsonRpcId) -> JsonRpcResponse {
-        let servers = if let Some(ref reg) = self.registry {
-            reg.list_backends().await.unwrap_or_default()
-        } else {
-            vec!["default".to_string()]
-        };
-        JsonRpcResponse::success(id, json!({ "servers": servers }))
-    }
-
     async fn handle_meta_register(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
         let tools_val = params.and_then(|p| p.get("tools").cloned()).unwrap_or(Value::Array(Vec::new()));
         let new_tools: Vec<ToolDefinition> = serde_json::from_value(tools_val).unwrap_or_default();
@@ -322,9 +306,25 @@ impl WireProtocolHandler for McpProtocolHandler {
             "tools/call" => self.handle_tools_call(id, req.params).await,
             "resources/list" => JsonRpcResponse::success(id, json!({ "resources": [] })),
             "prompts/list" => JsonRpcResponse::success(id, json!({ "prompts": [] })),
-            "gateway_search_tools" => self.handle_meta_search(id, req.params).await,
-            "gateway_plan_tasks" => self.handle_meta_plan(id, req.params).await,
-            "gateway_list_servers" => self.handle_meta_list_servers(id).await,
+            "execute_code" | "gateway_execute_code" => {
+                MetaToolDispatcher::handle_execute_code(id, &self.gateway, req.params).await
+            }
+            "gateway_search_tools" => {
+                MetaToolDispatcher::handle_search(id, self.tools.clone(), req.params).await
+            }
+            "gateway_plan_tasks" => {
+                MetaToolDispatcher::handle_plan(
+                    id,
+                    self.tools.clone(),
+                    &self.gateway,
+                    &self.planner,
+                    req.params,
+                )
+                .await
+            }
+            "gateway_list_servers" => {
+                MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await
+            }
             "gateway_register_tools" => self.handle_meta_register(id, req.params).await,
             other => JsonRpcResponse::error(
                 id,

@@ -14,10 +14,10 @@ pub mod daemon;
 pub mod discovery;
 pub mod dlp;
 pub mod policy;
+pub mod sandbox;
 pub mod skills;
 pub mod state;
 pub mod transport;
-
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -26,6 +26,7 @@ use crate::core::audit::{AuditAction, AuditEvent, AuditSink};
 use crate::core::dlp::DlpPipeline;
 use crate::core::error::{AegisError, AegisResult};
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
+use crate::core::sandbox::CodeSandboxEngine;
 use crate::core::skills::SkillRegistry;
 use crate::core::state::DistributedState;
 use crate::core::types::{
@@ -39,6 +40,7 @@ pub struct AegisGateway {
     dlp: Arc<dyn DlpPipeline>,
     audit: Arc<dyn AuditSink>,
     skills: Arc<dyn SkillRegistry>,
+    sandbox: Arc<dyn CodeSandboxEngine>,
     drain: Arc<state::DrainCoordinator>,
 }
 
@@ -50,14 +52,32 @@ impl AegisGateway {
         audit: Arc<dyn AuditSink>,
         skills: Arc<dyn SkillRegistry>,
     ) -> Self {
+        let egress = Arc::new(sandbox::EgressFilterEngine::new());
+        let secret_store = Arc::new(policy::secrets::EnvSecretStore::new());
+        let broker = Arc::new(sandbox::VaultCredentialBroker::new(secret_store));
+        let default_sandbox = Arc::new(sandbox::HermeticProcessSandbox::new(
+            egress,
+            broker,
+            audit.clone(),
+        ));
         Self {
             state,
             policy,
             dlp,
             audit,
             skills,
+            sandbox: default_sandbox,
             drain: Arc::new(state::DrainCoordinator::new()),
         }
+    }
+
+    pub fn with_sandbox(mut self, sandbox: Arc<dyn CodeSandboxEngine>) -> Self {
+        self.sandbox = sandbox;
+        self
+    }
+
+    pub fn sandbox(&self) -> &dyn CodeSandboxEngine {
+        self.sandbox.as_ref()
     }
 
     pub fn with_drain(mut self, drain: Arc<state::DrainCoordinator>) -> Self {

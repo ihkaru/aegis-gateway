@@ -96,23 +96,47 @@ audit_complaint 9 "Skill Dispersal & Static Prompt Stuffing" \
   "pub struct GitOpsSkillSync" "src/skills" \
   "Phase 6 (GitOps Remote Skill Sync & Vector RAG)"
 
+# 10. Unconstrained Remote Code Execution (RCE by Design)
+audit_complaint 10 "Unconstrained Remote Code Execution (RCE)" \
+  "pub trait CodeSandboxEngine" "src/core/sandbox.rs" \
+  "pub struct HermeticProcessSandbox" "src/sandbox" \
+  "Phase 16 (Hermetic Process Isolation Sandbox)"
+
+# 11. SSRF & Network Data Exfiltration
+audit_complaint 11 "SSRF & Network Data Exfiltration" \
+  "pub trait EgressFirewall" "src/core/sandbox.rs" \
+  "pub struct EgressFilterEngine" "src/sandbox" \
+  "Phase 16 (Default-Deny Egress Firewall)"
+
+# 12. Credential Leakage & Token Scope Creep
+audit_complaint 12 "Credential Leakage & Token Scope Creep" \
+  "pub trait CredentialBroker" "src/core/sandbox.rs" \
+  "pub struct VaultCredentialBroker" "src/sandbox" \
+  "Phase 16 (Zero-Knowledge Credential Broker)"
+
+# 13. Non-Repudiation Deficit & Cryptographic Attestation
+audit_complaint 13 "Non-Repudiation Deficit & SOC 2 Attestation" \
+  "pub trait CodeSandboxEngine" "src/core/sandbox.rs" \
+  "attestation" "src/sandbox/hermetic_driver.rs" \
+  "Phase 16 (Cryptographic Code Hash & Execution Attestation)"
+
 echo ""
 echo "============================================================"
 echo "          ENTERPRISE GAP AUDIT SCORECARD SUMMARY            "
 echo "============================================================"
-echo "  Foundational Architectural Contracts : $CONTRACTS_RESOLVED / 9 Resolved"
-echo "  Production-Ready Drivers Implemented : $PROD_DRIVERS_READY / 9 Ready"
-echo "  Roadmap Milestone Drivers Pending    : $ROADMAP_PENDING / 9 In Progress"
+echo "  Foundational Architectural Contracts : $CONTRACTS_RESOLVED / 13 Resolved"
+echo "  Production-Ready Drivers Implemented : $PROD_DRIVERS_READY / 13 Ready"
+echo "  Roadmap Milestone Drivers Pending    : $ROADMAP_PENDING / 13 In Progress"
 echo "============================================================"
 
 if [ "$STRICT_MODE" -eq 1 ] && [ "$ROADMAP_PENDING" -gt 0 ]; then
-  echo ">>> [STRICT MODE: FAILED] $ROADMAP_PENDING production drivers remain to be built across Phase 1-6."
+  echo ">>> [STRICT MODE: FAILED] $ROADMAP_PENDING production drivers remain to be built across Phase 1-16."
   exit 1
-elif [ "$CONTRACTS_RESOLVED" -lt 9 ]; then
+elif [ "$CONTRACTS_RESOLVED" -lt 13 ]; then
   echo ">>> [ARCHITECTURAL FAILURE] Foundational contracts missing!"
   exit 1
 else
-  echo ">>> [BASELINE ARCHITECTURE PASS] All 9 legacy flaws are architecturally insulated via SOLID traits."
+  echo ">>> [BASELINE ARCHITECTURE PASS] All 13 legacy flaws are architecturally insulated via SOLID traits."
   echo "    Early-stage development status: Pending drivers will be phased in according to docs/roadmap/."
   exit 0
 fi

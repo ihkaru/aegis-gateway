@@ -25,10 +25,11 @@ RUN cargo build --release --bin aegis-gateway
 # Stage 3: Minimal, Secure Runtime Image
 FROM debian:bookworm-slim AS runtime
 
-# Install CA certificates and curl for container healthchecks
+# Install CA certificates, curl, and python3 for code sandbox execution
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root unprivileged user

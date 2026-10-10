@@ -65,6 +65,7 @@ Classify identified issues using [`references/GAP_TAXONOMY.md`](references/GAP_T
 - `SEC`: Security & Governance (payload ABAC, refusal audit logging, DLP).
 - `OPS`: Operational HA & Resilience (circuit breakers, timeouts, drain).
 - `DISC`: Discovery & Planning (progressive disclosure, DAG cycle checks).
+- `SANDBOX_SEC`: Hermetic Sandboxing, Zero-Knowledge Credential Brokerage & Egress Firewall (RCE isolation, SSRF prevention, output secret scrubbing, cryptographic audit attestation).
 
 Group 2 to 4 related gaps into a coherent theme for the next implementation phase.
 

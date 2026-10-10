@@ -182,6 +182,8 @@ cargo test --test phase11_search_planning_and_real_routing_test # Tier 9: Search
 cargo test --test phase12_egress_guardrails_refusal_integrity_and_outcome_attestation_test # Tier 10: Egress, Refusal & Attestation
 cargo test --test phase13_stream_buffer_reuse_oauth_resource_metadata_and_process_reaper_test # Tier 11: Stream Reuse, OAuth & Reaping
 cargo test --test phase14_session_teardown_fence_configurable_oauth_callback_host_typed_ssrf_refusal_and_large_catalog_deep_indexing_test # Tier 12: Session Fence, OAuth Host & Deep Indexing
+cargo test --test phase15_runtime_dag_expression_interpolation_pipeline_and_hybrid_semantic_rrf_tool_retrieval_engine_test # Tier 13: DAG Interpolation & Hybrid RRF Search
+cargo test --test phase16_universal_code_sandbox_credential_broker_and_egress_firewall_test # Tier 14: Hermetic Code Sandbox, Credential Broker & Egress Firewall
 ```
 
 ---
@@ -206,6 +208,8 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 12**| Egress, Refusal & Attestation | SSRF Guardrails, Refusal Audit Integrity & Outcome Attestation | `Completed` |
 | **Phase 13**| Stream, OAuth & Reaper | Reusable Stream Buffer, OAuth Resource Metadata & Process Reaping | `Completed` |
 | **Phase 14**| Session Fence, OAuth Host & Deep Indexing | In-Flight Session Teardown Guard, Configurable OAuth Host, Typed SSRF & Large Catalog Deep Indexing | `Completed` |
+| **Phase 15**| DAG Interpolation & Hybrid RRF | Runtime DAG Expression Interpolation Pipeline & Hybrid Semantic RRF Tool Retrieval Engine | `Completed` |
+| **Phase 16**| Universal Code Sandbox & Credential Broker | Hermetic Context-Agnostic Execution Sandbox, Zero-Knowledge Vault Credential Broker & Default-Deny Egress Firewall | `Completed` |
 
 ---
 

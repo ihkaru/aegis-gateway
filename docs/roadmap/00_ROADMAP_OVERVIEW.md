@@ -24,30 +24,11 @@ flowchart LR
     P8 --> P9["Phase 9:<br/>CLI Daemon & Parity"]
     P9 --> P10["Phase 10:<br/>Graduated E2E"]
 ```
-| **Phase 12**| **Egress Guardrails Refusal Integrity and Outcome Attestation** | Operational gap resolution | `In Progress` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
-| **Phase 13**| **Stream Buffer Reuse OAuth Resource Metadata and Process Reaper** | Operational gap resolution | `In Progress` | [`13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md`](./13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md) |
-| **Phase 14**| **Session Teardown Fence, Configurable OAuth Callback Host, Typed SSRF Refusal and Large Catalog Deep Indexing** | Operational gap resolution | `In Progress` | [`14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md`](./14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md) |
-| **Phase 15**| **Runtime DAG Expression Interpolation Pipeline and Hybrid Semantic RRF Tool Retrieval Engine** | Operational gap resolution | `In Progress` | [`15_PHASE_15_RUNTIME_DAG_EXPRESSION_INTERPOLATION_PIPELINE_AND_HYBRID_SEMANTIC_RRF_TOOL_RETRIEVAL_ENGINE.md`](./15_PHASE_15_RUNTIME_DAG_EXPRESSION_INTERPOLATION_PIPELINE_AND_HYBRID_SEMANTIC_RRF_TOOL_RETRIEVAL_ENGINE.md) |
-
----
-
-## Phase Ledger & Milestone Status
-
-| Phase | Title | Focus Area | Status | Spec Document |
-| :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | **Distributed Foundation** | Redis/Postgres state backend, distributed locks, clustering HA | `Completed` | [`01_PHASE_1_DISTRIBUTED_FOUNDATION.md`](./01_PHASE_1_DISTRIBUTED_FOUNDATION.md) |
-| **Phase 2** | **Zero-Trust IAM & ABAC** | OIDC/SAML, Okta/Entra ID federation, OPA/Cedar payload ABAC | `Completed` | [`02_PHASE_2_ZERO_TRUST_IAM_ABAC.md`](./02_PHASE_2_ZERO_TRUST_IAM_ABAC.md) |
-| **Phase 3** | **Real-Time DLP & Guardrails**| PII/PCI masking, Presidio pipeline, Prompt injection defense | `Completed` | [`03_PHASE_3_REALTIME_DLP_GUARDRAILS.md`](./03_PHASE_3_REALTIME_DLP_GUARDRAILS.md) |
-| **Phase 4** | **Tamper-Evident SIEM Audit** | SHA-256 cryptographic chain, Splunk/Datadog OTel export | `Completed` | [`04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md`](./04_PHASE_4_IMMUTABLE_AUDIT_SIEM.md) |
-| **Phase 5** | **FinOps & Multi-Tenancy** | Hard budget freezes, departmental chargeback, token tracking | `Completed` | [`05_PHASE_5_FINOPS_MULTI_TENANCY.md`](./05_PHASE_5_FINOPS_MULTI_TENANCY.md) |
-| **Phase 6** | **Centralized Skill OS** | Dynamic `SKILL.md` registry, GitOps sync, Semantic Skill RAG | `Completed` | [`06_PHASE_6_CENTRALIZED_SKILL_OS.md`](./06_PHASE_6_CENTRALIZED_SKILL_OS.md) |
-| **Phase 7** | **MCP Wire Transports** | JSON-RPC 2.0 framing, Stdio (`--stdio`), and Streamable HTTP/SSE | `Completed` | [`07_PHASE_7_MCP_WIRE_TRANSPORTS.md`](./07_PHASE_7_MCP_WIRE_TRANSPORTS.md) |
-| **Phase 8** | **Backend Multiplexing** | Subprocess supervisor, remote HTTP proxying, declarative config | `Completed` | [`08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md`](./08_PHASE_8_BACKEND_MULTIPLEXING_CONFIG.md) |
-| **Phase 9** | **Production CLI Daemon** | Standalone CLI (`serve`, `add`, `list`, `doctor`), Legacy Parity | `Completed` | [`09_PHASE_9_PRODUCTION_CLI_DAEMON.md`](./09_PHASE_9_PRODUCTION_CLI_DAEMON.md) |
-| **Phase 10**| **Graduated E2E Testing** | 6-Tier Persona Validation: Hobbyist Quickstart to SRE Chaos | `Completed` | [`10_GRADUATED_E2E_TESTING_FRAMEWORK.md`](./10_GRADUATED_E2E_TESTING_FRAMEWORK.md) |
-| **Phase 11**| **Search, Planning & Zero-Mock** | Progressive Discovery, Task Planning & Zero-Mock Wire Routing | `Completed` | [`11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md`](./11_PHASE_11_SEARCH_PLANNING_ZERO_MOCKS.md) |
 | **Phase 12**| **Egress, Refusal & Attestation** | SSRF Guardrails, Refusal Audit Integrity & Tool Outcome Attestation | `Completed` | [`12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md`](./12_PHASE_12_EGRESS_GUARDRAILS_REFUSAL_INTEGRITY_AND_OUTCOME_ATTESTATION.md) |
 | **Phase 13**| **Stream Buffers, OAuth & Reaping** | Reusable Stream Buffers, OAuth Resource Metadata & Process Reaping | `Completed` | [`13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md`](./13_PHASE_13_STREAM_BUFFER_REUSE_OAUTH_RESOURCE_METADATA_AND_PROCESS_REAPER.md) |
+| **Phase 14**| **Session Fence, Host SSRF & Indexing** | Session Teardown Fence, Configurable OAuth Callback Host, Typed SSRF Refusal & Deep Indexing | `Completed` | [`14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md`](./14_PHASE_14_SESSION_TEARDOWN_FENCE_CONFIGURABLE_OAUTH_CALLBACK_HOST_TYPED_SSRF_REFUSAL_AND_LARGE_CATALOG_DEEP_INDEXING.md) |
+| **Phase 15**| **DAG Interpolation & Hybrid RRF** | Runtime DAG Expression Interpolation Pipeline & Hybrid Semantic RRF Tool Retrieval Engine | `Completed` | [`15_PHASE_15_RUNTIME_DAG_EXPRESSION_INTERPOLATION_PIPELINE_AND_HYBRID_SEMANTIC_RRF_TOOL_RETRIEVAL_ENGINE.md`](./15_PHASE_15_RUNTIME_DAG_EXPRESSION_INTERPOLATION_PIPELINE_AND_HYBRID_SEMANTIC_RRF_TOOL_RETRIEVAL_ENGINE.md) |
+| **Phase 16**| **Code Sandbox, Credential Broker & Egress Firewall** | Universal Context-Agnostic Hermetic Sandbox, Zero-Knowledge Credential Brokerage & Egress Firewall | `Completed` | [`16_PHASE_16_UNIVERSAL_CODE_SANDBOX_CREDENTIAL_BROKER_AND_EGRESS_FIREWALL.md`](./16_PHASE_16_UNIVERSAL_CODE_SANDBOX_CREDENTIAL_BROKER_AND_EGRESS_FIREWALL.md) |
 
 ---
 

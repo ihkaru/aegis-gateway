@@ -3,6 +3,7 @@
 pub mod buffer;
 pub mod command_split;
 pub mod http;
+pub mod meta_handlers;
 pub mod protocol;
 pub mod server;
 pub mod signer;

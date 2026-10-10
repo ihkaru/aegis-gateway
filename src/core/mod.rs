@@ -7,6 +7,7 @@ pub mod error;
 pub mod health;
 pub mod identity;
 pub mod policy;
+pub mod sandbox;
 pub mod secrets;
 pub mod session;
 pub mod skills;
@@ -22,6 +23,10 @@ pub use health::{HealthProbe, HealthReport, ProbeState};
 pub use identity::TokenValidator;
 
 pub use policy::{PolicyContext, PolicyDecision, PolicyEngine};
+pub use sandbox::{
+    CodeSandboxEngine, CredentialBroker, EgressFirewall, ExecutionLanguage,
+    SandboxExecutionRequest, SandboxExecutionResult,
+};
 pub use secrets::SecretStore;
 pub use session::{SessionFence, SessionLifecycleStatus, SessionRevocationRegistry};
 pub use skills::{
