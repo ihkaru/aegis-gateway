@@ -5,6 +5,7 @@ pub mod command_split;
 pub mod execution_pipeline;
 pub mod http;
 pub mod meta_handlers;
+pub mod meta_schemas;
 pub mod protocol;
 pub mod server;
 pub mod signer;

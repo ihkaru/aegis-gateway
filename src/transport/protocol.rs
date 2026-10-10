@@ -96,55 +96,7 @@ impl McpProtocolHandler {
             .collect();
 
         // Advertise first-class built-in meta-tools and sandbox
-        tool_list.push(json!({
-            "name": "execute_code",
-            "description": "Execute context-agnostic Python/Bash/Node code in hermetic sandbox with zero-knowledge credential broker and egress firewall",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "code": { "type": "string", "description": "The script source code to execute" },
-                    "language": { "type": "string", "description": "Execution language: python (default), bash, javascript" },
-                    "services": { "type": "array", "items": { "type": "string" }, "description": "Services requiring brokered credentials (e.g. ['google', 'github', 'aws'])" },
-                    "timeout_secs": { "type": "integer", "description": "Maximum execution time in seconds (default 30)" },
-                    "env_vars": { "type": "object", "description": "Optional environment variables" }
-                },
-                "required": ["code"]
-            }
-        }));
-        tool_list.push(json!({
-            "name": "gateway_execute_code",
-            "description": "Execute context-agnostic code in hermetic sandbox (alias for execute_code)",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "code": { "type": "string" },
-                    "language": { "type": "string" },
-                    "services": { "type": "array", "items": { "type": "string" } },
-                    "timeout_secs": { "type": "integer" }
-                },
-                "required": ["code"]
-            }
-        }));
-        tool_list.push(json!({
-            "name": "gateway_search_tools",
-            "description": "Progressive tool discovery across active MCP backend servers",
-            "inputSchema": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
-        }));
-        tool_list.push(json!({
-            "name": "gateway_plan_tasks",
-            "description": "Formulate and preflight multi-step execution plans across tools against zero-trust policy",
-            "inputSchema": { "type": "object", "properties": { "plan_id": { "type": "string" }, "steps": { "type": "array" } }, "required": ["steps"] }
-        }));
-        tool_list.push(json!({
-            "name": "gateway_list_servers",
-            "description": "List connected upstream backend MCP servers and operational status",
-            "inputSchema": { "type": "object", "properties": {} }
-        }));
-        tool_list.push(json!({
-            "name": "gateway_register_tools",
-            "description": "Dynamically register or update tool definitions into gateway catalog",
-            "inputSchema": { "type": "object", "properties": { "tools": { "type": "array" } }, "required": ["tools"] }
-        }));
+        tool_list.extend(crate::transport::meta_schemas::get_built_in_meta_tools());
 
         JsonRpcResponse::success(id, json!({ "tools": tool_list }))
     }
@@ -178,6 +130,15 @@ impl McpProtocolHandler {
         // Handle meta-tools and sandbox directly
         if tool_name == "execute_code" || tool_name == "gateway_execute_code" {
             return MetaToolDispatcher::handle_execute_code(id, &self.gateway, Some(arguments)).await;
+        }
+        if tool_name == "evaluate_data_egress" || tool_name == "gateway_evaluate_data_egress" {
+            return MetaToolDispatcher::handle_evaluate_data_egress(id, &self.gateway, Some(arguments)).await;
+        }
+        if tool_name == "execute_in_situ_query" || tool_name == "gateway_execute_in_situ_query" {
+            return MetaToolDispatcher::handle_execute_in_situ_query(id, &self.gateway, Some(arguments)).await;
+        }
+        if tool_name == "resolve_approval" || tool_name == "gateway_resolve_approval" {
+            return MetaToolDispatcher::handle_resolve_approval(id, &self.gateway, Some(arguments)).await;
         }
         if tool_name == "gateway_search_tools" {
             return MetaToolDispatcher::handle_search(id, self.tools.clone(), Some(arguments)).await;
@@ -308,6 +269,15 @@ impl WireProtocolHandler for McpProtocolHandler {
             "prompts/list" => JsonRpcResponse::success(id, json!({ "prompts": [] })),
             "execute_code" | "gateway_execute_code" => {
                 MetaToolDispatcher::handle_execute_code(id, &self.gateway, req.params).await
+            }
+            "evaluate_data_egress" | "gateway_evaluate_data_egress" => {
+                MetaToolDispatcher::handle_evaluate_data_egress(id, &self.gateway, req.params).await
+            }
+            "execute_in_situ_query" | "gateway_execute_in_situ_query" => {
+                MetaToolDispatcher::handle_execute_in_situ_query(id, &self.gateway, req.params).await
+            }
+            "resolve_approval" | "gateway_resolve_approval" => {
+                MetaToolDispatcher::handle_resolve_approval(id, &self.gateway, req.params).await
             }
             "gateway_search_tools" => {
                 MetaToolDispatcher::handle_search(id, self.tools.clone(), req.params).await

@@ -82,16 +82,42 @@ impl AegisGateway {
         let approval = Arc::new(policy::ActionApprovalGate::new("aegis_default_approval_secret"));
         let delegation = Arc::new(policy::UserIdentityDelegationBroker::new());
         let oauth_connect = Arc::new(policy::VendorAgnosticOAuthRouter::new(delegation.clone()));
+        let tier = std::env::var("AEGIS_POLICY_TIER")
+            .ok()
+            .and_then(|s| s.parse::<PolicyTier>().ok())
+            .unwrap_or(PolicyTier::Hybrid);
+        let max_egress = std::env::var("AEGIS_MAX_EGRESS_BYTES")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .unwrap_or(10 * 1024 * 1024);
+
         let data_egress = Arc::new(policy::TieredDataEgressEngine::new(
-            PolicyTier::Hybrid,
-            10 * 1024 * 1024,
+            tier,
+            max_egress,
             Some(approval.clone()),
         ));
         let in_situ = Arc::new(sandbox::SandboxedInSituEnclave::new(default_sandbox.clone()));
-        let approval_dispatcher = Arc::new(policy::MultiChannelApprovalDispatcher::new(vec![
+
+        let mut channels = vec![
             ApprovalChannelTarget::ConsoleLog,
             ApprovalChannelTarget::InBandMcp,
-        ]));
+        ];
+        if let Ok(url) = std::env::var("AEGIS_SLACK_WEBHOOK_URL") {
+            channels.push(ApprovalChannelTarget::SlackWebhook {
+                webhook_url: url,
+                channel: std::env::var("AEGIS_SLACK_CHANNEL").ok(),
+            });
+        }
+        if let Ok(url) = std::env::var("AEGIS_TEAMS_WEBHOOK_URL") {
+            channels.push(ApprovalChannelTarget::TeamsWebhook { webhook_url: url });
+        }
+        if let Ok(url) = std::env::var("AEGIS_GENERIC_WEBHOOK_URL") {
+            channels.push(ApprovalChannelTarget::GenericWebhook {
+                url,
+                secret_token: std::env::var("AEGIS_GENERIC_WEBHOOK_SECRET").ok(),
+            });
+        }
+        let approval_dispatcher = Arc::new(policy::MultiChannelApprovalDispatcher::new(channels));
         let resume_router = Arc::new(policy::DurableTaskResumeRouter::new(approval.clone(), audit.clone()));
 
         Self {
