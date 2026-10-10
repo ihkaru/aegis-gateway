@@ -9,6 +9,7 @@ pub mod dlp;
 pub mod error;
 pub mod health;
 pub mod identity;
+pub mod k8s;
 pub mod notification;
 pub mod oauth_connect;
 pub mod policy;
@@ -19,7 +20,9 @@ pub mod session;
 pub mod skills;
 pub mod state;
 pub mod transport;
+pub mod trust;
 pub mod types;
+pub mod vault;
 
 pub use approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
 pub use data_governance::{
@@ -63,5 +66,17 @@ pub use transport::{
 pub use types::{
     CallerContext, DisclosureTier, ProjectedTool, ProgressiveDisclosure, TenantId, TokenSavings,
     ToolCallRequest, ToolCallResponse, ToolDefinition,
+};
+pub use vault::{
+    BinaryBlobMetadata, BinaryStreamingVault, ChunkAck, EphemeralEgressTicket,
+    MimeInspectionResult, StoredBlobDescriptor, UploadSession,
+};
+pub use k8s::{
+    AdmissionDecision, AegisBackendCrd, AegisCrdReconciler, AegisPolicyCrd, AegisTenantCrd,
+    ReconcileOutcome,
+};
+pub use trust::{
+    AgentCertEnvelope, AgentTrustLevel, AgentTrustVerifier, AgentVerificationOutcome,
+    CorsEvaluationResult, CorsPolicyEnforcer, ThreatEvidenceEnricher, ThreatEvidenceReport,
 };
 

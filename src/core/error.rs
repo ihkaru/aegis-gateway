@@ -79,6 +79,18 @@ pub enum AegisError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
+    #[error("Validation error: {0}")]
+    Validation(String),
+
+    #[error("Resource not found: {0}")]
+    ResourceNotFound(String),
+
+    #[error("Invalid state: {0}")]
+    InvalidState(String),
+
+    #[error("Security refusal: {0}")]
+    SecurityRefusal(String),
+
     #[error("Internal gateway error: {0}")]
     Internal(String),
 }

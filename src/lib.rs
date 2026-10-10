@@ -13,11 +13,14 @@ pub mod core;
 pub mod daemon;
 pub mod discovery;
 pub mod dlp;
+pub mod k8s;
 pub mod policy;
 pub mod sandbox;
 pub mod skills;
 pub mod state;
 pub mod transport;
+pub mod trust;
+pub mod vault;
 
 use std::sync::Arc;
 

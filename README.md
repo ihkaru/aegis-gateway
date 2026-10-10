@@ -207,6 +207,9 @@ cargo test --test phase15_runtime_dag_expression_interpolation_pipeline_and_hybr
 cargo test --test phase16_universal_code_sandbox_credential_broker_and_egress_firewall_test # Tier 14: Hermetic Code Sandbox, Credential Broker & Egress Firewall
 cargo test --test phase22_data_egress_and_in_situ_test # Tier 15: Policy Tiers & In-Situ Analytics
 cargo test --test phase23_multi_channel_approval_test  # Tier 16: Multi-Channel HITL & Durable Resume
+cargo test --test phase24_binary_streaming_vault_test  # Tier 17: Multi-Modal Streaming Vault & Chunking
+cargo test --test phase25_k8s_operator_crd_test        # Tier 18: K8s Declarative CRD Operator & Webhooks
+cargo test --test phase26_agent_cert_and_threat_evidence_test # Tier 19: AgentCert Trust & Threat Intel
 ```
 
 ---
@@ -240,6 +243,9 @@ Full specs available in [`docs/roadmap/`](docs/roadmap/):
 | **Phase 21**| Agnostic Managed OAuth Connect Engine | RFC 9728 Discovery, Vendor-Agnostic PKCE Router & Interactive Auth Lifecycle | `Completed` |
 | **Phase 22**| Policy Tiers & In-Situ Analytics | Configurable Policy Profiles (Dev/Hybrid/Strict), Granular Data Egress & In-Situ Analytics Enclave | `Completed` |
 | **Phase 23**| Multi-Channel Approval & Durable Resume | Pluggable Multi-Channel Approval Dispatcher (Slack/Teams/Webhook/MCP) & Durable Resume Router | `Completed` |
+| **Phase 24**| Multi-Modal Streaming Vault | Zero-Buffer Chunking (TUS), Magic Byte Inspection & Ephemeral Egress | `Completed` |
+| **Phase 25**| Kubernetes Operator & CRDs | Declarative GitOps Reconciler, CRD Specs & Mutating Sidecar Injection | `Completed` |
+| **Phase 26**| AgentCert Trust & Threat Evidence | Ed25519 Agent Identity, URL Threat Intel Preflight & Opt-in CORS | `Completed` |
 
 ---
 
