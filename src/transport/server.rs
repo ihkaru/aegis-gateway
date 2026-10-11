@@ -121,6 +121,29 @@ async fn handle_options(
     resp
 }
 
+fn is_token_valid(auth_hdr: Option<&str>) -> bool {
+    let Some(raw) = auth_hdr else { return false; };
+    let clean = raw.strip_prefix("Bearer ").unwrap_or(raw).trim();
+    if clean.is_empty() { return false; }
+    let jwt_service = crate::policy::get_shared_jwt_service();
+    if jwt_service.is_revoked(clean) {
+        return false;
+    }
+    let candidate_jwt = if clean.starts_with("eyJ") {
+        clean
+    } else if let Some(idx) = clean.find(".eyJ") {
+        &clean[idx + 1..]
+    } else {
+        ""
+    };
+
+    if !candidate_jwt.is_empty() {
+        jwt_service.validate_token(candidate_jwt).is_ok()
+    } else {
+        clean.len() > 10
+    }
+}
+
 async fn handle_post_mcp(
     State(state): State<AppState>,
     headers: axum::http::HeaderMap,
@@ -134,8 +157,7 @@ async fn handle_post_mcp(
         || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
     if is_strict {
         let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
-        let has_token = auth_hdr.map(|h| h.starts_with("Bearer propylon_jwt_") || h.len() > 15).unwrap_or(false);
-        if !has_token {
+        if !is_token_valid(auth_hdr) {
             let err_body = json!({
                 "jsonrpc": "2.0",
                 "id": serde_json::Value::Null,
@@ -218,8 +240,7 @@ async fn handle_sse(
         || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
     if is_strict {
         let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
-        let has_token = auth_hdr.map(|h| h.starts_with("Bearer propylon_jwt_") || h.len() > 15).unwrap_or(false);
-        if !has_token {
+        if !is_token_valid(auth_hdr) {
             let mut resp = (StatusCode::UNAUTHORIZED, "Unauthorized: Strict Zero Trust requires SAML Bearer token").into_response();
             state.cors.apply_cors_headers(resp.headers_mut(), origin);
             return resp;

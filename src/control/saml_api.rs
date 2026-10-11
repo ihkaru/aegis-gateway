@@ -120,10 +120,18 @@ impl SamlApiDispatcher {
                 let sp = Self::get_sp_service();
                 match sp.validate_assertion(&saml_xml) {
                     Ok(ctx) => {
-                        let token = format!("propylon_jwt_{}", ctx.name_id);
                         let department = ctx.attributes.get("Department")
                             .cloned()
                             .unwrap_or_else(|| "BPS Mempawah".to_string());
+                        let jwt_service = crate::policy::get_shared_jwt_service();
+                        let raw_jwt = jwt_service.generate_token(
+                            &ctx.name_id,
+                            ctx.roles.clone(),
+                            Some(department.clone()),
+                            Some("bps".to_string()),
+                            28800,
+                        );
+                        let token = format!("propylon_jwt_{}.{}", ctx.name_id, raw_jwt);
 
                         let is_form_post = String::from_utf8_lossy(body_bytes).contains("SAMLResponse=");
                         if is_form_post || path == "/saml/acs" {
@@ -140,7 +148,7 @@ impl SamlApiDispatcher {
                                     "roles": ctx.roles,
                                     "department": department,
                                     "tenant": "bps",
-                                    "auth_provider": "rIDM SAML 2.0 (auth.dvlpid.my.id)"
+                                    "auth_provider": "rIDM SAML 2.0 (RFC 7519)"
                                 }
                             });
                             (200, res.to_string().into_bytes(), "application/json")
@@ -155,39 +163,61 @@ impl SamlApiDispatcher {
 
             // 5. Active User Session Introspection
             ("GET", "/api/v1/auth/session") => {
-                let token_str = String::from_utf8_lossy(body_bytes);
-                if !token_str.contains("propylon_jwt_") {
-                    let err = json!({
-                        "authenticated": false,
-                        "error": "unauthorized",
-                        "message": "No active session. Please authenticate via SAML SSO."
+                let token_raw = String::from_utf8_lossy(body_bytes).trim().to_string();
+                let token_str = token_raw.strip_prefix("Bearer ").unwrap_or(&token_raw).trim();
+                let jwt_service = crate::policy::get_shared_jwt_service();
+
+                if let Ok(claims) = jwt_service.validate_token(token_str) {
+                    let res = json!({
+                        "authenticated": true,
+                        "subject": claims.sub,
+                        "tenant": claims.tenant.unwrap_or_else(|| "bps".to_string()),
+                        "department": claims.department.unwrap_or_else(|| "BPS Mempawah / IPDS".to_string()),
+                        "roles": claims.roles,
+                        "jti": claims.jti,
+                        "exp": claims.exp,
+                        "auth_provider": "rIDM SAML 2.0 (RFC 7519)"
                     });
-                    return (401, err.to_string().into_bytes(), "application/json");
+                    return (200, res.to_string().into_bytes(), "application/json");
                 }
 
-                let subject = token_str
-                    .split("propylon_jwt_")
-                    .nth(1)
-                    .unwrap_or("unknown")
-                    .split_whitespace()
-                    .next()
-                    .unwrap_or("unknown")
-                    .trim()
-                    .to_string();
+                if token_str.contains("propylon_jwt_") {
+                    let subject = token_str
+                        .split("propylon_jwt_")
+                        .nth(1)
+                        .unwrap_or("unknown")
+                        .split_whitespace()
+                        .next()
+                        .unwrap_or("unknown")
+                        .trim()
+                        .to_string();
 
-                let res = json!({
-                    "authenticated": true,
-                    "subject": subject,
-                    "tenant": "bps",
-                    "department": "BPS Mempawah / IPDS",
-                    "roles": ["admin", "developer"],
-                    "auth_provider": "rIDM SAML 2.0"
+                    let res = json!({
+                        "authenticated": true,
+                        "subject": subject,
+                        "tenant": "bps",
+                        "department": "BPS Mempawah / IPDS",
+                        "roles": ["admin", "developer"],
+                        "auth_provider": "rIDM SAML 2.0"
+                    });
+                    return (200, res.to_string().into_bytes(), "application/json");
+                }
+
+                let err = json!({
+                    "authenticated": false,
+                    "error": "unauthorized",
+                    "message": "No active session or token invalid/expired. Please authenticate via SAML SSO."
                 });
-                (200, res.to_string().into_bytes(), "application/json")
+                (401, err.to_string().into_bytes(), "application/json")
             }
 
             // 6. User Logout
             ("POST", "/api/v1/auth/logout") => {
+                let token_raw = String::from_utf8_lossy(body_bytes).trim().to_string();
+                let token_str = token_raw.strip_prefix("Bearer ").unwrap_or(&token_raw).trim();
+                let jwt_service = crate::policy::get_shared_jwt_service();
+                let _ = jwt_service.revoke_token(token_str);
+
                 let res = json!({
                     "status": "logged_out",
                     "message": "Session invalidated"

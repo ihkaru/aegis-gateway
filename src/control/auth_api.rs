@@ -85,8 +85,17 @@ impl AuthApiDispatcher {
                         (400, err.to_string().into_bytes(), "application/json")
                     }
                     Ok(crate::core::identity::DeviceCodeStatus::Approved { claims }) => {
+                        let jwt_service = crate::policy::get_shared_jwt_service();
+                        let raw_jwt = jwt_service.generate_token(
+                            &claims.subject,
+                            claims.roles.clone(),
+                            claims.department.clone(),
+                            Some(claims.tenant_id.as_str().to_string()),
+                            3600,
+                        );
+                        let access_token = format!("propylon_jwt_{}.{}", claims.subject, raw_jwt);
                         let token_res = json!({
-                            "access_token": format!("propylon_jwt_{}", claims.subject),
+                            "access_token": access_token,
                             "token_type": "Bearer",
                             "expires_in": 3600,
                             "scope": "mcp:all",
@@ -164,6 +173,72 @@ impl AuthApiDispatcher {
                     Err(e) => {
                         let err = json!({ "error": "invalid_grant", "error_description": e.to_string() });
                         (400, err.to_string().into_bytes(), "application/json")
+                    }
+                }
+            }
+
+            // RFC 6749 RTR: Cryptographic Token Rolling / Refresh
+            ("POST", "/api/v1/auth/refresh") => {
+                let token_str = if let Ok(val) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
+                    val.get("token")
+                        .or_else(|| val.get("access_token"))
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string)
+                } else {
+                    None
+                };
+
+                let raw_token = token_str.unwrap_or_else(|| {
+                    String::from_utf8_lossy(body_bytes).trim().to_string()
+                });
+                let clean_token = raw_token.strip_prefix("Bearer ").unwrap_or(&raw_token).trim();
+
+                let jwt_service = crate::policy::get_shared_jwt_service();
+                match jwt_service.refresh_token(clean_token, 28800) {
+                    Ok(new_token) => {
+                        let res = json!({
+                            "status": "rolled",
+                            "access_token": new_token,
+                            "token_type": "Bearer",
+                            "expires_in": 28800
+                        });
+                        (200, res.to_string().into_bytes(), "application/json")
+                    }
+                    Err(e) => {
+                        let err = json!({ "error": "invalid_grant", "error_description": e.to_string() });
+                        (401, err.to_string().into_bytes(), "application/json")
+                    }
+                }
+            }
+
+            // Enterprise Kill-Switch: Token Revocation
+            ("POST", "/api/v1/auth/revoke") => {
+                let token_or_jti = if let Ok(val) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
+                    val.get("token")
+                        .or_else(|| val.get("jti"))
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string)
+                } else {
+                    None
+                };
+
+                let raw_id = token_or_jti.unwrap_or_else(|| {
+                    String::from_utf8_lossy(body_bytes).trim().to_string()
+                });
+                let clean_id = raw_id.strip_prefix("Bearer ").unwrap_or(&raw_id).trim();
+
+                let jwt_service = crate::policy::get_shared_jwt_service();
+                match jwt_service.revoke_token(clean_id) {
+                    Ok(revoked_id) => {
+                        let res = json!({
+                            "status": "revoked",
+                            "revoked_id": revoked_id
+                        });
+                        (200, res.to_string().into_bytes(), "application/json")
+                    }
+                    Err(e) => {
+                        let err = json!({ "error": "revocation_failed", "error_description": e.to_string() });
+                        (500, err.to_string().into_bytes(), "application/json")
                     }
                 }
             }
