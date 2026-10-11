@@ -13,6 +13,7 @@ pub mod server;
 pub mod signer;
 pub mod stdio;
 pub mod tls_listener;
+pub mod fallback;
 
 pub use buffer::ReusableStreamBuffer;
 pub use command_split::{split_command, split_command_unix, split_command_windows};

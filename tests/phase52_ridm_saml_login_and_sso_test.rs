@@ -61,7 +61,11 @@ async fn test_ridm_saml_login_authn_request_generation() {
 
     let b64 = val["saml_request"].as_str().unwrap();
     let decoded_bytes = BASE64_STANDARD.decode(b64).expect("valid base64");
-    let xml = String::from_utf8(decoded_bytes).expect("valid utf8");
+    use std::io::Read;
+    use flate2::read::DeflateDecoder;
+    let mut decoder = DeflateDecoder::new(&decoded_bytes[..]);
+    let mut xml = String::new();
+    decoder.read_to_string(&mut xml).expect("valid inflated xml");
     assert!(xml.contains("<samlp:AuthnRequest"));
     assert!(xml.contains("Destination=\"https://auth.dvlpid.my.id/t/bps/saml/sso\""));
     assert!(xml.contains("https://mcp.dvlpid.my.id/saml/metadata</saml:Issuer>"));

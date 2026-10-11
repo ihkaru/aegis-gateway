@@ -29,6 +29,7 @@ clap = { version = "4.5", features = ["derive", "env"] }
 axum = "0.8"
 tempfile = "3.12"
 rust-embed = "8.5"
+flate2 = { version = "1.0", default-features = false, features = ["rust_backend"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

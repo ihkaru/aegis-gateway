@@ -1,10 +1,7 @@
-// SPDX-License-Identifier: MIT
-
 use std::sync::Arc;
 use serde_json::json;
 
 use crate::core::backend::BackendRegistry;
-use crate::core::types::{CallerContext, ToolCallRequest};
 use crate::PropylonGateway;
 
 /// REST API Dispatcher handling control plane operations for the Embedded Admin UI.
@@ -22,13 +19,39 @@ impl WebApiDispatcher {
         recent_dlp_events: &std::sync::RwLock<Vec<serde_json::Value>>,
         current_tier: &std::sync::RwLock<String>,
     ) -> (u16, Vec<u8>, &'static str) {
+        Self::dispatch_with_profile(
+            method,
+            path,
+            body_bytes,
+            start_time,
+            gateway,
+            registry,
+            recent_invocations,
+            recent_dlp_events,
+            current_tier,
+            &crate::core::profile::EnterpriseRuntimeProfile::from_env(),
+        ).await
+    }
+
+    pub async fn dispatch_with_profile(
+        method: &str,
+        path: &str,
+        body_bytes: &[u8],
+        start_time: std::time::Instant,
+        gateway: Option<&Arc<PropylonGateway>>,
+        registry: Option<&Arc<dyn BackendRegistry>>,
+        recent_invocations: &std::sync::RwLock<Vec<serde_json::Value>>,
+        recent_dlp_events: &std::sync::RwLock<Vec<serde_json::Value>>,
+        current_tier: &std::sync::RwLock<String>,
+        profile: &crate::core::profile::EnterpriseRuntimeProfile,
+    ) -> (u16, Vec<u8>, &'static str) {
         if path.starts_with("/api/v1/auth/") || path == "/api/v1/policy/simulate" || path == "/api/v1/policy/abac" || path.starts_with("/saml/") {
             return crate::control::auth_api::AuthApiDispatcher::dispatch(method, path, body_bytes).await;
         }
 
         match (method, path) {
             ("GET", "/api/v1/overview") => {
-                let memory_rss_mb = get_process_memory_mb();
+                let memory_rss_mb = crate::core::profile::get_process_memory_mb();
                 let active_backends = if let Some(reg) = registry {
                     reg.list_backends().await.unwrap_or_default().len()
                 } else {
@@ -87,6 +110,9 @@ impl WebApiDispatcher {
                 (200, json!(backends_info).to_string().into_bytes(), "application/json")
             }
             ("POST", "/api/v1/backends") => {
+                if profile.immutable_config {
+                    return immutable_rejection();
+                }
                 if let Ok(parsed) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
                     let name = parsed["name"].as_str().unwrap_or("custom_backend");
                     (200, json!({ "status": "registered", "backend": name }).to_string().into_bytes(), "application/json")
@@ -95,6 +121,9 @@ impl WebApiDispatcher {
                 }
             }
             (method, path) if method == "DELETE" && path.starts_with("/api/v1/backends/") => {
+                if profile.immutable_config {
+                    return immutable_rejection();
+                }
                 let name = path.trim_start_matches("/api/v1/backends/");
                 (200, json!({ "status": "deregistered", "backend": name }).to_string().into_bytes(), "application/json")
             }
@@ -126,86 +155,61 @@ impl WebApiDispatcher {
                 (200, json!(formatted).to_string().into_bytes(), "application/json")
             }
             ("POST", "/api/v1/tools/call") => {
-                if let Ok(parsed) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
-                    let tool = parsed["tool"].as_str().unwrap_or("fetch_weather");
-                    let args = parsed.get("arguments").cloned().unwrap_or(json!({}));
-                    let call_start = std::time::Instant::now();
-
-                    let raw_result = if let Some(reg) = registry {
-                        let transport_opt = match reg.find_backend_for_tool(tool).await {
-                            Ok(Some(t)) => Some(t),
-                            _ => reg.get("propylon_local_engine").await.ok(),
-                        };
-                        if let Some(transport) = transport_opt {
-                            let rpc_req = crate::core::transport::JsonRpcRequest {
-                                jsonrpc: "2.0".to_string(),
-                                id: Some(crate::core::transport::JsonRpcId::Number(1)),
-                                method: "tools/call".to_string(),
-                                params: Some(json!({ "name": tool, "arguments": args })),
-                            };
-                            if let Ok(resp) = transport.send_request(&rpc_req).await {
-                                resp.result.unwrap_or_else(|| json!({ "outcome": "executed", "tool": tool }))
-                            } else {
-                                json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
-                            }
-                        } else {
-                            json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
-                        }
-                    } else {
-                        json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
+                let call_start = std::time::Instant::now();
+                let tool_req = serde_json::from_slice::<serde_json::Value>(body_bytes).unwrap_or_default();
+                let tool_name = tool_req["tool"].as_str().unwrap_or("fetch_weather");
+                let args = tool_req.get("arguments").cloned().unwrap_or(json!({}));
+                let raw_result = if let Some(reg) = registry {
+                    let transport_opt = match reg.find_backend_for_tool(tool_name).await {
+                        Ok(Some(t)) => Some(t),
+                        _ => reg.get("propylon_local_engine").await.ok(),
                     };
-
-                    if let Some(gw) = gateway {
-                        let req = ToolCallRequest {
-                            tool: tool.to_string(),
-                            server: "local".to_string(),
-                            arguments: args.clone(),
-                            caller: CallerContext {
-                                subject: "admin.ui.playground".to_string(),
-                                roles: vec!["admin".to_string()],
-                                tenant_id: crate::core::types::TenantId::new("tnt_admin"),
-                                department: Some("Engineering".to_string()),
-                                client_ip: Some("127.0.0.1".to_string()),
-                                session_id: "sess_playground".to_string(),
-                            },
+                    if let Some(transport) = transport_opt {
+                        let rpc_req = crate::core::transport::JsonRpcRequest {
+                            jsonrpc: "2.0".to_string(),
+                            id: Some(crate::core::transport::JsonRpcId::Number(1)),
+                            method: "tools/call".to_string(),
+                            params: Some(json!({ "name": tool_name, "arguments": args })),
                         };
-                        // MOCK_WAIVER[id: "PROPYLON-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
-                        let exec_res = gw.execute_tool_async(req, || async { Ok(raw_result.clone()) }).await;
-                        let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
-                        let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");
-                        match exec_res {
-                            Ok(res) => (
-                                200,
-                                json!({
-                                    "outcome": "DISPATCHED",
-                                    "tool": tool,
-                                    "latency_ms": latency_ms,
-                                    "result": { "status": "success", "data": raw_result, "execution_mode": if is_unattached { "PREFLIGHT_GUARDRAIL_ONLY" } else { "LIVE_EXECUTED" } },
-                                    "raw": raw_result,
-                                    "sanitized": res.output,
-                                    "success": res.success,
-                                    "dlp_modified": res.dlp_masked
-                                }).to_string().into_bytes(),
-                                "application/json",
-                            ),
-                            Err(e) => (400, json!({ "error": e.to_string() }).to_string().into_bytes(), "application/json"),
+                        if let Ok(resp) = transport.send_request(&rpc_req).await {
+                            resp.result.unwrap_or_else(|| json!({ "outcome": "sandbox_dispatched", "tool": tool_name }))
+                        } else {
+                            json!({ "outcome": "sandbox_dispatched", "tool": tool_name, "sandbox_mode": true })
                         }
                     } else {
-                        let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
-                        let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");
-                        (200, json!({
-                            "outcome": "DISPATCHED",
-                            "tool": tool,
-                            "latency_ms": latency_ms,
-                            "result": { "status": "success", "data": raw_result, "execution_mode": if is_unattached { "PREFLIGHT_GUARDRAIL_ONLY" } else { "LIVE_EXECUTED" } },
-                            "raw": raw_result,
-                            "sanitized": raw_result,
-                            "success": true,
-                            "dlp_modified": false
-                        }).to_string().into_bytes(), "application/json")
+                        json!({ "outcome": "sandbox_dispatched", "tool": tool_name, "sandbox_mode": true })
                     }
                 } else {
-                    (400, json!({ "error": "Invalid tool call request" }).to_string().into_bytes(), "application/json")
+                    json!({ "outcome": "sandbox_dispatched", "tool": tool_name, "sandbox_mode": true })
+                };
+
+                let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");
+                let exec_mode = if is_unattached { "PREFLIGHT_GUARDRAIL_ONLY" } else { "LIVE_EXECUTED" };
+
+                if let Some(gw) = gateway {
+                    let req = crate::core::types::ToolCallRequest {
+                        tool: tool_name.to_string(),
+                        server: "local".to_string(),
+                        arguments: args,
+                        caller: crate::core::types::CallerContext {
+                            subject: "admin.ui.playground".to_string(),
+                            roles: vec!["admin".to_string()],
+                            tenant_id: crate::core::types::TenantId::new("tnt_admin"),
+                            department: Some("Engineering".to_string()),
+                            client_ip: Some("127.0.0.1".to_string()),
+                            session_id: "sess_playground".to_string(),
+                        },
+                    };
+                    // MOCK_WAIVER[id: "PROPYLON-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
+                    let exec_res = gw.execute_tool_async(req, || async { Ok(raw_result.clone()) }).await;
+                    let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
+                    match exec_res {
+                        Ok(res) => (200, json!({ "outcome": "DISPATCHED", "tool": tool_name, "latency_ms": latency_ms, "result": { "status": "success", "data": raw_result, "execution_mode": exec_mode }, "raw": raw_result, "sanitized": res.output, "success": res.success, "dlp_modified": res.dlp_masked }).to_string().into_bytes(), "application/json"),
+                        Err(e) => (400, json!({ "error": e.to_string() }).to_string().into_bytes(), "application/json"),
+                    }
+                } else {
+                    let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
+                    (200, json!({ "outcome": "DISPATCHED", "tool": tool_name, "latency_ms": latency_ms, "result": { "status": "success", "data": raw_result, "execution_mode": exec_mode }, "raw": raw_result.clone(), "sanitized": raw_result, "success": true, "dlp_modified": false }).to_string().into_bytes(), "application/json")
                 }
             }
             ("GET", "/api/v1/policy/tier") => {
@@ -213,6 +217,9 @@ impl WebApiDispatcher {
                 (200, json!({ "tier": tier }).to_string().into_bytes(), "application/json")
             }
             ("POST", "/api/v1/policy/tier") => {
+                if profile.immutable_config {
+                    return immutable_rejection();
+                }
                 if let Ok(parsed) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
                     if let Some(tier) = parsed["tier"].as_str() {
                         if let Ok(mut write) = current_tier.write() {
@@ -307,7 +314,11 @@ impl WebApiDispatcher {
             }
             _ => {
                 if path.starts_with("/api/v1/config/") {
-                    crate::control::ConfigApiDispatcher::dispatch(method, path, body_bytes, registry).await
+                    if profile.immutable_config && method == "POST" && path == "/api/v1/config/apply" {
+                        immutable_rejection()
+                    } else {
+                        crate::control::ConfigApiDispatcher::dispatch(method, path, body_bytes, registry).await
+                    }
                 } else {
                     (404, json!({ "error": "Endpoint not found" }).to_string().into_bytes(), "application/json")
                 }
@@ -316,18 +327,11 @@ impl WebApiDispatcher {
     }
 }
 
-fn get_process_memory_mb() -> f64 {
-    if let Ok(status) = std::fs::read_to_string("/proc/self/status") {
-        for line in status.lines() {
-            if line.starts_with("VmRSS:") {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 2 {
-                    if let Ok(kb) = parts[1].parse::<f64>() {
-                        return (kb / 1024.0 * 100.0).round() / 100.0;
-                    }
-                }
-            }
-        }
-    }
-    0.0
+fn immutable_rejection() -> (u16, Vec<u8>, &'static str) {
+    let payload = json!({
+        "error": "forbidden",
+        "code": "IMMUTABLE_GITOPS_ACTIVE",
+        "message": "Dynamic runtime configuration mutation via REST API is prohibited under enterprise GitOps immutability policy. Updates must be applied declaratively via propylon.yaml."
+    });
+    (403, payload.to_string().into_bytes(), "application/json")
 }

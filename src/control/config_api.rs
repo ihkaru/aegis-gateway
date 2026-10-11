@@ -17,10 +17,26 @@ impl ConfigApiDispatcher {
         body_bytes: &[u8],
         registry: Option<&Arc<dyn BackendRegistry>>,
     ) -> (u16, Vec<u8>, &'static str) {
+        Self::dispatch_with_profile(
+            method,
+            path,
+            body_bytes,
+            registry,
+            &crate::core::profile::EnterpriseRuntimeProfile::from_env(),
+        ).await
+    }
+
+    pub async fn dispatch_with_profile(
+        method: &str,
+        path: &str,
+        body_bytes: &[u8],
+        registry: Option<&Arc<dyn BackendRegistry>>,
+        profile: &crate::core::profile::EnterpriseRuntimeProfile,
+    ) -> (u16, Vec<u8>, &'static str) {
         match (method, path) {
             ("GET", "/api/v1/config/raw") => Self::handle_get_raw(),
             ("POST", "/api/v1/config/validate") => Self::handle_validate(body_bytes),
-            ("POST", "/api/v1/config/apply") => Self::handle_apply(body_bytes, registry).await,
+            ("POST", "/api/v1/config/apply") => Self::handle_apply(body_bytes, registry, profile).await,
             ("GET", "/api/v1/config/template") => Self::handle_get_template(),
             _ => (404, json!({ "error": "Config endpoint not found" }).to_string().into_bytes(), "application/json"),
         }
@@ -86,7 +102,20 @@ impl ConfigApiDispatcher {
     async fn handle_apply(
         body_bytes: &[u8],
         registry: Option<&Arc<dyn BackendRegistry>>,
+        profile: &crate::core::profile::EnterpriseRuntimeProfile,
     ) -> (u16, Vec<u8>, &'static str) {
+        if profile.immutable_config {
+            return (
+                403,
+                json!({
+                    "error": "forbidden",
+                    "code": "IMMUTABLE_GITOPS_ACTIVE",
+                    "message": "Dynamic runtime configuration mutation via REST API is prohibited under enterprise GitOps immutability policy. Updates must be applied declaratively via propylon.yaml."
+                }).to_string().into_bytes(),
+                "application/json",
+            );
+        }
+
         let Ok(req) = serde_json::from_slice::<serde_json::Value>(body_bytes) else {
             return (400, json!({ "status": "ERROR", "error": "Invalid JSON request body" }).to_string().into_bytes(), "application/json");
         };

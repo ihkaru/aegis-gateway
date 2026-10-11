@@ -14,6 +14,7 @@ pub struct AdminUiAssets;
 pub struct EmbeddedAdminServer {
     pub port: u16,
     pub enabled: bool,
+    pub profile: crate::core::profile::EnterpriseRuntimeProfile,
     start_time: Instant,
     gateway: Option<Arc<PropylonGateway>>,
     registry: Option<Arc<dyn BackendRegistry>>,
@@ -33,6 +34,7 @@ impl EmbeddedAdminServer {
         Self {
             port,
             enabled,
+            profile: crate::core::profile::EnterpriseRuntimeProfile::from_env(),
             start_time: Instant::now(),
             gateway: None,
             registry: Some(Arc::new(crate::backend::SubprocessBackendRegistry::with_default_local_engine())),
@@ -40,6 +42,11 @@ impl EmbeddedAdminServer {
             recent_dlp_events: Arc::new(std::sync::RwLock::new(Vec::new())),
             current_tier: Arc::new(std::sync::RwLock::new("Hybrid".to_string())),
         }
+    }
+
+    pub fn with_profile(mut self, profile: crate::core::profile::EnterpriseRuntimeProfile) -> Self {
+        self.profile = profile;
+        self
     }
 
     pub fn with_gateway(mut self, gateway: Arc<PropylonGateway>) -> Self {
@@ -53,6 +60,9 @@ impl EmbeddedAdminServer {
     }
 
     pub fn record_invocation(&self, call: serde_json::Value) {
+        if self.profile.lean_memory {
+            return;
+        }
         if let Ok(mut write) = self.recent_invocations.write() {
             write.push(call);
             if write.len() > 50 {
@@ -62,6 +72,9 @@ impl EmbeddedAdminServer {
     }
 
     pub fn record_dlp_event(&self, evt: serde_json::Value) {
+        if self.profile.lean_memory {
+            return;
+        }
         if let Ok(mut write) = self.recent_dlp_events.write() {
             write.push(evt);
             if write.len() > 50 {
@@ -84,10 +97,17 @@ impl EmbeddedAdminServer {
                 "text/plain",
             );
         }
+        if !self.profile.ui_enabled {
+            return (
+                404,
+                b"{\"error\":\"not_found\",\"message\":\"Admin Web UI is disabled in headless mode.\"}".to_vec(),
+                "application/json",
+            );
+        }
 
         // 1. Dispatch REST API Endpoints via WebApiDispatcher (SRP Pattern)
         if path.starts_with("/api/v1/") {
-            return crate::control::web_api::WebApiDispatcher::dispatch(
+            return crate::control::web_api::WebApiDispatcher::dispatch_with_profile(
                 method,
                 path,
                 body,
@@ -97,6 +117,7 @@ impl EmbeddedAdminServer {
                 &self.recent_invocations,
                 &self.recent_dlp_events,
                 &self.current_tier,
+                &self.profile,
             ).await;
         }
 

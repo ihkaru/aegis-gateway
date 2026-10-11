@@ -78,6 +78,18 @@ pub struct ServeArgs {
     /// Path to topology configuration file
     #[arg(short, long)]
     pub config: Option<String>,
+
+    /// Disable embedded Admin Web UI (headless mode for minimal memory footprint)
+    #[arg(long, default_value_t = false, env = "PROPYLON_NO_UI")]
+    pub no_ui: bool,
+
+    /// Enforce GitOps immutable mode (prohibit dynamic REST API mutations)
+    #[arg(long, default_value_t = false, env = "PROPYLON_IMMUTABLE_CONFIG")]
+    pub immutable_config: bool,
+
+    /// Enable lean memory profile (skip UI event history buffers)
+    #[arg(long, default_value_t = false, env = "PROPYLON_LEAN_PROFILE")]
+    pub lean: bool,
 }
 
 #[derive(Debug, Args, Clone)]

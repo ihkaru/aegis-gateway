@@ -86,7 +86,10 @@ impl SamlApiDispatcher {
 
                 match sp.create_authn_request(&sso_url) {
                     Ok(authn_xml) => {
-                        let b64 = BASE64_STANDARD.encode(authn_xml.as_bytes());
+                        let b64 = match Self::deflate_and_base64_encode(authn_xml.as_bytes()) {
+                            Ok(compressed) => compressed,
+                            Err(_) => BASE64_STANDARD.encode(authn_xml.as_bytes()),
+                        };
                         let redirect_url = format!("{}?SAMLRequest={}", sso_url, Self::url_encode(&b64));
                         if path == "/saml/login" {
                             (302, redirect_url.into_bytes(), "text/uri-list")
@@ -242,6 +245,17 @@ impl SamlApiDispatcher {
             }
         }
         encoded
+    }
+
+    fn deflate_and_base64_encode(data: &[u8]) -> Result<String, std::io::Error> {
+        use std::io::Write;
+        use flate2::write::DeflateEncoder;
+        use flate2::Compression;
+
+        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(data)?;
+        let compressed = encoder.finish()?;
+        Ok(BASE64_STANDARD.encode(&compressed))
     }
 
     fn url_decode(input: &str) -> String {

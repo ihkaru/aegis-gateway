@@ -246,6 +246,16 @@ impl McpProtocolHandler {
     }
 
     async fn handle_meta_register(&self, id: JsonRpcId, params: Option<Value>) -> JsonRpcResponse {
+        let profile = crate::core::profile::EnterpriseRuntimeProfile::from_env();
+        if profile.immutable_config {
+            return JsonRpcResponse::error(
+                id,
+                JsonRpcError::new(
+                    -32003,
+                    "Dynamic tool registration is prohibited under enterprise GitOps immutability policy. Tools must be declared via propylon.yaml.",
+                ),
+            );
+        }
         let tools_val = params.and_then(|p| p.get("tools").cloned()).unwrap_or(Value::Array(Vec::new()));
         let new_tools: Vec<ToolDefinition> = serde_json::from_value(tools_val).unwrap_or_default();
         let count = new_tools.len();

@@ -33,7 +33,9 @@ pub mod abac;
 pub mod scoping;
 pub mod topology;
 pub mod vault;
+pub mod profile;
 
+pub use profile::EnterpriseRuntimeProfile;
 pub use approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
 pub use data_governance::{
     DataClassification, DataEgressDecision, DataEgressPolicyEngine, InSituDataEnclave,
