@@ -203,6 +203,14 @@ For large-scale enterprise deployments (20,000+ employees), see the [Failure Mod
 * **The Failure Hierarchy**: What collapses first (Stdio child processes), what strains next (Redis sync bus), and what never fails (Tokio Ingress Fast-Fail & Control Bus).
 * **Responsibility Boundary**: In-scope Aegis architectural mitigations vs. out-of-scope enterprise platform/SRE requirements (`ulimit`, `somaxconn`, PgBouncer pooling).
 
+### 5. Enterprise IAM, SSO & Declarative ABAC Access Control (Phases 49–51)
+Aegis Gateway acts as the central Policy Enforcement Point (PEP) and Policy Decision Point (PDP) compliant with NIST Zero Trust:
+* **OAuth 2.1 Device Flow (RFC 8628)**: Frictionless SSO login for AI CLI and IDE agents (Cursor, Claude Code) with Okta, Microsoft Entra ID, and Keycloak.
+* **Identity Federation Broker (RFC 8693)**: Ingests on-prem SAML 2.0 assertions and OIDC tokens, issuing audience-bound JWTs with Resource Indicators (RFC 8707).
+* **Declarative ABAC Policy-as-Code**: Evaluates Principal, Action, Resource, and Environment in <50 microseconds with live dry-run simulation (`POST /api/v1/policy/simulate`).
+* **Dynamic Catalog Scoping**: Filters unauthorized tools from discovery, eliminating LLM context window bloat and reconnaissance risks.
+* Read the authoritative [Enterprise IAM, SSO Federation & ABAC Access Control Guide](docs/ENTERPRISE_IAM_AND_ACCESS_CONTROL_GUIDE.md).
+
 ---
 
 ## ⚡ Production CLI & Quickstart

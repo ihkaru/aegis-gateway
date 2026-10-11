@@ -29,7 +29,7 @@ impl TenantId {
 }
 
 /// Caller context carrying authenticated identity, tenant, and role attributes
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CallerContext {
     pub tenant_id: TenantId,
     pub subject: String,

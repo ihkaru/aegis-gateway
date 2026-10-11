@@ -204,7 +204,7 @@
     {:else if currentTab === 'tools'}
       <ToolsTab />
     {:else if currentTab === 'topology'}
-      <TopologyTab />
+      <TopologyTab {isDark} />
     {:else if currentTab === 'policy'}
       <PolicyTab />
     {:else if currentTab === 'config'}

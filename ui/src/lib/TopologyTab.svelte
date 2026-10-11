@@ -22,6 +22,8 @@
   } from 'lucide-svelte';
   import CustomGatewayNode from './CustomGatewayNode.svelte';
 
+  let { isDark = true }: { isDark?: boolean } = $props();
+
   const nodeTypes = {
     custom: CustomGatewayNode,
   };
@@ -184,6 +186,7 @@
       {edges}
       {nodeTypes}
       fitView
+      colorMode={isDark ? 'dark' : 'light'}
       on:nodeclick={handleNodeClick}
       class="bg-dot-pattern"
     >

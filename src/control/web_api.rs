@@ -22,6 +22,10 @@ impl WebApiDispatcher {
         recent_dlp_events: &std::sync::RwLock<Vec<serde_json::Value>>,
         current_tier: &std::sync::RwLock<String>,
     ) -> (u16, Vec<u8>, &'static str) {
+        if path.starts_with("/api/v1/auth/") || path == "/api/v1/policy/simulate" || path == "/api/v1/policy/abac" {
+            return crate::control::auth_api::AuthApiDispatcher::dispatch(method, path, body_bytes).await;
+        }
+
         match (method, path) {
             ("GET", "/api/v1/overview") => {
                 let memory_rss_mb = get_process_memory_mb();

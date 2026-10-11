@@ -29,6 +29,8 @@ pub mod state;
 pub mod transport;
 pub mod trust;
 pub mod types;
+pub mod abac;
+pub mod scoping;
 pub mod topology;
 pub mod vault;
 
@@ -50,8 +52,16 @@ pub use audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink, HashChai
 pub use backend::{AegisTopologyConfig, BackendConfig, BackendRegistry, BackendTransport};
 pub use dlp::{ComplianceProfile, DlpFinding, DlpPipeline, FastPatternMatcher, MaskingStrategy, SensitivityLevel};
 pub use error::{AegisError, AegisResult};
-pub use health::{HealthProbe, HealthReport, ProbeState};
-pub use identity::{GatewayServerIdentity, TokenValidator};
+pub use identity::{
+    AssertionExchangeRequest, DeviceAuthRequest, DeviceAuthResponse, DeviceCodeStatus,
+    FederatedTokenResponse, GatewayServerIdentity, IdentityFederationBroker, TokenValidator,
+};
+pub use abac::{
+    AbacContext, AbacDecision, AbacEffect, AbacPolicy, AbacPolicyEngine, AbacRule,
+    ActionAttributes, EnvironmentAttributes, PolicySimulationResult, PrincipalAttributes,
+    ResourceAttributes,
+};
+pub use scoping::CatalogScopingProvider;
 
 pub use policy::{PolicyContext, PolicyDecision, PolicyEngine};
 pub use sandbox::{

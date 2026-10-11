@@ -136,12 +136,23 @@ impl ConfigurationWatcher for FileSignalConfigurationWatcher {
     }
 }
 
+pub mod abac_engine;
+pub mod auth_api;
+pub mod catalog_scoper;
 pub mod config_api;
 pub mod crd_operator;
+pub mod downstream_signer;
+pub mod identity_broker;
 pub mod topology_api;
 pub mod web_api;
 pub mod web_ui;
+
+pub use abac_engine::LocalAbacEngine;
+pub use auth_api::AuthApiDispatcher;
+pub use catalog_scoper::AbacCatalogScoper;
 pub use config_api::ConfigApiDispatcher;
 pub use crd_operator::{AegisBackendCrd, AegisPolicyCrd, CrdOperatorEngine, ReconciliationReport};
+pub use downstream_signer::DownstreamIdentitySigner;
+pub use identity_broker::LocalIdentityBroker;
 pub use topology_api::TopologyApiDispatcher;
 pub use web_ui::{AdminUiAssets, EmbeddedAdminServer};
