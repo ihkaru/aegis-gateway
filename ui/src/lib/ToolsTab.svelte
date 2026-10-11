@@ -1,6 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Terminal, Play, Search, Code, ShieldCheck, RefreshCw, Layers } from 'lucide-svelte';
+  import {
+    Terminal,
+    Play,
+    Search,
+    ShieldCheck,
+    RefreshCw,
+    Layers,
+    Database,
+    CheckCircle2,
+    AlertTriangle,
+  } from 'lucide-svelte';
 
   interface ToolItem {
     name: string;
@@ -9,6 +19,7 @@
     signature: string;
     schema: any;
     tags: string[];
+    is_live?: boolean;
   }
 
   interface ExecutionResult {
@@ -17,12 +28,6 @@
     latency_ms: number;
     result: any;
     dlp_modified: boolean;
-    dlp_diff?: {
-      original_args: any;
-      sanitized_args: any;
-      original_output: any;
-      redacted_output: any;
-    };
   }
 
   let tools = $state<ToolItem[]>([]);
@@ -30,7 +35,7 @@
   let searchQuery = $state('');
   let disclosureLevel = $state<'L0' | 'L1' | 'L2'>('L0');
   let selectedTool = $state<ToolItem | null>(null);
-  let inputArgs = $state('{\n  "query": "SELECT * FROM audit_logs LIMIT 10"\n}');
+  let inputArgs = $state('{\n  "query": "SELECT * FROM customer_accounts LIMIT 5"\n}');
   let executing = $state(false);
   let execResult = $state<ExecutionResult | null>(null);
 
@@ -50,15 +55,29 @@
     }
   }
 
+  function isLiveTool(tool: ToolItem): boolean {
+    return (
+      tool.is_live === true ||
+      tool.backend === 'aegis_local_engine' ||
+      tool.backend === 'sqlite_ledger'
+    );
+  }
+
   function selectTool(tool: ToolItem) {
     selectedTool = tool;
     execResult = null;
-    if (tool.name.includes('sql') || tool.name.includes('db')) {
-      inputArgs = '{\n  "query": "SELECT * FROM users WHERE active = true LIMIT 5"\n}';
+    if (tool.name.includes('sqlite') || tool.name.includes('sql') || tool.name.includes('ledger')) {
+      inputArgs = '{\n  "query": "SELECT * FROM customer_accounts LIMIT 5"\n}';
+    } else if (tool.name === 'aegis_ping') {
+      inputArgs = '{\n  "echo": "Aegis loopback roundtrip ping"\n}';
     } else if (tool.name.includes('search') || tool.name.includes('lookup')) {
       inputArgs = '{\n  "query": "NIST AI RMF compliance standard",\n  "limit": 5\n}';
     } else {
-      inputArgs = JSON.stringify(tool.schema?.properties ? { ...tool.schema.properties } : { param: "sample_value" }, null, 2);
+      inputArgs = JSON.stringify(
+        tool.schema?.properties ? { ...tool.schema.properties } : { param: 'sample_value' },
+        null,
+        2
+      );
     }
   }
 
@@ -70,7 +89,7 @@
       let parsed = {};
       try {
         parsed = JSON.parse(inputArgs);
-      } catch (e) {
+      } catch {
         alert('Invalid JSON in arguments input');
         executing = false;
         return;
@@ -128,7 +147,7 @@
   <div class="rounded-lg border border-border bg-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
     <div>
       <h3 class="text-sm font-semibold tracking-tight">Interactive Tools Catalog & Execution Playground</h3>
-      <p class="text-xs text-muted-foreground">Progressive disclosure token optimization with live interactive payload execution and DLP diff evaluation.</p>
+      <p class="text-xs text-muted-foreground">Progressive disclosure token optimization with real local database execution and preflight guardrail verification.</p>
     </div>
     <div class="flex items-center gap-2">
       <div class="flex items-center rounded border border-border bg-muted/40 p-0.5 text-xs font-medium">
@@ -190,7 +209,20 @@
             >
               <div class="flex items-center justify-between gap-2">
                 <span class="font-semibold text-foreground text-xs">{t.name}</span>
-                <span class="rounded bg-muted px-1.5 py-0.2 text-[10px] text-muted-foreground uppercase">{t.backend}</span>
+                <div class="flex items-center gap-1.5">
+                  {#if isLiveTool(t)}
+                    <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-500 flex items-center gap-1">
+                      <CheckCircle2 class="h-2.5 w-2.5 shrink-0" />
+                      LIVE
+                    </span>
+                  {:else}
+                    <span class="rounded bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground uppercase flex items-center gap-1">
+                      <Layers class="h-2.5 w-2.5 shrink-0" />
+                      TEMPLATE
+                    </span>
+                  {/if}
+                  <span class="rounded bg-muted px-1.5 py-0.2 text-[10px] text-muted-foreground uppercase">{t.backend}</span>
+                </div>
               </div>
               <div class="mt-1 text-[11px] text-muted-foreground line-clamp-2">
                 {#if disclosureLevel === 'L0'}
@@ -232,6 +264,24 @@
           </button>
         </div>
 
+        {#if isLiveTool(selectedTool)}
+          <div class="rounded border border-emerald-500/20 bg-emerald-500/5 p-2.5 text-xs flex items-start gap-2">
+            <Database class="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <div class="font-medium text-foreground text-[11px]">Live Engine Attached</div>
+              <div class="text-muted-foreground text-[10px] mt-0.5">Connected to active local backend. Queries and mutations execute on persistent storage and real process telemetry.</div>
+            </div>
+          </div>
+        {:else}
+          <div class="rounded border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs flex items-start gap-2">
+            <AlertTriangle class="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <div class="font-medium text-foreground text-[11px]">Unattached Catalog Template</div>
+              <div class="text-muted-foreground text-[10px] mt-0.5">Upstream backend not connected. Dispatching evaluates live ABAC and DLP guardrails in preflight mode without external side effects.</div>
+            </div>
+          </div>
+        {/if}
+
         <div>
           <label for="arguments-editor" class="block font-medium text-muted-foreground mb-1">Invocation Arguments (JSON Payload):</label>
           <textarea
@@ -250,13 +300,15 @@
                 Execution Response
               </span>
               <div class="flex items-center gap-2 text-[10px] tabular-nums">
-                {#if execResult.result?.sandbox_mode}
-                  <span class="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-amber-500 font-semibold">
-                    SANDBOX GUARDRAIL CHECK
+                {#if execResult.result?.execution_mode === 'PREFLIGHT_GUARDRAIL_ONLY' || execResult.result?.data?.status === 'unattached'}
+                  <span class="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-amber-500 font-semibold flex items-center gap-1">
+                    <ShieldCheck class="h-3 w-3" />
+                    PREFLIGHT VERIFIED
                   </span>
                 {:else}
-                  <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-emerald-500 font-semibold">
-                    {execResult.outcome}
+                  <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-emerald-500 font-semibold flex items-center gap-1">
+                    <CheckCircle2 class="h-3 w-3" />
+                    LIVE EXECUTED
                   </span>
                 {/if}
                 <span class="text-muted-foreground">{execResult.latency_ms.toFixed(2)} ms</span>
@@ -264,12 +316,6 @@
             </div>
 
             <pre class="rounded bg-background border border-border p-2 font-mono text-[11px] text-foreground max-h-48 overflow-y-auto">{JSON.stringify(execResult.result, null, 2)}</pre>
-
-            {#if execResult.result?.sandbox_mode}
-              <div class="pt-1 text-[10px] text-muted-foreground italic">
-                <span>Note: Evaluated through live Policy ABAC & DLP pipelines without unattached upstream process.</span>
-              </div>
-            {/if}
 
             {#if execResult.dlp_modified}
               <div class="pt-2 border-t border-border/60 text-[10px] text-amber-500 font-medium flex items-center gap-1">

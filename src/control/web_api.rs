@@ -90,25 +90,28 @@ impl WebApiDispatcher {
                 (200, json!({ "status": "deregistered", "backend": name }).to_string().into_bytes(), "application/json")
             }
             ("GET", "/api/v1/tools") => {
-                let tools = if let Some(reg) = registry {
-                    let discovered = reg.discover_all_tools().await.unwrap_or_default();
-                    if discovered.is_empty() {
-                        crate::discovery::default_enterprise_catalog()
-                    } else {
-                        discovered
-                    }
+                let mut tools = if let Some(reg) = registry {
+                    reg.discover_all_tools().await.unwrap_or_default()
                 } else {
-                    crate::discovery::default_enterprise_catalog()
+                    Vec::new()
                 };
+                let discovered_names: std::collections::HashSet<_> = tools.iter().map(|t| t.name.clone()).collect();
+                for default_tool in crate::discovery::default_enterprise_catalog() {
+                    if !discovered_names.contains(&default_tool.name) {
+                        tools.push(default_tool);
+                    }
+                }
                 let formatted: Vec<_> = tools.into_iter().map(|t| {
                     let sig = format!("{}({}) -> Value", t.name, t.required_params.join(", "));
+                    let is_live = t.server == "aegis_local_engine" || t.server == "sqlite_ledger";
                     json!({
                         "name": t.name,
                         "backend": t.server,
                         "purpose": t.description,
                         "signature": sig,
                         "schema": t.input_schema,
-                        "tags": t.tags
+                        "tags": t.tags,
+                        "is_live": is_live
                     })
                 }).collect();
                 (200, json!(formatted).to_string().into_bytes(), "application/json")
@@ -156,6 +159,7 @@ impl WebApiDispatcher {
                         // MOCK_WAIVER[id: "AEGIS-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
                         let exec_res = gw.execute_tool_async(req, || async { Ok(raw_result.clone()) }).await;
                         let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
+                        let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");
                         match exec_res {
                             Ok(res) => (
                                 200,
@@ -163,7 +167,7 @@ impl WebApiDispatcher {
                                     "outcome": "DISPATCHED",
                                     "tool": tool,
                                     "latency_ms": latency_ms,
-                                    "result": { "status": "success", "data": raw_result },
+                                    "result": { "status": "success", "data": raw_result, "execution_mode": if is_unattached { "PREFLIGHT_GUARDRAIL_ONLY" } else { "LIVE_EXECUTED" } },
                                     "raw": raw_result,
                                     "sanitized": res.output,
                                     "success": res.success,
@@ -175,11 +179,12 @@ impl WebApiDispatcher {
                         }
                     } else {
                         let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
+                        let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");
                         (200, json!({
                             "outcome": "DISPATCHED",
                             "tool": tool,
                             "latency_ms": latency_ms,
-                            "result": { "status": "success", "data": raw_result },
+                            "result": { "status": "success", "data": raw_result, "execution_mode": if is_unattached { "PREFLIGHT_GUARDRAIL_ONLY" } else { "LIVE_EXECUTED" } },
                             "raw": raw_result,
                             "sanitized": raw_result,
                             "success": true,

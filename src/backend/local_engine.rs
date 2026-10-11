@@ -42,6 +42,11 @@ impl BackendTransport for LocalAegisBackend {
                             "name": "aegis_ping",
                             "description": "Ping local loopback backend for roundtrip latency test",
                             "inputSchema": { "type": "object", "properties": { "echo": { "type": "string" } } }
+                        },
+                        {
+                            "name": "aegis_sqlite_query",
+                            "description": "Execute live SQL query on local persistent SQLite database",
+                            "inputSchema": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
                         }
                     ]
                 });
@@ -67,8 +72,15 @@ impl BackendTransport for LocalAegisBackend {
                         "status": "pong",
                         "echo": args.get("echo").and_then(|e| e.as_str()).unwrap_or("hello")
                     }),
+                    "aegis_sqlite_query" => {
+                        let query = args.get("query").and_then(|q| q.as_str()).unwrap_or("SELECT * FROM customer_accounts LIMIT 5");
+                        execute_local_sqlite(query)
+                    }
                     _ => json!({
-                        "status": "success",
+                        "status": "unattached",
+                        "execution_mode": "PREFLIGHT_GUARDRAIL_ONLY",
+                        "upstream_status": "NOT_CONNECTED",
+                        "message": format!("Guardrail ABAC & DLP verified for '{tool_name}'. No live upstream backend connected. Register a live backend in Backends tab to execute live transactions."),
                         "tool": tool_name,
                         "arguments": args
                     }),
@@ -96,6 +108,48 @@ impl BackendTransport for LocalAegisBackend {
 
     async fn stop(&self) -> AegisResult<()> {
         Ok(())
+    }
+}
+
+fn execute_local_sqlite(query: &str) -> serde_json::Value {
+    let script = r#"
+import sqlite3, json, sys, os
+db_dir = "/root/projects/aegis-gateway/data"
+os.makedirs(db_dir, exist_ok=True)
+db_path = os.path.join(db_dir, "aegis_local.db")
+conn = sqlite3.connect(db_path)
+cur = conn.cursor()
+try:
+    cur.execute(sys.argv[1])
+    q_upper = sys.argv[1].strip().upper()
+    if q_upper.startswith(("SELECT", "PRAGMA", "EXPLAIN")):
+        cols = [d[0] for d in cur.description] if cur.description else []
+        rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+        print(json.dumps({"status": "SUCCESS", "type": "SELECT", "row_count": len(rows), "rows": rows}))
+    else:
+        conn.commit()
+        print(json.dumps({"status": "SUCCESS", "type": "MUTATION", "rows_affected": cur.rowcount}))
+except Exception as e:
+    print(json.dumps({"status": "ERROR", "error": str(e)}))
+"#;
+    let output = std::process::Command::new("python3")
+        .arg("-c")
+        .arg(script)
+        .arg(query)
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            serde_json::from_str(&stdout).unwrap_or_else(|_| {
+                json!({ "status": "ERROR", "error": "Invalid output from SQLite engine" })
+            })
+        }
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            json!({ "status": "ERROR", "error": stderr.to_string() })
+        }
+        Err(e) => json!({ "status": "ERROR", "error": e.to_string() }),
     }
 }
 

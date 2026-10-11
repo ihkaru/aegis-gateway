@@ -1,10 +1,9 @@
 mcp_servers:
-  postgres:
-    name: postgres
-    command: npx
+  sqlite_ledger:
+    name: sqlite_ledger
+    command: python3
     args:
-    - -y
-    - '@modelcontextprotocol/server-postgres'
+    - scripts/sqlite_mcp_server.py
     env: {}
     url: null
     timeout_secs: 30
