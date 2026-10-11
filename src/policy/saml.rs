@@ -28,9 +28,10 @@ impl SamlServiceProvider for NativeSamlServiceProvider {
         }
 
         let request_id = format!("_propylon_req_{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis());
+        let now_utc = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         let authn_xml = format!(
             "<samlp:AuthnRequest xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" \
-             ID=\"{request_id}\" Version=\"2.0\" IssueInstant=\"2026-10-10T12:00:00Z\" \
+             ID=\"{request_id}\" Version=\"2.0\" IssueInstant=\"{now_utc}\" \
              Destination=\"{destination_url}\" \
              AssertionConsumerServiceURL=\"{}\"> \
              <saml:Issuer xmlns:saml=\"urn:oasis:names:tc:SAML:2.0:assertion\">{}</saml:Issuer> \
