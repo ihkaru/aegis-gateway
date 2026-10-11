@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Aegis Gateway - Enterprise Scale Accuracy & Planning Benchmark
+Propylon Gateway - Enterprise Scale Accuracy & Planning Benchmark
 Evaluates Tool Discovery Recall, Multilingual Robustness, Action Disambiguation,
-and Topological DAG Planning against the live Aegis Gateway endpoint.
+and Topological DAG Planning against the live Propylon Gateway endpoint.
 """
 
 import json
@@ -105,7 +105,7 @@ def make_mcp_request(endpoint: str, method: str, params: Dict[str, Any]) -> Tupl
         headers={
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AegisBenchmark/1.0"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 PropylonBenchmark/1.0"
         }
     )
     start = time.perf_counter()
@@ -124,7 +124,7 @@ def make_mcp_request(endpoint: str, method: str, params: Dict[str, Any]) -> Tupl
 
 def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
     print("=" * 65)
-    print(f"AEGIS GATEWAY EMPIRICAL ACCURACY & PLANNING BENCHMARK")
+    print(f"PROPYLON GATEWAY EMPIRICAL ACCURACY & PLANNING BENCHMARK")
     print(f"Target Endpoint : {endpoint}")
     print(f"Tools in Catalog: {len(ENTERPRISE_TOOLS)}")
     print("=" * 65)
@@ -254,7 +254,7 @@ def run_benchmark(endpoint: str = DEFAULT_ENDPOINT):
     p99_lat = latencies[-1]
 
     print("\n" + "=" * 65)
-    print("           AEGIS GATEWAY EVALUATION SCORECARD            ")
+    print("           PROPYLON GATEWAY EVALUATION SCORECARD            ")
     print("=" * 65)
     print(f"  Top-1 Accuracy (Exact Best Match) : {top1_hits:02d}/{total:02d} ({top1_pct:.1f}%)")
     print(f"  Top-3 Accuracy (Recall@3)         : {top3_hits:02d}/{total:02d} ({top3_pct:.1f}%)")

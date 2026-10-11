@@ -9,7 +9,7 @@
 
 ## 1. Enterprise Problem & Motivation
 
-In enterprise high-availability deployments, Aegis Gateway runs as multiple replicated instances across Kubernetes pods or edge nodes:
+In enterprise high-availability deployments, Propylon Gateway runs as multiple replicated instances across Kubernetes pods or edge nodes:
 1. **Multi-Pod Desynchronization**: When an administrator or CI/CD pipeline pushes a configuration change to Pod A via the Admin API, Pods B, C, and D remain on stale configurations if there is no cross-pod synchronization mechanism.
 2. **Split-Brain & Configuration Drift**: Network partitions can cause divergent state across gateway nodes, causing inconsistent rate limits, stale token budgets, or bypassed security guardrails.
 3. **Vendor-Agnostic Broadcast**: The synchronization bus must operate seamlessly across lightweight in-memory channels (for single-node / dev), Redis Pub/Sub, or NATS streaming without proprietary vendor lock-in.
@@ -23,14 +23,14 @@ Phase 28 establishes a **Distributed Cluster Sync & Pub/Sub Control Bus**:
 ```mermaid
 sequenceDiagram
     participant Admin as Admin / GitOps Pipeline
-    participant NodeA as Aegis Gateway (Pod A)
+    participant NodeA as Propylon Gateway (Pod A)
     participant Bus as Distributed Pub/Sub Bus (Redis / Channel)
-    participant NodeB as Aegis Gateway (Pod B)
-    participant NodeC as Aegis Gateway (Pod C)
+    participant NodeB as Propylon Gateway (Pod B)
+    participant NodeC as Propylon Gateway (Pod C)
 
     Admin->>NodeA: Update Policy (e.g. Rate Limit / Strict Tier)
     NodeA->>NodeA: Apply Locally & Increment Version
-    NodeA->>Bus: Broadcast ClusterSyncMessage (Topic: aegis.control.sync)
+    NodeA->>Bus: Broadcast ClusterSyncMessage (Topic: propylon.control.sync)
     par Distributed Broadcast
         Bus-->>NodeB: Deliver ClusterSyncMessage
         Bus-->>NodeC: Deliver ClusterSyncMessage
@@ -66,9 +66,9 @@ pub struct ClusterSyncReceipt {
 
 #[async_trait]
 pub trait ClusterSyncEngine: Send + Sync {
-    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> AegisResult<ClusterSyncMessage>;
-    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> AegisResult<ClusterSyncReceipt>;
-    async fn get_cluster_nodes(&self) -> AegisResult<Vec<String>>;
+    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> PropylonResult<ClusterSyncMessage>;
+    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> PropylonResult<ClusterSyncReceipt>;
+    async fn get_cluster_nodes(&self) -> PropylonResult<Vec<String>>;
 }
 ```
 

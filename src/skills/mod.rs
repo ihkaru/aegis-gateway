@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::skills::{PoisonScanner, SkillBundle, SkillMetadata, SkillRegistry};
 
 pub mod gitops;
@@ -33,19 +33,19 @@ impl LocalSkillRegistry {
 
 #[async_trait]
 impl SkillRegistry for LocalSkillRegistry {
-    async fn list_skills(&self) -> AegisResult<Vec<SkillMetadata>> {
+    async fn list_skills(&self) -> PropylonResult<Vec<SkillMetadata>> {
         let read = self.skills.read().await;
         Ok(read.values().map(|s| s.metadata.clone()).collect())
     }
 
-    async fn load_skill(&self, name: &str) -> AegisResult<SkillBundle> {
+    async fn load_skill(&self, name: &str) -> PropylonResult<SkillBundle> {
         let read = self.skills.read().await;
         read.get(name)
             .cloned()
-            .ok_or_else(|| AegisError::SkillNotFound(name.to_string()))
+            .ok_or_else(|| PropylonError::SkillNotFound(name.to_string()))
     }
 
-    async fn reload(&self) -> AegisResult<usize> {
+    async fn reload(&self) -> PropylonResult<usize> {
         let read = self.skills.read().await;
         Ok(read.len())
     }
@@ -62,7 +62,7 @@ impl DefaultPoisonScanner {
 }
 
 impl PoisonScanner for DefaultPoisonScanner {
-    fn detect_injection(&self, text: &str) -> AegisResult<()> {
+    fn detect_injection(&self, text: &str) -> PropylonResult<()> {
         let lower = text.to_lowercase();
         let triggers = [
             "<important>",
@@ -75,7 +75,7 @@ impl PoisonScanner for DefaultPoisonScanner {
 
         for trigger in triggers {
             if lower.contains(trigger) {
-                return Err(AegisError::SecurityPoisoningDetected(format!(
+                return Err(PropylonError::SecurityPoisoningDetected(format!(
                     "Found prohibited prompt injection pattern: '{trigger}'"
                 )));
             }

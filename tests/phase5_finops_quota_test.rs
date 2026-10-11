@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::core::error::AegisError;
-use aegis_gateway::core::state::{BudgetManager, BudgetStatus, QuotaEngine, TenantBudget};
-use aegis_gateway::core::types::TenantId;
-use aegis_gateway::state::HardFreezeQuota;
+use propylon::core::error::PropylonError;
+use propylon::core::state::{BudgetManager, BudgetStatus, QuotaEngine, TenantBudget};
+use propylon::core::types::TenantId;
+use propylon::state::HardFreezeQuota;
 
 #[tokio::test]
 async fn test_phase5_realtime_metering_and_tenant_isolation() {
@@ -115,10 +115,10 @@ async fn test_phase5_soft_warning_and_hard_freeze_cutoff() {
     // Further record_spend or record_usage attempts must return BudgetFrozen error
     let freeze_err = quota.record_spend(&tenant, 1.0).await;
     match freeze_err {
-        Err(AegisError::BudgetFrozen { reason, .. }) => {
+        Err(PropylonError::BudgetFrozen { reason, .. }) => {
             assert!(reason.contains("exhausted"));
         }
-        other => panic!("Expected AegisError::BudgetFrozen, got {:?}", other),
+        other => panic!("Expected PropylonError::BudgetFrozen, got {:?}", other),
     }
 }
 
@@ -183,7 +183,7 @@ async fn test_phase5_departmental_chargeback_and_prometheus_metrics() {
 
     // Export Prometheus metrics
     let metrics = quota.render_prometheus_metrics().await.unwrap();
-    assert!(metrics.contains("aegis_tenant_cost_usd_total{tenant=\"eng-backend\",department=\"Engineering\"} 150.0000"));
-    assert!(metrics.contains("aegis_tenant_tokens_total{tenant=\"eng-frontend\",department=\"Engineering\"} 500000"));
-    assert!(metrics.contains("aegis_tenant_budget_frozen{tenant=\"ops-infra\",department=\"Operations\"} 0"));
+    assert!(metrics.contains("propylon_tenant_cost_usd_total{tenant=\"eng-backend\",department=\"Engineering\"} 150.0000"));
+    assert!(metrics.contains("propylon_tenant_tokens_total{tenant=\"eng-frontend\",department=\"Engineering\"} 500000"));
+    assert!(metrics.contains("propylon_tenant_budget_frozen{tenant=\"ops-infra\",department=\"Operations\"} 0"));
 }

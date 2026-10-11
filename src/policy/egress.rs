@@ -1,5 +1,5 @@
 use crate::core::CallerContext;
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
@@ -24,8 +24,8 @@ impl Default for EgressRuleConfig {
 
 #[async_trait]
 pub trait EgressPolicyGuard: Send + Sync {
-    async fn evaluate_url(&self, target_url: &str, caller: &CallerContext) -> Result<(), AegisError>;
-    async fn inspect_arguments(&self, args: &serde_json::Value, caller: &CallerContext) -> Result<(), AegisError>;
+    async fn evaluate_url(&self, target_url: &str, caller: &CallerContext) -> Result<(), PropylonError>;
+    async fn inspect_arguments(&self, args: &serde_json::Value, caller: &CallerContext) -> Result<(), PropylonError>;
 }
 
 pub struct DefaultEgressGuard {
@@ -137,11 +137,11 @@ impl DefaultEgressGuard {
 
 #[async_trait]
 impl EgressPolicyGuard for DefaultEgressGuard {
-    async fn evaluate_url(&self, target_url: &str, _caller: &CallerContext) -> Result<(), AegisError> {
+    async fn evaluate_url(&self, target_url: &str, _caller: &CallerContext) -> Result<(), PropylonError> {
         let (scheme, rest) = if let Some(idx) = target_url.find("://") {
             (&target_url[..idx], &target_url[idx + 3..])
         } else {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "Invalid URL syntax in egress check: missing scheme in '{}'",
                 target_url
             )));
@@ -149,7 +149,7 @@ impl EgressPolicyGuard for DefaultEgressGuard {
 
         let scheme_lower = scheme.to_lowercase();
         if scheme_lower != "http" && scheme_lower != "https" {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "Blocked prohibited URL scheme '{}': only http/https allowed",
                 scheme_lower
             )));
@@ -170,20 +170,20 @@ impl EgressPolicyGuard for DefaultEgressGuard {
         };
 
         if host.is_empty() {
-            return Err(AegisError::PolicyDenied(
+            return Err(PropylonError::PolicyDenied(
                 "Missing host in egress target URL".to_string(),
             ));
         }
 
         if self.is_ip_or_host_blocked(host) {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "SSRF/Egress policy violation: destination host '{}' is blocked (private/metadata network)",
                 host
             )));
         }
 
         if !self.is_domain_allowed(host) {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "Source-rights policy violation: domain '{}' is not in allowed egress domain list",
                 host
             )));
@@ -192,7 +192,7 @@ impl EgressPolicyGuard for DefaultEgressGuard {
         Ok(())
     }
 
-    async fn inspect_arguments(&self, args: &serde_json::Value, caller: &CallerContext) -> Result<(), AegisError> {
+    async fn inspect_arguments(&self, args: &serde_json::Value, caller: &CallerContext) -> Result<(), PropylonError> {
         let mut urls = Vec::new();
         self.scan_urls_recursive(args, &mut urls);
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo "    AEGIS: ZERO-DOWNTIME & DYNAMIC CONTROL PLANE AUDIT     "
+echo "    PROPYLON: ZERO-DOWNTIME & DYNAMIC CONTROL PLANE AUDIT     "
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"

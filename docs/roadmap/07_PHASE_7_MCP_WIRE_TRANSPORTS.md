@@ -21,12 +21,12 @@ Defined in `src/core/transport.rs`:
 ```rust
 #[async_trait]
 pub trait IngressTransport: Send + Sync {
-    async fn run(&self) -> AegisResult<()>;
+    async fn run(&self) -> PropylonResult<()>;
 }
 
 #[async_trait]
 pub trait WireProtocolHandler: Send + Sync {
-    async fn handle_message(&self, raw_json: &str) -> AegisResult<Option<String>>;
+    async fn handle_message(&self, raw_json: &str) -> PropylonResult<Option<String>>;
 }
 ```
 
@@ -34,10 +34,10 @@ pub trait WireProtocolHandler: Send + Sync {
 
 1. **Streamable HTTP vs Legacy Dual-SSE (Kubernetes ALB Traps)**:
    - *Legacy Fault*: Separate `/sse` (GET) and `/message` (POST) endpoints required stateful session affinity, frequently breaking in multi-pod Kubernetes behind AWS ALB / Cloudflare.
-   - *Aegis Standard*: Unified Streamable HTTP endpoint (`POST /mcp`) supporting stateless chunked JSON-RPC and request-scoped SSE streaming per RFC 2025-03-26, with backward-compatible SSE fallback.
+   - *Propylon Standard*: Unified Streamable HTTP endpoint (`POST /mcp`) supporting stateless chunked JSON-RPC and request-scoped SSE streaming per RFC 2025-03-26, with backward-compatible SSE fallback.
 2. **Zero-Contamination Stdio Channel (Anti-Hang Invariant)**:
    - Any raw print to `stdout` corrupts the AI client's JSON parser, causing silent process death.
-   - Aegis guarantees `stdout` is strictly reserved for framed JSON-RPC 2.0 messages; all diagnostic traces and errors are unconditionally directed to `stderr`.
+   - Propylon guarantees `stdout` is strictly reserved for framed JSON-RPC 2.0 messages; all diagnostic traces and errors are unconditionally directed to `stderr`.
 3. **Canonical JSON-RPC 2.0 Error Taxonomy**:
    - Strict adherence to specification error codes:
      - `-32700`: Parse error (invalid JSON)

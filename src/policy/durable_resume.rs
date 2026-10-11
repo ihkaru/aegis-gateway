@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::core::approval::ApprovalGate;
 use crate::core::audit::{AuditAction, AuditEvent, AuditSink};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::notification::DurableResumeRouter;
 use crate::core::types::{CallerContext, TenantId};
 
@@ -32,11 +32,11 @@ impl DurableResumeRouter for DurableTaskResumeRouter {
         signature: &str,
         approved: bool,
         approver_id: &str,
-    ) -> AegisResult<bool> {
+    ) -> PropylonResult<bool> {
         let is_valid = self.approval_gate.resolve_ticket(ticket_id, signature, approved).await?;
 
         if !is_valid {
-            return Err(AegisError::AuthenticationFailed(format!(
+            return Err(PropylonError::AuthenticationFailed(format!(
                 "Invalid or expired cryptographic signature for approval ticket '{ticket_id}'"
             )));
         }

@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,12 +46,12 @@ pub struct OtelTraceContext {
 
 /// Verifier contract for validating integrity of sequential cryptographic log chains
 pub trait AuditChainVerifier: Send + Sync {
-    fn verify_chain(&self, events: &[HashChainedEvent]) -> AegisResult<bool>;
+    fn verify_chain(&self, events: &[HashChainedEvent]) -> PropylonResult<bool>;
 }
 
 /// Pluggable enterprise audit streaming sink (Splunk, Datadog, Elastic, OTel)
 #[async_trait]
 pub trait AuditSink: Send + Sync {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()>;
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()>;
 }
 

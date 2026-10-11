@@ -27,16 +27,16 @@ impl ConfigApiDispatcher {
     }
 
     fn handle_get_raw() -> (u16, Vec<u8>, &'static str) {
-        let (config_path, content) = if Path::new("aegis.yaml").exists() {
-            let text = std::fs::read_to_string("aegis.yaml").unwrap_or_default();
-            ("aegis.yaml", text)
-        } else if Path::new("aegis.json").exists() {
-            let text = std::fs::read_to_string("aegis.json").unwrap_or_default();
-            ("aegis.json", text)
+        let (config_path, content) = if Path::new("propylon.yaml").exists() {
+            let text = std::fs::read_to_string("propylon.yaml").unwrap_or_default();
+            ("propylon.yaml", text)
+        } else if Path::new("propylon.json").exists() {
+            let text = std::fs::read_to_string("propylon.json").unwrap_or_default();
+            ("propylon.json", text)
         } else {
             let default_template = TopologyConfigLoader::template();
             let yaml_str = serde_yaml::to_string(&default_template).unwrap_or_default();
-            ("aegis.yaml", yaml_str)
+            ("propylon.yaml", yaml_str)
         };
 
         let payload = json!({
@@ -117,13 +117,13 @@ impl ConfigApiDispatcher {
         };
 
         // 2. Persist safely with backup
-        if Path::new("aegis.yaml").exists() {
-            let _ = std::fs::copy("aegis.yaml", "aegis.yaml.bak");
+        if Path::new("propylon.yaml").exists() {
+            let _ = std::fs::copy("propylon.yaml", "propylon.yaml.bak");
         }
-        if let Err(e) = std::fs::write("aegis.yaml", content) {
+        if let Err(e) = std::fs::write("propylon.yaml", content) {
             return (
                 500,
-                json!({ "status": "IO_ERROR", "error": format!("Failed to write aegis.yaml: {e}") }).to_string().into_bytes(),
+                json!({ "status": "IO_ERROR", "error": format!("Failed to write propylon.yaml: {e}") }).to_string().into_bytes(),
                 "application/json",
             );
         }
@@ -138,7 +138,7 @@ impl ConfigApiDispatcher {
                 if srv.command.is_some() {
                     let backend = Arc::new(HermeticSubprocessBackend::new(srv.clone()));
                     if let Err(e) = backend.start().await {
-                        eprintln!("[AEGIS HOT-RELOAD] Warning spawning backend '{name}': {e}");
+                        eprintln!("[PROPYLON HOT-RELOAD] Warning spawning backend '{name}': {e}");
                     } else if reg.register(name, backend).await.is_ok() {
                         reloaded_backends.push(name.clone());
                     }

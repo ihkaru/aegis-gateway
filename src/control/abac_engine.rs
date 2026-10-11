@@ -9,7 +9,7 @@ use crate::core::abac::{
     AbacContext, AbacDecision, AbacEffect, AbacPolicy, AbacPolicyEngine, AbacRule,
     PolicySimulationResult,
 };
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Pure-Rust In-Memory ABAC Policy Engine with Atomic Hot-Reload
 #[derive(Debug, Clone)]
@@ -140,7 +140,7 @@ impl LocalAbacEngine {
 
 #[async_trait]
 impl AbacPolicyEngine for LocalAbacEngine {
-    async fn evaluate(&self, ctx: &AbacContext) -> AegisResult<AbacDecision> {
+    async fn evaluate(&self, ctx: &AbacContext) -> PropylonResult<AbacDecision> {
         let policy_guard = self.policy.read().await;
 
         for rule in &policy_guard.rules {
@@ -161,7 +161,7 @@ impl AbacPolicyEngine for LocalAbacEngine {
         })
     }
 
-    async fn simulate(&self, ctx: &AbacContext) -> AegisResult<PolicySimulationResult> {
+    async fn simulate(&self, ctx: &AbacContext) -> PropylonResult<PolicySimulationResult> {
         let start = Instant::now();
         let policy_guard = self.policy.read().await;
 
@@ -196,13 +196,13 @@ impl AbacPolicyEngine for LocalAbacEngine {
         })
     }
 
-    async fn reload_policy(&self, new_policy: AbacPolicy) -> AegisResult<()> {
+    async fn reload_policy(&self, new_policy: AbacPolicy) -> PropylonResult<()> {
         let mut guard = self.policy.write().await;
         *guard = new_policy;
         Ok(())
     }
 
-    async fn get_active_policy(&self) -> AegisResult<AbacPolicy> {
+    async fn get_active_policy(&self) -> PropylonResult<AbacPolicy> {
         let guard = self.policy.read().await;
         Ok(guard.clone())
     }

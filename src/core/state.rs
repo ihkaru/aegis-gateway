@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::TenantId;
 
 /// Core distributed state abstraction.
@@ -14,34 +14,34 @@ pub trait DistributedState: DistributedCache + DistributedRateLimiter + Distribu
 /// Distributed caching contract for cross-pod coordination
 #[async_trait]
 pub trait DistributedCache: Send + Sync {
-    async fn get(&self, key: &str) -> AegisResult<Option<Value>>;
-    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> AegisResult<()>;
-    async fn delete(&self, key: &str) -> AegisResult<bool>;
+    async fn get(&self, key: &str) -> PropylonResult<Option<Value>>;
+    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> PropylonResult<()>;
+    async fn delete(&self, key: &str) -> PropylonResult<bool>;
 }
 
 /// Distributed token bucket / sliding window rate limiting
 #[async_trait]
 pub trait DistributedRateLimiter: Send + Sync {
     /// Acquire rate limit quota. Returns Ok(true) if allowed, Ok(false) or Err if exceeded.
-    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> AegisResult<bool>;
+    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> PropylonResult<bool>;
 }
 
 /// Distributed circuit breaker to prevent cascading backend failures
 #[async_trait]
 pub trait DistributedCircuitBreaker: Send + Sync {
     /// Check whether calls to backend are permitted (Closed or Half-Open)
-    async fn is_available(&self, backend: &str) -> AegisResult<bool>;
+    async fn is_available(&self, backend: &str) -> PropylonResult<bool>;
     /// Record successful invocation
-    async fn record_success(&self, backend: &str) -> AegisResult<()>;
+    async fn record_success(&self, backend: &str) -> PropylonResult<()>;
     /// Record backend failure
-    async fn record_failure(&self, backend: &str) -> AegisResult<()>;
+    async fn record_failure(&self, backend: &str) -> PropylonResult<()>;
 }
 
 /// Multi-tenant cost and token quota tracking (Pillar 5)
 #[async_trait]
 pub trait QuotaEngine: Send + Sync {
-    async fn check_budget(&self, tenant: &TenantId) -> AegisResult<bool>;
-    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> AegisResult<()>;
+    async fn check_budget(&self, tenant: &TenantId) -> PropylonResult<bool>;
+    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> PropylonResult<()>;
 }
 
 /// Tenant monthly budget configuration and usage state
@@ -75,10 +75,10 @@ pub struct DepartmentChargeback {
 /// Enterprise budget management contract
 #[async_trait]
 pub trait BudgetManager: Send + Sync {
-    async fn set_budget(&self, budget: TenantBudget) -> AegisResult<()>;
-    async fn get_budget(&self, tenant: &TenantId) -> AegisResult<Option<TenantBudget>>;
-    async fn record_usage(&self, tenant: &TenantId, tokens: u64, cost_usd: f64) -> AegisResult<()>;
-    async fn evaluate_status(&self, tenant: &TenantId) -> AegisResult<BudgetStatus>;
-    async fn generate_chargeback_report(&self) -> AegisResult<Vec<DepartmentChargeback>>;
-    async fn render_prometheus_metrics(&self) -> AegisResult<String>;
+    async fn set_budget(&self, budget: TenantBudget) -> PropylonResult<()>;
+    async fn get_budget(&self, tenant: &TenantId) -> PropylonResult<Option<TenantBudget>>;
+    async fn record_usage(&self, tenant: &TenantId, tokens: u64, cost_usd: f64) -> PropylonResult<()>;
+    async fn evaluate_status(&self, tenant: &TenantId) -> PropylonResult<BudgetStatus>;
+    async fn generate_chargeback_report(&self) -> PropylonResult<Vec<DepartmentChargeback>>;
+    async fn render_prometheus_metrics(&self) -> PropylonResult<String>;
 }

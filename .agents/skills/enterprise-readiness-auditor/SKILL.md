@@ -5,7 +5,7 @@ description: Automated verification and compliance auditor for Enterprise AI/MCP
 
 # Enterprise Readiness Auditor Skill
 
-This skill governs and verifies that any implementation of `aegis-gateway` strictly satisfies the 6 core pillars required by Enterprise CISOs, Cloud Architects, and Compliance Officers.
+This skill governs and verifies that any implementation of `propylon` strictly satisfies the 6 core pillars required by Enterprise CISOs, Cloud Architects, and Compliance Officers.
 
 ## The 6 Enterprise Pillars (Mandatory Gate)
 
@@ -37,12 +37,12 @@ This skill governs and verifies that any implementation of `aegis-gateway` stric
 
 ## Audit Workflow for Coding Agents
 
-Whenever a coding agent modifies or adds features to `aegis-gateway`, the agent MUST:
+Whenever a coding agent modifies or adds features to `propylon`, the agent MUST:
 1. Run the enterprise audit suite:
    ```bash
    bash scripts/governance-check.sh
    # or run the dedicated auditor binary:
-   cargo run --bin aegis-audit
+   cargo run --bin propylon-audit
    ```
 2. Verify that all 6 pillars pass with a score of 100%.
 3. Any regression or shortcut (such as adding hardcoded in-memory state without trait abstraction) MUST fail the build.

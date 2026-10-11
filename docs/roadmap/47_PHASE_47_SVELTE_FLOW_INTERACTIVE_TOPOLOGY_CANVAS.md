@@ -15,7 +15,7 @@
 Enterprise administrators managing 20,000+ users require immediate visual intuition of gateway architecture and traffic routing:
 1. Static tables require manual mental mapping to trace how a request navigates through Ingress, DLP, Router, and Backends.
 2. Svelte Flow (`@xyflow/svelte`) provides industry-standard node graph visualization with full reactivity (Svelte 5 Runes) and smooth WebGL/SVG rendering.
-3. The visual canvas must preserve Aegis Gateway's anti-slop aesthetic, Lucide SVG iconography, and zero-emoji policy.
+3. The visual canvas must preserve Propylon Gateway's anti-slop aesthetic, Lucide SVG iconography, and zero-emoji policy.
 
 ---
 

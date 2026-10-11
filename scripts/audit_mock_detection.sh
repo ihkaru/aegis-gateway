@@ -8,7 +8,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "============================================================"
-echo "    AEGIS GATEWAY: ADVANCED ZERO-MOCK & INTEGRITY AUDITOR   "
+echo "    PROPYLON GATEWAY: ADVANCED ZERO-MOCK & INTEGRITY AUDITOR   "
 echo "============================================================"
 
 VIOLATIONS=0
@@ -227,7 +227,7 @@ fi
 echo "------------------------------------------------------------"
 if [ "$VIOLATIONS" -gt 0 ]; then
     echo ">>> [AUDIT REJECTED] Found $VIOLATIONS full-stack integrity violation(s)!"
-    echo "    Aegis Gateway strictly forbids silent mocks and unconstrained files."
+    echo "    Propylon Gateway strictly forbids silent mocks and unconstrained files."
     exit 1
 else
     echo ">>> [AUDIT PASSED] 100% Full-Stack Zero-Mock & Governance Integrity Verified."

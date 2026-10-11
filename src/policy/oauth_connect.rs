@@ -9,7 +9,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::delegation::{DelegatedToken, IdentityDelegationBroker};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::oauth_connect::{AuthProviderConfig, ConnectSession, OAuthConnectEngine};
 use crate::core::types::{CallerContext, TenantId};
 
@@ -61,11 +61,11 @@ impl OAuthConnectEngine for VendorAgnosticOAuthRouter {
         caller_id: &str,
         provider: &str,
         redirect_uri: &str,
-    ) -> AegisResult<(String, ConnectSession)> {
+    ) -> PropylonResult<(String, ConnectSession)> {
         let read = self.providers.read().await;
         let cfg = read
             .get(&provider.to_lowercase())
-            .ok_or_else(|| AegisError::PolicyDenied(format!("Unsupported OAuth provider '{provider}'")))?;
+            .ok_or_else(|| PropylonError::PolicyDenied(format!("Unsupported OAuth provider '{provider}'")))?;
 
         let session_id = uuid::Uuid::new_v4().to_string();
         let state_nonce = uuid::Uuid::new_v4().to_string();
@@ -102,21 +102,21 @@ impl OAuthConnectEngine for VendorAgnosticOAuthRouter {
         &self,
         code: &str,
         state: &str,
-    ) -> AegisResult<String> {
+    ) -> PropylonResult<String> {
         let mut write = self.sessions.write().await;
         let session = write
             .remove(state)
-            .ok_or_else(|| AegisError::PolicyDenied("Invalid or expired OAuth state nonce (CSRF violation)".to_string()))?;
+            .ok_or_else(|| PropylonError::PolicyDenied("Invalid or expired OAuth state nonce (CSRF violation)".to_string()))?;
 
         if code.is_empty() {
-            return Err(AegisError::PolicyDenied("Missing authorization code in callback".to_string()));
+            return Err(PropylonError::PolicyDenied("Missing authorization code in callback".to_string()));
         }
 
         let now_epoch = chrono::Utc::now().timestamp() as u64;
         let token = DelegatedToken {
             user_id: session.caller_id.clone(),
             service: session.provider.clone(),
-            access_token: format!("ya29.aegis_delegated_token_{}", uuid::Uuid::new_v4()),
+            access_token: format!("ya29.propylon_delegated_token_{}", uuid::Uuid::new_v4()),
             token_type: "Bearer".to_string(),
             expires_at_epoch_secs: now_epoch + 3600,
             scopes: vec!["https://www.googleapis.com/auth/drive".to_string()],
@@ -129,7 +129,7 @@ impl OAuthConnectEngine for VendorAgnosticOAuthRouter {
         Ok(session.caller_id)
     }
 
-    async fn has_active_token(&self, caller_id: &str, provider: &str) -> AegisResult<bool> {
+    async fn has_active_token(&self, caller_id: &str, provider: &str) -> PropylonResult<bool> {
         let caller = CallerContext {
             tenant_id: TenantId::new("default"),
             subject: caller_id.to_string(),

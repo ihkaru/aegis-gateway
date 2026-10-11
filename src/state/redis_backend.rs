@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::state::{
     DistributedCache, DistributedCircuitBreaker, DistributedRateLimiter, DistributedState,
     QuotaEngine,
@@ -76,13 +76,13 @@ impl DistributedState for RedisStateBackend {}
 
 #[async_trait]
 impl DistributedCache for RedisStateBackend {
-    async fn get(&self, key: &str) -> AegisResult<Option<Value>> {
+    async fn get(&self, key: &str) -> PropylonResult<Option<Value>> {
         if let Some(client) = &self.redis_client {
             if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
                 let res: redis::RedisResult<Option<String>> = redis::AsyncCommands::get(&mut conn, key).await;
                 if let Ok(Some(json_str)) = res {
                     let val: Value = serde_json::from_str(&json_str)
-                        .map_err(|e| AegisError::StateError(e.to_string()))?;
+                        .map_err(|e| PropylonError::StateError(e.to_string()))?;
                     return Ok(Some(val));
                 }
             }
@@ -99,11 +99,11 @@ impl DistributedCache for RedisStateBackend {
         Ok(None)
     }
 
-    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> AegisResult<()> {
+    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> PropylonResult<()> {
         if let Some(client) = &self.redis_client {
             if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
                 let serialized = serde_json::to_string(value)
-                    .map_err(|e| AegisError::StateError(e.to_string()))?;
+                    .map_err(|e| PropylonError::StateError(e.to_string()))?;
                 let ttl_secs = ttl.as_secs().max(1);
                 let _: redis::RedisResult<()> = redis::AsyncCommands::set_ex(&mut conn, key, serialized, ttl_secs).await;
             }
@@ -113,7 +113,7 @@ impl DistributedCache for RedisStateBackend {
         Ok(())
     }
 
-    async fn delete(&self, key: &str) -> AegisResult<bool> {
+    async fn delete(&self, key: &str) -> PropylonResult<bool> {
         if let Some(client) = &self.redis_client {
             if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
                 let _: redis::RedisResult<()> = redis::AsyncCommands::del(&mut conn, key).await;
@@ -126,7 +126,7 @@ impl DistributedCache for RedisStateBackend {
 
 #[async_trait]
 impl DistributedRateLimiter for RedisStateBackend {
-    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> AegisResult<bool> {
+    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> PropylonResult<bool> {
         let key = format!("ratelimit:{}:{}", tenant.as_str(), resource);
         if let Some(client) = &self.redis_client {
             if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
@@ -157,7 +157,7 @@ impl DistributedRateLimiter for RedisStateBackend {
 
 #[async_trait]
 impl DistributedCircuitBreaker for RedisStateBackend {
-    async fn is_available(&self, backend: &str) -> AegisResult<bool> {
+    async fn is_available(&self, backend: &str) -> PropylonResult<bool> {
         let trips = self.circuit_tripped.read().await;
         if let Some(tripped_at) = trips.get(backend) {
             if tripped_at.elapsed() < self.recovery_timeout {
@@ -167,7 +167,7 @@ impl DistributedCircuitBreaker for RedisStateBackend {
         Ok(true)
     }
 
-    async fn record_success(&self, backend: &str) -> AegisResult<()> {
+    async fn record_success(&self, backend: &str) -> PropylonResult<()> {
         let mut fails = self.failure_counts.write().await;
         fails.remove(backend);
         let mut trips = self.circuit_tripped.write().await;
@@ -175,7 +175,7 @@ impl DistributedCircuitBreaker for RedisStateBackend {
         Ok(())
     }
 
-    async fn record_failure(&self, backend: &str) -> AegisResult<()> {
+    async fn record_failure(&self, backend: &str) -> PropylonResult<()> {
         let mut fails = self.failure_counts.write().await;
         let count = fails.entry(backend.to_string()).or_insert(0);
         *count += 1;
@@ -189,13 +189,13 @@ impl DistributedCircuitBreaker for RedisStateBackend {
 
 #[async_trait]
 impl QuotaEngine for RedisStateBackend {
-    async fn check_budget(&self, tenant: &TenantId) -> AegisResult<bool> {
+    async fn check_budget(&self, tenant: &TenantId) -> PropylonResult<bool> {
         let spend = self.tenant_spend.read().await;
         let current = spend.get(tenant.as_str()).copied().unwrap_or(0.0);
         Ok(current < 10_000.0) // $10,000 default budget ceiling
     }
 
-    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> AegisResult<()> {
+    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> PropylonResult<()> {
         let mut spend = self.tenant_spend.write().await;
         let current = spend.entry(tenant.as_str().to_string()).or_insert(0.0);
         *current += cost_usd;

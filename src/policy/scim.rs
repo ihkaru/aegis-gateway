@@ -1,5 +1,5 @@
 use crate::core::data_governance::PolicyTier;
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use crate::core::federation::{ScimEventType, ScimInboundReceiver, ScimProvisionResult, ScimUserRecord};
 use std::collections::{HashMap, HashSet};
 use std::sync::RwLock;
@@ -52,9 +52,9 @@ impl ScimInboundReceiver for NativeScimInboundReceiver {
         &self,
         event_type: ScimEventType,
         record: ScimUserRecord,
-    ) -> Result<ScimProvisionResult, AegisError> {
+    ) -> Result<ScimProvisionResult, PropylonError> {
         if record.user_id.trim().is_empty() {
-            return Err(AegisError::Validation("SCIM user_id cannot be empty".to_string()));
+            return Err(PropylonError::Validation("SCIM user_id cannot be empty".to_string()));
         }
 
         // Handle deprovisioning / inactive state
@@ -62,7 +62,7 @@ impl ScimInboundReceiver for NativeScimInboundReceiver {
             let mut set = self
                 .revoked_users
                 .write()
-                .map_err(|e| AegisError::Internal(format!("SCIM lock error: {e}")))?;
+                .map_err(|e| PropylonError::Internal(format!("SCIM lock error: {e}")))?;
             set.insert(record.user_id.clone());
 
             return Ok(ScimProvisionResult {

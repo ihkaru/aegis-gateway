@@ -8,20 +8,20 @@
 
 ## 1. Executive Summary & Objective
 
-Phase 9 transforms Aegis Gateway from an embedded library into a **standalone, production-grade CLI daemon** and ensures **100% operational parity** with legacy `mcp-gateway` deployments.
+Phase 9 transforms Propylon Gateway from an embedded library into a **standalone, production-grade CLI daemon** and ensures **100% operational parity** with legacy `mcp-gateway` deployments.
 
-Developers can run Aegis Gateway directly from their terminal, manage backends via dynamic CLI subcommands, deploy it behind Docker/Kubernetes, and connect AI desktop clients (Claude Desktop, Cursor) with zero manual friction.
+Developers can run Propylon Gateway directly from their terminal, manage backends via dynamic CLI subcommands, deploy it behind Docker/Kubernetes, and connect AI desktop clients (Claude Desktop, Cursor) with zero manual friction.
 
 ---
 
 ## 2. CLI Architecture & Subcommand Matrix
 
-The Aegis CLI (`aegis-gateway`) provides rich ergonomics powered by `clap`:
+The Propylon CLI (`propylon`) provides rich ergonomics powered by `clap`:
 
 | Subcommand | Functionality | Primary Persona |
 | :--- | :--- | :--- |
 | `serve` | Start HTTP daemon (`0.0.0.0:39400`) or Stdio channel (`--stdio`) | SRE, Cloud Ops, Desktop Dev |
-| `init` | Scaffold starter `aegis.yaml` with best practices | Solo Developer, Hobbyist |
+| `init` | Scaffold starter `propylon.yaml` with best practices | Solo Developer, Hobbyist |
 | `validate` | Preflight parse & validate YAML/JSON topology file | CI/CD Engineer, GitOps |
 | `add` | Dynamically add/update an MCP backend server | Developer, Automation Script |
 | `remove` | Remove an MCP backend server from configuration | Developer, Automation Script |
@@ -37,19 +37,19 @@ Phase 9 audits and closes critical operational failure modes identified from rea
 
 ### 3.1. Tool Search by Backend Name (Issue #2317)
 * **Problem**: In legacy gateways, users or LLMs querying a backend name (e.g., `postgres`, `codesearch`) received zero results if the tool names (`query_sql`, `find_symbol`) and descriptions did not happen to repeat the server name.
-* **Aegis Parity**: `ProgressiveProjector::filter_by_context` scores and ranks candidate tools using `tool.server` and `tool.tags`, ensuring tools served by that backend rank at the top of progressive discovery.
+* **Propylon Parity**: `ProgressiveProjector::filter_by_context` scores and ranks candidate tools using `tool.server` and `tool.tags`, ensuring tools served by that backend rank at the top of progressive discovery.
 
 ### 3.2. Dedicated Package Manager Cache Isolation (Issue #622)
 * **Problem**: Concurrently spawning multiple `npx` or `uv` backend subprocesses causes lock contention on the host's global `~/.npm` or `~/.cache` directory, tearing the cache tree and failing subsequent spawns with `MODULE_NOT_FOUND`.
-* **Aegis Parity**: `HermeticSubprocessBackend::build_command_for_backend` automatically generates dedicated, sanitized cache directories (`$TMPDIR/aegis-cache/npm/<backend>`, `UV_CACHE_DIR`, `PIP_CACHE_DIR`) while preserving operator-set overrides.
+* **Propylon Parity**: `HermeticSubprocessBackend::build_command_for_backend` automatically generates dedicated, sanitized cache directories (`$TMPDIR/propylon-cache/npm/<backend>`, `UV_CACHE_DIR`, `PIP_CACHE_DIR`) while preserving operator-set overrides.
 
 ### 3.3. Cross-Platform Windows & Unix Command Splitting (Issue #523 / #527)
 * **Problem**: Windows path separators (`C:\Windows\py.exe`) are corrupted by POSIX `shlex` as escape sequences (`C:Windowspy.exe`).
-* **Aegis Parity**: Host-aware `command_split` module implements both Unix POSIX shell quote rules and Windows `CommandLineToArgvW` rules, preserving backslashes as path separators.
+* **Propylon Parity**: Host-aware `command_split` module implements both Unix POSIX shell quote rules and Windows `CommandLineToArgvW` rules, preserving backslashes as path separators.
 
 ### 3.4. Streamable HTTP Protocol Version Header Validation (Issue #540)
 * **Problem**: Clients sending unserved or bogus protocol versions (e.g. `1999-01-01`) would silently receive responses shaped by unsupported versions without notification.
-* **Aegis Parity**: `LiveHttpServer` validates `mcp-protocol-version` request headers on `/mcp`. Supported versions (`2024-11-05`, `2025-11-25`, `2024-10-07`) and absent headers pass; invalid revisions receive standard HTTP 400 with JSON-RPC error code `-32022`.
+* **Propylon Parity**: `LiveHttpServer` validates `mcp-protocol-version` request headers on `/mcp`. Supported versions (`2024-11-05`, `2025-11-25`, `2024-10-07`) and absent headers pass; invalid revisions receive standard HTTP 400 with JSON-RPC error code `-32022`.
 
 ---
 

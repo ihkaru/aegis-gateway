@@ -1,16 +1,16 @@
-use aegis_gateway::core::data_governance::PolicyTier;
-use aegis_gateway::core::federation::{
+use propylon::core::data_governance::PolicyTier;
+use propylon::core::federation::{
     SamlServiceProvider, ScimEventType, ScimInboundReceiver, ScimUserRecord,
 };
-use aegis_gateway::policy::saml::NativeSamlServiceProvider;
-use aegis_gateway::policy::scim::NativeScimInboundReceiver;
+use propylon::policy::saml::NativeSamlServiceProvider;
+use propylon::policy::scim::NativeScimInboundReceiver;
 
 #[test]
 fn test_saml_authn_request_and_valid_assertion_parsing() {
     let sp = NativeSamlServiceProvider::new(
-        "https://gateway.aegis.enterprise.io/saml/metadata",
+        "https://gateway.propylon.enterprise.io/saml/metadata",
         "https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/",
-        "https://gateway.aegis.enterprise.io/saml/acs",
+        "https://gateway.propylon.enterprise.io/saml/acs",
     );
 
     // 1. Generate AuthnRequest
@@ -18,8 +18,8 @@ fn test_saml_authn_request_and_valid_assertion_parsing() {
         .create_authn_request("https://login.microsoftonline.com/tenant/saml2")
         .expect("AuthnRequest creation failed");
     assert!(req.contains("samlp:AuthnRequest"));
-    assert!(req.contains("https://gateway.aegis.enterprise.io/saml/acs"));
-    assert!(req.contains("https://gateway.aegis.enterprise.io/saml/metadata"));
+    assert!(req.contains("https://gateway.propylon.enterprise.io/saml/acs"));
+    assert!(req.contains("https://gateway.propylon.enterprise.io/saml/metadata"));
 
     // 2. Validate valid assertion XML
     let valid_xml = r#"
@@ -28,7 +28,7 @@ fn test_saml_authn_request_and_valid_assertion_parsing() {
             <saml2:Issuer>https://sts.windows.net/72f988bf-86f1-41af-91ab-2d7cd011db47/</saml2:Issuer>
             <saml2:Conditions NotBefore="2026-10-10T00:00:00Z" NotOnOrAfter="2026-10-11T00:00:00Z">
                 <saml2:AudienceRestriction>
-                    <saml2:Audience>https://gateway.aegis.enterprise.io/saml/metadata</saml2:Audience>
+                    <saml2:Audience>https://gateway.propylon.enterprise.io/saml/metadata</saml2:Audience>
                 </saml2:AudienceRestriction>
             </saml2:Conditions>
             <saml2:Subject>
@@ -56,9 +56,9 @@ fn test_saml_authn_request_and_valid_assertion_parsing() {
 #[test]
 fn test_saml_security_refusals_and_mismatches() {
     let sp = NativeSamlServiceProvider::new(
-        "https://gateway.aegis.enterprise.io/saml/metadata",
+        "https://gateway.propylon.enterprise.io/saml/metadata",
         "https://sts.windows.net/trusted-tenant/",
-        "https://gateway.aegis.enterprise.io/saml/acs",
+        "https://gateway.propylon.enterprise.io/saml/acs",
     );
 
     // Mismatched Issuer
@@ -66,7 +66,7 @@ fn test_saml_security_refusals_and_mismatches() {
     <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
         <saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
             <saml:Issuer>https://rogue-idp.attacker.com/</saml:Issuer>
-            <saml:Audience>https://gateway.aegis.enterprise.io/saml/metadata</saml:Audience>
+            <saml:Audience>https://gateway.propylon.enterprise.io/saml/metadata</saml:Audience>
         </saml:Assertion>
     </samlp:Response>
     "#;
@@ -90,7 +90,7 @@ fn test_saml_security_refusals_and_mismatches() {
     <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
         <saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" NotOnOrAfter="2020-01-01T00:00:00Z">
             <saml:Issuer>https://sts.windows.net/trusted-tenant/</saml:Issuer>
-            <saml:Audience>https://gateway.aegis.enterprise.io/saml/metadata</saml:Audience>
+            <saml:Audience>https://gateway.propylon.enterprise.io/saml/metadata</saml:Audience>
         </saml:Assertion>
     </samlp:Response>
     "#;

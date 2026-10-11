@@ -18,8 +18,8 @@ Defined in [`src/core/dlp.rs`](../../src/core/dlp.rs) and [`src/core/skills.rs`]
 ```rust
 #[async_trait]
 pub trait DlpPipeline: Send + Sync {
-    async fn sanitize_response(&self, payload: Value) -> AegisResult<(Value, Vec<DlpFinding>)>;
-    async fn inspect_request_arguments(&self, arguments: &Value) -> AegisResult<Vec<DlpFinding>>;
+    async fn sanitize_response(&self, payload: Value) -> PropylonResult<(Value, Vec<DlpFinding>)>;
+    async fn inspect_request_arguments(&self, arguments: &Value) -> PropylonResult<Vec<DlpFinding>>;
 }
 
 pub trait FastPatternMatcher: Send + Sync {
@@ -27,7 +27,7 @@ pub trait FastPatternMatcher: Send + Sync {
 }
 
 pub trait PoisonScanner: Send + Sync {
-    fn detect_injection(&self, text: &str) -> AegisResult<()>;
+    fn detect_injection(&self, text: &str) -> PropylonResult<()>;
 }
 ```
 

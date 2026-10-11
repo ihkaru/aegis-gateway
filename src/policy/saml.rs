@@ -1,4 +1,4 @@
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use crate::core::federation::{SamlAssertionContext, SamlServiceProvider};
 use std::collections::HashMap;
 
@@ -20,14 +20,14 @@ impl NativeSamlServiceProvider {
 }
 
 impl SamlServiceProvider for NativeSamlServiceProvider {
-    fn create_authn_request(&self, destination_url: &str) -> Result<String, AegisError> {
+    fn create_authn_request(&self, destination_url: &str) -> Result<String, PropylonError> {
         if destination_url.trim().is_empty() {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "SAML IdP destination URL cannot be empty".to_string(),
             ));
         }
 
-        let request_id = format!("_aegis_req_{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis());
+        let request_id = format!("_propylon_req_{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis());
         let authn_xml = format!(
             "<samlp:AuthnRequest xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" \
              ID=\"{request_id}\" Version=\"2.0\" IssueInstant=\"2026-10-10T12:00:00Z\" \
@@ -42,23 +42,23 @@ impl SamlServiceProvider for NativeSamlServiceProvider {
         Ok(authn_xml)
     }
 
-    fn validate_assertion(&self, saml_xml: &str) -> Result<SamlAssertionContext, AegisError> {
+    fn validate_assertion(&self, saml_xml: &str) -> Result<SamlAssertionContext, PropylonError> {
         let trimmed = saml_xml.trim();
         if trimmed.is_empty() {
-            return Err(AegisError::Validation("SAML assertion payload is empty".to_string()));
+            return Err(PropylonError::Validation("SAML assertion payload is empty".to_string()));
         }
 
         if !trimmed.contains("Response") || !trimmed.contains("Assertion") {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "Invalid SAML 2.0 payload format: missing Response or Assertion element".to_string(),
             ));
         }
 
         // Validate Issuer
         let issuer = extract_xml_tag(trimmed, "Issuer")
-            .ok_or_else(|| AegisError::Validation("Missing Issuer in SAML Assertion".to_string()))?;
+            .ok_or_else(|| PropylonError::Validation("Missing Issuer in SAML Assertion".to_string()))?;
         if issuer != self.idp_entity_id {
-            return Err(AegisError::SecurityRefusal(format!(
+            return Err(PropylonError::SecurityRefusal(format!(
                 "SAML Issuer mismatch: expected '{}', found '{}'",
                 self.idp_entity_id, issuer
             )));
@@ -66,9 +66,9 @@ impl SamlServiceProvider for NativeSamlServiceProvider {
 
         // Validate Audience Restriction
         let audience = extract_xml_tag(trimmed, "Audience")
-            .ok_or_else(|| AegisError::Validation("Missing Audience in SAML Assertion".to_string()))?;
+            .ok_or_else(|| PropylonError::Validation("Missing Audience in SAML Assertion".to_string()))?;
         if audience != self.entity_id {
-            return Err(AegisError::SecurityRefusal(format!(
+            return Err(PropylonError::SecurityRefusal(format!(
                 "SAML Audience mismatch: expected '{}', found '{}'",
                 self.entity_id, audience
             )));
@@ -77,7 +77,7 @@ impl SamlServiceProvider for NativeSamlServiceProvider {
         // Validate NotOnOrAfter
         if let Some(not_on_or_after) = extract_xml_attribute(trimmed, "NotOnOrAfter") {
             if not_on_or_after.starts_with("2020-") || not_on_or_after.starts_with("2021-") {
-                return Err(AegisError::SecurityRefusal(
+                return Err(PropylonError::SecurityRefusal(
                     "SAML assertion has expired (NotOnOrAfter condition failed)".to_string(),
                 ));
             }

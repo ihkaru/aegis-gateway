@@ -1,7 +1,7 @@
-# Aegis Gateway: Agentic Workflow & Coding Guidelines
+# Propylon Gateway: Agentic Workflow & Coding Guidelines
 
 > [!IMPORTANT]
-> This file defines non-negotiable rules and constraints for all AI coding agents working on `aegis-gateway`.
+> This file defines non-negotiable rules and constraints for all AI coding agents working on `propylon`.
 
 ## 1. Core Architectural Laws (SOLID & Enterprise-First)
 
@@ -10,7 +10,7 @@
    - **OCP**: Open for extension via new trait implementations; closed for modification of core orchestration logic.
    - **LSP**: All trait implementations (e.g., in-memory dev mocks vs Redis cluster backends) must satisfy identical contracts.
    - **ISP**: Small, cohesive, and segregated traits (`DistributedCache`, `DistributedRateLimiter`, `DistributedCircuitBreaker`, `QuotaEngine`).
-   - **DIP**: High-level orchestrators (`AegisGateway`) depend ONLY on abstractions in `src/core/` (`Arc<dyn Trait>`).
+   - **DIP**: High-level orchestrators (`PropylonGateway`) depend ONLY on abstractions in `src/core/` (`Arc<dyn Trait>`).
 
 2. **Interface-First Principle**:
    - Zero concrete implementation before abstraction.
@@ -27,7 +27,7 @@
 5. **Zero Unsafe Code & Memory Safety**:
    - `#![deny(unsafe_code)]` is strictly enforced at the crate root (`src/lib.rs` and `src/main.rs`).
    - Zero bare `unwrap()` or `expect()` in production library code (`src/`).
-   - All errors must map into typed variants of `AegisError`.
+   - All errors must map into typed variants of `PropylonError`.
 
 ## 2. Agentic Workflow Lifecycle & Enforcement
 

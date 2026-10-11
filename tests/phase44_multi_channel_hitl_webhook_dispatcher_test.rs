@@ -2,9 +2,9 @@
 //! Phase 44: Multi-Channel HITL Webhook Dispatcher Test Suite
 //! Validates Slack BlockKit, Teams Adaptive Cards, HMAC attestation, and multi-channel dispatching.
 
-use aegis_gateway::core::approval::{ApprovalTicket, RiskTier};
-use aegis_gateway::core::notification::{ApprovalChannelTarget, ApprovalNotificationDispatcher, ApprovalNotificationPayload};
-use aegis_gateway::policy::approval_dispatcher::MultiChannelApprovalDispatcher;
+use propylon::core::approval::{ApprovalTicket, RiskTier};
+use propylon::core::notification::{ApprovalChannelTarget, ApprovalNotificationDispatcher, ApprovalNotificationPayload};
+use propylon::policy::approval_dispatcher::MultiChannelApprovalDispatcher;
 
 fn make_test_payload() -> ApprovalNotificationPayload {
     let ticket = ApprovalTicket {
@@ -24,7 +24,7 @@ fn make_test_payload() -> ApprovalNotificationPayload {
         description: "Agent requested destructive drop of production database table".to_string(),
         proposed_action: "DROP TABLE production_ledger".to_string(),
         resource: "db:production_ledger".to_string(),
-        resolve_base_url: "https://aegis.enterprise.internal:8485".to_string(),
+        resolve_base_url: "https://propylon.enterprise.internal:8485".to_string(),
         created_at_epoch_secs: 1769999000,
     }
 }
@@ -83,9 +83,9 @@ fn test_phase44_hmac_attestation_signature_verification() {
 
     // Verify header generation
     let headers = dispatcher.generate_headers(ticket_id);
-    assert!(headers.contains_key("X-Aegis-Signature"));
-    assert!(headers.contains_key("X-Aegis-Timestamp"));
-    assert_eq!(headers.get("X-Aegis-Ticket-Id").unwrap(), ticket_id);
+    assert!(headers.contains_key("X-Propylon-Signature"));
+    assert!(headers.contains_key("X-Propylon-Timestamp"));
+    assert_eq!(headers.get("X-Propylon-Ticket-Id").unwrap(), ticket_id);
 }
 
 #[tokio::test]

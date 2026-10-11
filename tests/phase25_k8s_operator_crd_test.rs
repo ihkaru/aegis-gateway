@@ -2,19 +2,19 @@
 
 use serde_json::json;
 
-use aegis_gateway::core::k8s::{
-    AegisBackendCrd, AegisCrdReconciler, AegisPolicyCrd, AegisTenantCrd,
+use propylon::core::k8s::{
+    PropylonBackendCrd, PropylonCrdReconciler, PropylonPolicyCrd, PropylonTenantCrd,
 };
-use aegis_gateway::k8s::DeclarativeCrdController;
+use propylon::k8s::DeclarativeCrdController;
 
 #[tokio::test]
 async fn test_declarative_crd_reconciliation() {
-    let controller = DeclarativeCrdController::new("ghcr.io/aegis-gateway/proxy:latest");
+    let controller = DeclarativeCrdController::new("ghcr.io/propylon/proxy:latest");
 
-    // 1. Reconcile AegisBackend
-    let backend = AegisBackendCrd {
+    // 1. Reconcile PropylonBackend
+    let backend = PropylonBackendCrd {
         name: "python-datascience-mcp".into(),
-        namespace: "aegis-workloads".into(),
+        namespace: "propylon-workloads".into(),
         transport: "stdio".into(),
         endpoint_or_cmd: "python3 /app/mcp_server.py".into(),
         replicas: 2,
@@ -23,10 +23,10 @@ async fn test_declarative_crd_reconciliation() {
     let outcome = controller.reconcile_backend(&backend).await.expect("reconcile backend failed");
     assert_eq!(outcome.status, "Applied");
 
-    // 2. Reconcile AegisPolicy
-    let policy = AegisPolicyCrd {
+    // 2. Reconcile PropylonPolicy
+    let policy = PropylonPolicyCrd {
         name: "strict-financial-governance".into(),
-        namespace: "aegis-workloads".into(),
+        namespace: "propylon-workloads".into(),
         tier: "strict".into(),
         rate_limit_rps: 50,
         circuit_breaker_threshold: 5,
@@ -35,10 +35,10 @@ async fn test_declarative_crd_reconciliation() {
     let outcome_pol = controller.reconcile_policy(&policy).await.expect("reconcile policy failed");
     assert_eq!(outcome_pol.status, "Applied");
 
-    // 3. Reconcile AegisTenant
-    let tenant = AegisTenantCrd {
+    // 3. Reconcile PropylonTenant
+    let tenant = PropylonTenantCrd {
         tenant_id: "analytics-bi-team".into(),
-        namespace: "aegis-workloads".into(),
+        namespace: "propylon-workloads".into(),
         monthly_token_budget: 5_000_000,
         cost_center: "CC-9012".into(),
     };
@@ -48,7 +48,7 @@ async fn test_declarative_crd_reconciliation() {
 
 #[tokio::test]
 async fn test_admission_webhook_validation_refuses_invalid_specs() {
-    let controller = DeclarativeCrdController::new("ghcr.io/aegis-gateway/proxy:latest");
+    let controller = DeclarativeCrdController::new("ghcr.io/propylon/proxy:latest");
 
     // Invalid transport
     let invalid_backend_json = json!({
@@ -58,7 +58,7 @@ async fn test_admission_webhook_validation_refuses_invalid_specs() {
         }
     });
     let decision = controller
-        .validate_admission("AegisBackend", &invalid_backend_json)
+        .validate_admission("PropylonBackend", &invalid_backend_json)
         .await
         .expect("validation failed");
     assert!(!decision.allowed);
@@ -72,7 +72,7 @@ async fn test_admission_webhook_validation_refuses_invalid_specs() {
         }
     });
     let decision_valid = controller
-        .validate_admission("AegisBackend", &valid_backend_json)
+        .validate_admission("PropylonBackend", &valid_backend_json)
         .await
         .expect("validation failed");
     assert!(decision_valid.allowed);
@@ -81,7 +81,7 @@ async fn test_admission_webhook_validation_refuses_invalid_specs() {
 
 #[tokio::test]
 async fn test_mutating_webhook_injects_sidecar_proxy() {
-    let controller = DeclarativeCrdController::new("ghcr.io/aegis-gateway/proxy:v1.0.0");
+    let controller = DeclarativeCrdController::new("ghcr.io/propylon/proxy:v1.0.0");
 
     let initial_pod = json!({
         "apiVersion": "v1",
@@ -102,8 +102,8 @@ async fn test_mutating_webhook_injects_sidecar_proxy() {
     let containers = mutated["spec"]["containers"].as_array().expect("containers must be array");
     assert_eq!(containers.len(), 2);
 
-    let sidecar = containers.iter().find(|c| c["name"] == "aegis-sidecar-proxy").expect("sidecar missing");
-    assert_eq!(sidecar["image"], "ghcr.io/aegis-gateway/proxy:v1.0.0");
+    let sidecar = containers.iter().find(|c| c["name"] == "propylon-sidecar-proxy").expect("sidecar missing");
+    assert_eq!(sidecar["image"], "ghcr.io/propylon/proxy:v1.0.0");
 
     // 2. Ensure idempotent mutation (running again does not duplicate)
     let re_mutated = controller.mutate_pod_spec(&mutated).await.expect("second mutation failed");

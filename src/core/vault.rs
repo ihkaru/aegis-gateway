@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BinaryBlobMetadata {
@@ -58,9 +58,9 @@ pub struct MimeInspectionResult {
 /// Interface-First abstraction for large multi-modal and chunked binary streaming
 #[async_trait]
 pub trait BinaryStreamingVault: Send + Sync {
-    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> AegisResult<UploadSession>;
-    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> AegisResult<ChunkAck>;
-    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> AegisResult<StoredBlobDescriptor>;
-    async fn generate_ephemeral_egress_ticket(&self, blob_urn: &str, client_id: &str, ttl_secs: u64) -> AegisResult<EphemeralEgressTicket>;
-    async fn inspect_blob_content(&self, blob_urn: &str) -> AegisResult<MimeInspectionResult>;
+    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> PropylonResult<UploadSession>;
+    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> PropylonResult<ChunkAck>;
+    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> PropylonResult<StoredBlobDescriptor>;
+    async fn generate_ephemeral_egress_ticket(&self, blob_urn: &str, client_id: &str, ttl_secs: u64) -> PropylonResult<EphemeralEgressTicket>;
+    async fn inspect_blob_content(&self, blob_urn: &str) -> PropylonResult<MimeInspectionResult>;
 }

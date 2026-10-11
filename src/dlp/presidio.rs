@@ -7,7 +7,7 @@ use sha2::{Digest, Sha256};
 use crate::core::dlp::{
     ComplianceProfile, DlpFinding, DlpPipeline, FastPatternMatcher, MaskingStrategy,
 };
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::dlp::matcher::FastMatcher;
 
 
@@ -152,12 +152,12 @@ impl Default for PresidioDlpPipeline {
 
 #[async_trait]
 impl DlpPipeline for PresidioDlpPipeline {
-    async fn sanitize_response(&self, payload: Value) -> AegisResult<(Value, Vec<DlpFinding>)> {
+    async fn sanitize_response(&self, payload: Value) -> PropylonResult<(Value, Vec<DlpFinding>)> {
         let (sanitized, findings) = self.recursive_sanitize(payload, "");
         Ok((sanitized, findings))
     }
 
-    async fn inspect_request_arguments(&self, arguments: &Value) -> AegisResult<Vec<DlpFinding>> {
+    async fn inspect_request_arguments(&self, arguments: &Value) -> PropylonResult<Vec<DlpFinding>> {
         let (_, findings) = self.recursive_sanitize(arguments.clone(), "args");
         Ok(findings)
     }

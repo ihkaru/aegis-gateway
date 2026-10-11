@@ -1,11 +1,11 @@
 [package]
-name = "aegis-gateway"
+name = "propylon"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-authors = ["Aegis Gateway Contributors"]
+authors = ["Propylon Gateway Contributors"]
 description = "Enterprise-Grade Zero-Trust MCP & Skill Gateway with Distributed State, Granular ABAC, and Tamper-Proof Audit"
-repository = "https://github.com/aegis-gateway/aegis-gateway"
+repository = "https://github.com/propylon/propylon"
 readme = "README.md"
 keywords = ["mcp", "model-context-protocol", "gateway", "enterprise", "skills"]
 categories = ["development-tools", "network-programming"]
@@ -34,9 +34,9 @@ rust-embed = "8.5"
 tower = { version = "0.5", features = ["util"] }
 
 [[bin]]
-name = "aegis-gateway"
+name = "propylon"
 path = "src/main.rs"
 
 [[bin]]
-name = "aegis-audit"
-path = "src/bin/aegis_audit.rs"
+name = "propylon-audit"
+path = "src/bin/propylon_audit.rs"

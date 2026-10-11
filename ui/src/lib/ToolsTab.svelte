@@ -57,7 +57,7 @@
   }
 
   function isLiveTool(tool: ToolItem): boolean {
-    return tool.is_live === true || tool.backend === 'aegis_local_engine' || tool.backend === 'sqlite_ledger';
+    return tool.is_live === true || tool.backend === 'propylon_local_engine' || tool.backend === 'sqlite_ledger';
   }
 
   function selectTool(tool: ToolItem) {
@@ -65,8 +65,8 @@
     execResult = null;
     if (tool.name.includes('sqlite') || tool.name.includes('sql') || tool.name.includes('ledger')) {
       inputArgs = '{\n  "query": "SELECT * FROM customer_accounts LIMIT 5"\n}';
-    } else if (tool.name === 'aegis_ping') {
-      inputArgs = '{\n  "echo": "Aegis loopback roundtrip ping"\n}';
+    } else if (tool.name === 'propylon_ping') {
+      inputArgs = '{\n  "echo": "Propylon loopback roundtrip ping"\n}';
     } else if (tool.name.includes('search') || tool.name.includes('lookup')) {
       inputArgs = '{\n  "query": "NIST AI RMF compliance standard",\n  "limit": 5\n}';
     } else {

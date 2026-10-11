@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::state::{
     DistributedCache, DistributedCircuitBreaker, DistributedRateLimiter, DistributedState,
     QuotaEngine,
@@ -47,7 +47,7 @@ impl DistributedState for InMemoryStateBackend {}
 
 #[async_trait]
 impl DistributedCache for InMemoryStateBackend {
-    async fn get(&self, key: &str) -> AegisResult<Option<Value>> {
+    async fn get(&self, key: &str) -> PropylonResult<Option<Value>> {
         let read = self.cache.read().await;
         if let Some((val, inserted, ttl)) = read.get(key) {
             if inserted.elapsed() < *ttl {
@@ -57,13 +57,13 @@ impl DistributedCache for InMemoryStateBackend {
         Ok(None)
     }
 
-    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> AegisResult<()> {
+    async fn set(&self, key: &str, value: &Value, ttl: Duration) -> PropylonResult<()> {
         let mut write = self.cache.write().await;
         write.insert(key.to_string(), (value.clone(), Instant::now(), ttl));
         Ok(())
     }
 
-    async fn delete(&self, key: &str) -> AegisResult<bool> {
+    async fn delete(&self, key: &str) -> PropylonResult<bool> {
         let mut write = self.cache.write().await;
         Ok(write.remove(key).is_some())
     }
@@ -71,7 +71,7 @@ impl DistributedCache for InMemoryStateBackend {
 
 #[async_trait]
 impl DistributedRateLimiter for InMemoryStateBackend {
-    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> AegisResult<bool> {
+    async fn acquire(&self, tenant: &TenantId, resource: &str, tokens: u32) -> PropylonResult<bool> {
         let key = format!("{}:{}", tenant.as_str(), resource);
         let mut buckets = self.rate_buckets.write().await;
         let entry = buckets.entry(key).or_insert((100, Instant::now()));
@@ -93,7 +93,7 @@ impl DistributedRateLimiter for InMemoryStateBackend {
 
 #[async_trait]
 impl DistributedCircuitBreaker for InMemoryStateBackend {
-    async fn is_available(&self, backend: &str) -> AegisResult<bool> {
+    async fn is_available(&self, backend: &str) -> PropylonResult<bool> {
         let read = self.circuit_failures.read().await;
         if let Some((fails, last_fail)) = read.get(backend) {
             // Open if >= 5 failures within last 30 seconds
@@ -104,13 +104,13 @@ impl DistributedCircuitBreaker for InMemoryStateBackend {
         Ok(true)
     }
 
-    async fn record_success(&self, backend: &str) -> AegisResult<()> {
+    async fn record_success(&self, backend: &str) -> PropylonResult<()> {
         let mut write = self.circuit_failures.write().await;
         write.remove(backend);
         Ok(())
     }
 
-    async fn record_failure(&self, backend: &str) -> AegisResult<()> {
+    async fn record_failure(&self, backend: &str) -> PropylonResult<()> {
         let mut write = self.circuit_failures.write().await;
         let entry = write.entry(backend.to_string()).or_insert((0, Instant::now()));
         entry.0 += 1;
@@ -121,14 +121,14 @@ impl DistributedCircuitBreaker for InMemoryStateBackend {
 
 #[async_trait]
 impl QuotaEngine for InMemoryStateBackend {
-    async fn check_budget(&self, tenant: &TenantId) -> AegisResult<bool> {
+    async fn check_budget(&self, tenant: &TenantId) -> PropylonResult<bool> {
         let read = self.tenant_spend.read().await;
         let current = read.get(tenant).copied().unwrap_or(0.0);
         // Default cap of $500 per month
         Ok(current < 500.0)
     }
 
-    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> AegisResult<()> {
+    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> PropylonResult<()> {
         let mut write = self.tenant_spend.write().await;
         let entry = write.entry(tenant.clone()).or_insert(0.0);
         *entry += cost_usd;

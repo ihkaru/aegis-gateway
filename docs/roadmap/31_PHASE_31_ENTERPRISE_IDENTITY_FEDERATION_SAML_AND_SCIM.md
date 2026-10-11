@@ -1,7 +1,7 @@
 # Phase 31: Enterprise Identity Federation — SAML 2.0 Web SSO & SCIM 2.0 Inbound Receiver
 
 ## Executive Summary
-Phase 31 bridges Aegis Gateway with enterprise identity providers (IdPs)—such as Microsoft Entra ID (Azure AD), Okta, Ping Identity, and Active Directory Federation Services (ADFS). By supporting legacy SAML 2.0 XML assertion verification alongside automated SCIM 2.0 (RFC 7644) inbound lifecycle provisioning and deprovisioning, enterprises can govern AI agent access and developer tool sessions using their existing corporate directory without vendor lock-in.
+Phase 31 bridges Propylon Gateway with enterprise identity providers (IdPs)—such as Microsoft Entra ID (Azure AD), Okta, Ping Identity, and Active Directory Federation Services (ADFS). By supporting legacy SAML 2.0 XML assertion verification alongside automated SCIM 2.0 (RFC 7644) inbound lifecycle provisioning and deprovisioning, enterprises can govern AI agent access and developer tool sessions using their existing corporate directory without vendor lock-in.
 
 ---
 
@@ -27,4 +27,4 @@ Phase 31 bridges Aegis Gateway with enterprise identity providers (IdPs)—such 
 - [x] SAML AuthnRequest generation outputs RFC-compliant parameters.
 - [x] SAML response parser correctly verifies valid assertions and rejects expired/tampered XML tokens.
 - [x] SCIM 2.0 user deprovisioning immediately triggers token tombstoning and session teardown.
-- [x] Group provisioning maps corporate directory memberships to appropriate Aegis PolicyTiers.
+- [x] Group provisioning maps corporate directory memberships to appropriate Propylon PolicyTiers.

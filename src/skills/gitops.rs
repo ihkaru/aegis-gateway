@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::skills::{
     GitOpsSyncReport, SignedSkillBundle, SkillBundle, SkillDependency,
 };
@@ -56,10 +56,10 @@ impl GitOpsSkillSync {
     }
 
     /// Verify cryptographic integrity of a signed bundle
-    pub fn verify_signature(&self, signed: &SignedSkillBundle) -> AegisResult<bool> {
+    pub fn verify_signature(&self, signed: &SignedSkillBundle) -> PropylonResult<bool> {
         let actual_digest = Self::compute_digest(&signed.bundle);
         if actual_digest != signed.sha256_digest {
-            return Err(AegisError::SkillVerificationFailed(format!(
+            return Err(PropylonError::SkillVerificationFailed(format!(
                 "Digest mismatch for skill '{}': expected {}, computed {}",
                 signed.bundle.metadata.name, signed.sha256_digest, actual_digest
             )));
@@ -68,7 +68,7 @@ impl GitOpsSkillSync {
         // Check signature presence if signer identity is declared
         if let Some(ref signer) = signed.signer_identity {
             if signed.signature.is_none() {
-                return Err(AegisError::SkillVerificationFailed(format!(
+                return Err(PropylonError::SkillVerificationFailed(format!(
                     "Missing signature from declared signer: {signer}"
                 )));
             }
@@ -82,9 +82,9 @@ impl GitOpsSkillSync {
         &self,
         dep: &SkillDependency,
         available_tools: &HashSet<String>,
-    ) -> AegisResult<()> {
+    ) -> PropylonResult<()> {
         if !dep.semver_req.is_empty() && dep.semver_req != "*" && !self.gateway_semver.starts_with(&dep.semver_req[..1]) {
-            return Err(AegisError::SkillDependencyMissing {
+            return Err(PropylonError::SkillDependencyMissing {
                 skill: dep.skill_name.clone(),
                 missing: format!(
                     "Requires gateway version {}, currently on {}",
@@ -95,7 +95,7 @@ impl GitOpsSkillSync {
 
         for tool in &dep.required_tools {
             if !available_tools.contains(tool) {
-                return Err(AegisError::SkillDependencyMissing {
+                return Err(PropylonError::SkillDependencyMissing {
                     skill: dep.skill_name.clone(),
                     missing: format!("Tool '{tool}' is not available in registered MCP servers"),
                 });
@@ -110,7 +110,7 @@ impl GitOpsSkillSync {
         bundles: Vec<SignedSkillBundle>,
         available_tools: &HashSet<String>,
         dependencies: &[SkillDependency],
-    ) -> AegisResult<GitOpsSyncReport> {
+    ) -> PropylonResult<GitOpsSyncReport> {
         let mut updated = Vec::new();
         let mut errors = Vec::new();
         let mut verified_count = 0;

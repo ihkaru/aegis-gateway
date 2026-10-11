@@ -3,24 +3,24 @@
 use std::sync::Arc;
 use serde_json::json;
 
-use aegis_gateway::control::abac_engine::LocalAbacEngine;
-use aegis_gateway::control::auth_api::AuthApiDispatcher;
-use aegis_gateway::control::catalog_scoper::AbacCatalogScoper;
-use aegis_gateway::control::downstream_signer::DownstreamIdentitySigner;
-use aegis_gateway::control::identity_broker::LocalIdentityBroker;
-use aegis_gateway::core::abac::{
+use propylon::control::abac_engine::LocalAbacEngine;
+use propylon::control::auth_api::AuthApiDispatcher;
+use propylon::control::catalog_scoper::AbacCatalogScoper;
+use propylon::control::downstream_signer::DownstreamIdentitySigner;
+use propylon::control::identity_broker::LocalIdentityBroker;
+use propylon::core::abac::{
     AbacContext, AbacEffect, AbacPolicyEngine, ActionAttributes, EnvironmentAttributes,
     PrincipalAttributes, ResourceAttributes,
 };
-use aegis_gateway::core::identity::{
+use propylon::core::identity::{
     AssertionExchangeRequest, DeviceAuthRequest, DeviceCodeStatus, IdentityFederationBroker,
 };
-use aegis_gateway::core::scoping::CatalogScopingProvider;
-use aegis_gateway::core::types::{CallerContext, TenantId, ToolDefinition};
+use propylon::core::scoping::CatalogScopingProvider;
+use propylon::core::types::{CallerContext, TenantId, ToolDefinition};
 
 #[tokio::test]
 async fn test_phase49_oauth_device_flow_lifecycle_and_assertion_exchange() {
-    let broker = LocalIdentityBroker::new("https://aegis.corp.internal");
+    let broker = LocalIdentityBroker::new("https://propylon.corp.internal");
 
     // 1. Initiate Device Flow (RFC 8628)
     let init_req = DeviceAuthRequest {
@@ -30,7 +30,7 @@ async fn test_phase49_oauth_device_flow_lifecycle_and_assertion_exchange() {
     let init_res = broker.start_device_flow(&init_req).await.expect("Failed to start device flow");
     assert!(init_res.device_code.starts_with("dev_"));
     assert_eq!(init_res.user_code.len(), 9); // XXXX-XXXX
-    assert_eq!(init_res.verification_uri, "https://aegis.corp.internal/activate");
+    assert_eq!(init_res.verification_uri, "https://propylon.corp.internal/activate");
 
     // 2. Poll while pending
     let status_pending = broker.poll_device_flow(&init_res.device_code).await.expect("Poll failed");
@@ -64,7 +64,7 @@ async fn test_phase49_oauth_device_flow_lifecycle_and_assertion_exchange() {
         resource: Some("urn:mcp:server:analytics".to_string()),
     };
     let token_res = broker.exchange_assertion(&exchange_req).await.expect("Exchange failed");
-    assert!(token_res.access_token.starts_with("aegis_jwt_"));
+    assert!(token_res.access_token.starts_with("propylon_jwt_"));
     assert_eq!(token_res.token_type, "Bearer");
     assert_eq!(token_res.scope, "urn:mcp:server:analytics");
 }

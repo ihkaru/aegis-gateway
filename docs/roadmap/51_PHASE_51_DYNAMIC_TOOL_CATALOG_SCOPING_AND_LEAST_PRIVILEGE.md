@@ -25,7 +25,7 @@ When an enterprise has 100+ tools registered across 20 MCP servers:
 #[async_trait]
 pub trait CatalogScopingProvider: Send + Sync {
     /// Filters discovered tools dynamically for the given authenticated principal
-    async fn scope_catalog(&self, principal: &PrincipalAttributes, raw_tools: Vec<ToolDefinition>) -> AegisResult<Vec<ToolDefinition>>;
+    async fn scope_catalog(&self, principal: &PrincipalAttributes, raw_tools: Vec<ToolDefinition>) -> PropylonResult<Vec<ToolDefinition>>;
 }
 ```
 

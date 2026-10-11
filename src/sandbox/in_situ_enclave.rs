@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::core::data_governance::{InSituDataEnclave, InSituExecutionResult};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::sandbox::{CodeSandboxEngine, ExecutionLanguage, SandboxExecutionRequest};
 use crate::core::types::CallerContext;
 
@@ -28,12 +28,12 @@ impl InSituDataEnclave for SandboxedInSituEnclave {
         query: &str,
         resource_path: &str,
         caller: &CallerContext,
-    ) -> AegisResult<InSituExecutionResult> {
+    ) -> PropylonResult<InSituExecutionResult> {
         let start = Instant::now();
 
         // Enforce honest filesystem pre-check: reject non-existent paths immediately
         if !Path::new(resource_path).exists() {
-            return Err(AegisError::ResourceNotFound(format!(
+            return Err(PropylonError::ResourceNotFound(format!(
                 "In-situ dataset not found on server filesystem: '{}'",
                 resource_path
             )));
@@ -131,17 +131,17 @@ except Exception as e:
         let duration_ms = start.elapsed().as_millis() as u64;
 
         if !result.success {
-            return Err(AegisError::Internal(format!(
+            return Err(PropylonError::Internal(format!(
                 "In-situ analytics execution failed (code {}): {}",
                 result.exit_code, result.stderr
             )));
         }
 
         let parsed: serde_json::Value = serde_json::from_str(result.stdout.trim())
-            .map_err(|e| AegisError::Internal(format!("Failed to parse in-situ JSON: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Failed to parse in-situ JSON: {e}")))?;
 
         if let Some(err_msg) = parsed.get("error").and_then(|e| e.as_str()) {
-            return Err(AegisError::Internal(format!("In-situ engine error: {err_msg}")));
+            return Err(PropylonError::Internal(format!("In-situ engine error: {err_msg}")));
         }
 
         let columns: Vec<String> = parsed

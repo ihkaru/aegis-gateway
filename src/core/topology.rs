@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct TopologyNodeMetrics {
@@ -57,5 +57,5 @@ pub struct TopologyGraphResponse {
 /// Interface-First abstraction for Dynamic Topology Graph Generation
 #[async_trait]
 pub trait TopologyGraphProvider: Send + Sync {
-    async fn get_topology_graph(&self) -> AegisResult<TopologyGraphResponse>;
+    async fn get_topology_graph(&self) -> PropylonResult<TopologyGraphResponse>;
 }

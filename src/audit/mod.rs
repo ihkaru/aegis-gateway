@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use tracing::info;
 
 use crate::core::audit::{AuditEvent, AuditSink};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 pub mod attestation;
 pub mod otel;
@@ -31,12 +31,12 @@ impl StructuredAuditLogger {
 
 #[async_trait]
 impl AuditSink for StructuredAuditLogger {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         let serialized = serde_json::to_string(event)
-            .map_err(|e| crate::core::error::AegisError::AuditError(e.to_string()))?;
+            .map_err(|e| crate::core::error::PropylonError::AuditError(e.to_string()))?;
 
         // Structured JSON log output ready for Datadog / Vector / FluentBit daemon ingestion
-        info!(target: "aegis::audit", event_json = %serialized, "AUDIT_EVENT_EMITTED");
+        info!(target: "propylon::audit", event_json = %serialized, "AUDIT_EVENT_EMITTED");
         Ok(())
     }
 }

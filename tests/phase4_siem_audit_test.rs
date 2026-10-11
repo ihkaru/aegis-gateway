@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
-use aegis_gateway::audit::{DatadogAuditSink, HashChainSequencer, MultiplexedAuditSink, OtelAuditSink, SplunkHecSink};
-use aegis_gateway::core::audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink};
-use aegis_gateway::core::types::{CallerContext, TenantId};
+use propylon::audit::{DatadogAuditSink, HashChainSequencer, MultiplexedAuditSink, OtelAuditSink, SplunkHecSink};
+use propylon::core::audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink};
+use propylon::core::types::{CallerContext, TenantId};
 
 fn create_sample_event(id: &str, tool: &str) -> AuditEvent {
     AuditEvent {
@@ -60,7 +60,7 @@ async fn test_phase4_cryptographic_hash_chain_integrity_and_soc2_report() {
 
 #[tokio::test]
 async fn test_phase4_otel_w3c_traceparent_propagation() {
-    let otel_sink = OtelAuditSink::new("aegis-production-gateway");
+    let otel_sink = OtelAuditSink::new("propylon-production-gateway");
 
     let event = create_sample_event("trace-evt-123", "deploy_service");
     otel_sink.emit(&event).await.expect("Emit span");

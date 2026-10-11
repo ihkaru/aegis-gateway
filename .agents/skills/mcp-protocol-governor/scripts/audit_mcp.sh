@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo " [AEGIS AUDIT] MCP Protocol & Skill Governance Audit"
+echo " [PROPYLON AUDIT] MCP Protocol & Skill Governance Audit"
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"

@@ -7,17 +7,17 @@ use tokio::sync::RwLock;
 use async_trait::async_trait;
 use serde_json::json;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::k8s::{
-    AdmissionDecision, AegisBackendCrd, AegisCrdReconciler, AegisPolicyCrd, AegisTenantCrd,
+    AdmissionDecision, PropylonBackendCrd, PropylonCrdReconciler, PropylonPolicyCrd, PropylonTenantCrd,
     ReconcileOutcome,
 };
 
 /// Production Kubernetes CRD Controller & Sidecar Mutator
 pub struct DeclarativeCrdController {
-    backends: Arc<RwLock<HashMap<String, AegisBackendCrd>>>,
-    policies: Arc<RwLock<HashMap<String, AegisPolicyCrd>>>,
-    tenants: Arc<RwLock<HashMap<String, AegisTenantCrd>>>,
+    backends: Arc<RwLock<HashMap<String, PropylonBackendCrd>>>,
+    policies: Arc<RwLock<HashMap<String, PropylonPolicyCrd>>>,
+    tenants: Arc<RwLock<HashMap<String, PropylonTenantCrd>>>,
     proxy_image: String,
 }
 
@@ -33,10 +33,10 @@ impl DeclarativeCrdController {
 }
 
 #[async_trait]
-impl AegisCrdReconciler for DeclarativeCrdController {
-    async fn reconcile_backend(&self, spec: &AegisBackendCrd) -> AegisResult<ReconcileOutcome> {
+impl PropylonCrdReconciler for DeclarativeCrdController {
+    async fn reconcile_backend(&self, spec: &PropylonBackendCrd) -> PropylonResult<ReconcileOutcome> {
         if spec.endpoint_or_cmd.is_empty() {
-            return Err(AegisError::Validation("Backend endpoint_or_cmd cannot be empty".into()));
+            return Err(PropylonError::Validation("Backend endpoint_or_cmd cannot be empty".into()));
         }
 
         let key = format!("{}/{}", spec.namespace, spec.name);
@@ -52,10 +52,10 @@ impl AegisCrdReconciler for DeclarativeCrdController {
         })
     }
 
-    async fn reconcile_policy(&self, spec: &AegisPolicyCrd) -> AegisResult<ReconcileOutcome> {
+    async fn reconcile_policy(&self, spec: &PropylonPolicyCrd) -> PropylonResult<ReconcileOutcome> {
         let tier = spec.tier.to_lowercase();
         if tier != "dev" && tier != "hybrid" && tier != "strict" {
-            return Err(AegisError::Validation(format!(
+            return Err(PropylonError::Validation(format!(
                 "Invalid policy tier '{tier}': expected dev, hybrid, or strict"
             )));
         }
@@ -73,9 +73,9 @@ impl AegisCrdReconciler for DeclarativeCrdController {
         })
     }
 
-    async fn reconcile_tenant(&self, spec: &AegisTenantCrd) -> AegisResult<ReconcileOutcome> {
+    async fn reconcile_tenant(&self, spec: &PropylonTenantCrd) -> PropylonResult<ReconcileOutcome> {
         if spec.monthly_token_budget == 0 {
-            return Err(AegisError::Validation("Tenant monthly token budget must be > 0".into()));
+            return Err(PropylonError::Validation("Tenant monthly token budget must be > 0".into()));
         }
 
         let key = format!("{}/{}", spec.namespace, spec.tenant_id);
@@ -91,9 +91,9 @@ impl AegisCrdReconciler for DeclarativeCrdController {
         })
     }
 
-    async fn validate_admission(&self, resource_kind: &str, raw_json: &serde_json::Value) -> AegisResult<AdmissionDecision> {
+    async fn validate_admission(&self, resource_kind: &str, raw_json: &serde_json::Value) -> PropylonResult<AdmissionDecision> {
         match resource_kind {
-            "AegisBackend" => {
+            "PropylonBackend" => {
                 let transport = raw_json["spec"]["transport"].as_str().unwrap_or("");
                 if transport != "stdio" && transport != "sse" && transport != "http" {
                     return Ok(AdmissionDecision {
@@ -116,7 +116,7 @@ impl AegisCrdReconciler for DeclarativeCrdController {
                     reason: None,
                 })
             }
-            "AegisPolicy" => {
+            "PropylonPolicy" => {
                 let tier = raw_json["spec"]["tier"].as_str().unwrap_or("").to_lowercase();
                 if tier != "dev" && tier != "hybrid" && tier != "strict" {
                     return Ok(AdmissionDecision {
@@ -139,23 +139,23 @@ impl AegisCrdReconciler for DeclarativeCrdController {
         }
     }
 
-    async fn mutate_pod_spec(&self, pod_spec: &serde_json::Value) -> AegisResult<serde_json::Value> {
+    async fn mutate_pod_spec(&self, pod_spec: &serde_json::Value) -> PropylonResult<serde_json::Value> {
         let mut mutated = pod_spec.clone();
         let containers = mutated["spec"]["containers"]
             .as_array_mut()
-            .ok_or_else(|| AegisError::Validation("Invalid Pod spec: missing containers array".into()))?;
+            .ok_or_else(|| PropylonError::Validation("Invalid Pod spec: missing containers array".into()))?;
 
-        // Sidecar injection: Add Aegis Gateway proxy sidecar
+        // Sidecar injection: Add Propylon Gateway proxy sidecar
         let sidecar = json!({
-            "name": "aegis-sidecar-proxy",
+            "name": "propylon-sidecar-proxy",
             "image": self.proxy_image,
             "env": [
                 {
-                    "name": "AEGIS_GATEWAY_URL",
-                    "value": "http://aegis-gateway.aegis-system.svc.cluster.local:8080"
+                    "name": "PROPYLON_GATEWAY_URL",
+                    "value": "http://propylon.propylon-system.svc.cluster.local:8080"
                 },
                 {
-                    "name": "AEGIS_INTERCEPT_ALL_MCP",
+                    "name": "PROPYLON_INTERCEPT_ALL_MCP",
                     "value": "true"
                 }
             ],
@@ -166,7 +166,7 @@ impl AegisCrdReconciler for DeclarativeCrdController {
         });
 
         // Avoid duplicate injection
-        let already_injected = containers.iter().any(|c| c["name"] == "aegis-sidecar-proxy");
+        let already_injected = containers.iter().any(|c| c["name"] == "propylon-sidecar-proxy");
         if !already_injected {
             containers.push(sidecar);
         }

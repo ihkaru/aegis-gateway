@@ -2,7 +2,7 @@
 #![deny(unsafe_code)]
 
 use clap::Parser;
-use aegis_gateway::cli::{self, Cli};
+use propylon::cli::{self, Cli};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if let Err(e) = cli::run(cli).await {
-        eprintln!("[AEGIS] Error: {e}");
+        eprintln!("[PROPYLON] Error: {e}");
         std::process::exit(1);
     }
 

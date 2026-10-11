@@ -32,11 +32,11 @@ pub trait CatalogSyncSentinel: Send + Sync {
 
 /// Default Enterprise Catalog Sync Sentinel Implementation
 #[derive(Debug, Clone)]
-pub struct AegisCatalogSyncSentinel {
+pub struct PropylonCatalogSyncSentinel {
     allow_empty_sync: bool,
 }
 
-impl Default for AegisCatalogSyncSentinel {
+impl Default for PropylonCatalogSyncSentinel {
     fn default() -> Self {
         Self {
             allow_empty_sync: false,
@@ -44,13 +44,13 @@ impl Default for AegisCatalogSyncSentinel {
     }
 }
 
-impl AegisCatalogSyncSentinel {
+impl PropylonCatalogSyncSentinel {
     pub fn new(allow_empty_sync: bool) -> Self {
         Self { allow_empty_sync }
     }
 }
 
-impl CatalogSyncSentinel for AegisCatalogSyncSentinel {
+impl CatalogSyncSentinel for PropylonCatalogSyncSentinel {
     fn evaluate_sync(
         &self,
         server: &str,

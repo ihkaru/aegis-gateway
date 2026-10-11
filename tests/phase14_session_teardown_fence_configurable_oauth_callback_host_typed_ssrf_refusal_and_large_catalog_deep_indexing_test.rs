@@ -6,15 +6,15 @@
 use std::collections::HashMap;
 use serde_json::json;
 
-use aegis_gateway::core::session::{SessionFence, SessionLifecycleStatus};
-use aegis_gateway::core::types::{DisclosureTier, ToolDefinition};
-use aegis_gateway::discovery::{
+use propylon::core::session::{SessionFence, SessionLifecycleStatus};
+use propylon::core::types::{DisclosureTier, ToolDefinition};
+use propylon::discovery::{
     BackendCatalogMetadata, BackendIndexStatus, CatalogSearchIndex,
 };
-use aegis_gateway::policy::{
+use propylon::policy::{
     CallbackServerConfig, OAuthCallbackResolver, SecurityPosture, SsrfRedirectValidator,
 };
-use aegis_gateway::state::session_fence::InMemorySessionFence;
+use propylon::state::session_fence::InMemorySessionFence;
 
 #[tokio::test]
 async fn test_mikko_issue_2568_in_flight_session_teardown_fence_and_anti_resurrection() {
@@ -213,7 +213,7 @@ fn test_mikko_issue_3034_catalog_search_deep_indexing_and_unindexed_visibility()
 
     // 4. Query matching backend description only: 'Bytebase DBHub fleet'
     // In issue #3034, searching for backend description returned 0 dbhub tools.
-    // In Aegis, all 44 tools are returned because parent metadata is deeply indexed!
+    // In Propylon, all 44 tools are returned because parent metadata is deeply indexed!
     let fleet_res = catalog.search("Bytebase DBHub fleet", DisclosureTier::L0, 50);
     assert_eq!(
         fleet_res.total_matches, 44,

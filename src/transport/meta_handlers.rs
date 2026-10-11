@@ -8,7 +8,7 @@ use crate::core::data_governance::{DataClassification, DataEgressDecision};
 use crate::core::sandbox::{ExecutionLanguage, SandboxExecutionRequest};
 use crate::core::transport::{JsonRpcError, JsonRpcId, JsonRpcResponse, INVALID_PARAMS};
 use crate::core::types::{CallerContext, DisclosureTier, TenantId, ToolDefinition};
-use crate::AegisGateway;
+use crate::PropylonGateway;
 
 pub struct MetaToolDispatcher;
 
@@ -42,7 +42,7 @@ impl MetaToolDispatcher {
     pub async fn handle_plan(
         id: JsonRpcId,
         tools: Arc<RwLock<Vec<ToolDefinition>>>,
-        gateway: &AegisGateway,
+        gateway: &PropylonGateway,
         planner: &crate::discovery::ExecutionPlanner,
         params: Option<Value>,
     ) -> JsonRpcResponse {
@@ -91,7 +91,7 @@ impl MetaToolDispatcher {
 
     pub async fn handle_execute_code(
         id: JsonRpcId,
-        gateway: &AegisGateway,
+        gateway: &PropylonGateway,
         params: Option<Value>,
     ) -> JsonRpcResponse {
         let args = match params {
@@ -169,7 +169,7 @@ impl MetaToolDispatcher {
 
     pub async fn handle_evaluate_data_egress(
         id: JsonRpcId,
-        gateway: &AegisGateway,
+        gateway: &PropylonGateway,
         params: Option<Value>,
     ) -> JsonRpcResponse {
         let args = match params {
@@ -234,7 +234,7 @@ impl MetaToolDispatcher {
 
     pub async fn handle_execute_in_situ_query(
         id: JsonRpcId,
-        gateway: &AegisGateway,
+        gateway: &PropylonGateway,
         params: Option<Value>,
     ) -> JsonRpcResponse {
         let args = match params {
@@ -272,7 +272,7 @@ impl MetaToolDispatcher {
 
     pub async fn handle_resolve_approval(
         id: JsonRpcId,
-        gateway: &AegisGateway,
+        gateway: &PropylonGateway,
         params: Option<Value>,
     ) -> JsonRpcResponse {
         let args = match params {

@@ -1,4 +1,4 @@
-# Aegis Gateway: Enterprise Issue Parity & Community Resolution Ledger
+# Propylon Gateway: Enterprise Issue Parity & Community Resolution Ledger
 
 > **Standard Compliance**: ISO 27001, SOC 2 Type II Non-Repudiation, NIST SP 800-218 (SSDF), OWASP Agentic AI Top 10  
 > **Target Benchmarks**: `MikkoParkkola/mcp-gateway` (canonical Rust proxy), `docker/mcp-gateway`, `microsoft/mcp-gateway`  
@@ -8,7 +8,7 @@
 
 ## 1. Governance & Issue Tracking Standard
 
-In high-assurance enterprise systems, issue resolution cannot remain ephemeral in commit messages. Aegis Gateway enforces a three-tier tracking structure:
+In high-assurance enterprise systems, issue resolution cannot remain ephemeral in commit messages. Propylon Gateway enforces a three-tier tracking structure:
 1. **Master Issue Parity Matrix (`docs/ISSUES_PARITY_MATRIX.md`)**: The central permanent index linking every upstream bug, community complaint, and CVE to concrete code and empirical test traces.
 2. **Phase Specifications (`docs/roadmap/NN_PHASE_*.md`)**: Dedicated architectural milestone contracts containing problem statements, threat models, and interface definitions.
 3. **Automated Audit Verifiers (`scripts/audit_gap_coverage.py` & `scripts/governance-check.sh`)**: Static and dynamic verification validating that no regression occurs.
@@ -17,7 +17,7 @@ In high-assurance enterprise systems, issue resolution cannot remain ephemeral i
 
 ## 2. Comprehensive Issue Resolution Ledger (Verified in Live Code)
 
-| Repository | Issue | Category | Upstream Vulnerability / Deficit | Aegis Gateway Resolution | Source File | Empirical Test Trace |
+| Repository | Issue | Category | Upstream Vulnerability / Deficit | Propylon Gateway Resolution | Source File | Empirical Test Trace |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `MikkoParkkola/mcp-gateway` | [#3265](https://github.com/MikkoParkkola/mcp-gateway/issues/3265) | `SEC` | In-memory state lock-in; pod crashes lose session states | Pluggable `DistributedState` with Redis Cluster Lua-scripts & in-memory dev backend | `src/core/state.rs` | `tests/phase1_distributed_test.rs` |
 | `MikkoParkkola/mcp-gateway` | [#555](https://github.com/MikkoParkkola/mcp-gateway/issues/555) | `SEC` | Coarse role bits; no dynamic payload argument bounds | ABAC engine with JSON AST evaluation, OPA/Rego constraints & DDL blocking | `src/policy/mod.rs` | `tests/phase2_zero_trust_test.rs` |
@@ -45,7 +45,7 @@ In high-assurance enterprise systems, issue resolution cannot remain ephemeral i
 
 ## 3. Scheduled & Roadmapped Issues (Upcoming Milestones)
 
-| Repository | Issue | Category | Upstream Vulnerability / Deficit | Scheduled Aegis Resolution | Target Milestone | Roadmap Specification |
+| Repository | Issue | Category | Upstream Vulnerability / Deficit | Scheduled Propylon Resolution | Target Milestone | Roadmap Specification |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `MikkoParkkola/mcp-gateway` | [#2555](https://github.com/MikkoParkkola/mcp-gateway/issues/2555) | `SEC` | Replayed chain-refused call loses original caller context | Immutable cryptographic correlation header retained across retries | Phase 37 | `docs/roadmap/37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md` |
 | `MikkoParkkola/mcp-gateway` | [#2554](https://github.com/MikkoParkkola/mcp-gateway/issues/2554) | `SEC` | Re-paired or restarted HTTP backends lose TLS pinning | Persistent SPKI SHA-256 Subject Public Key Info certificate pinning | Phase 37 | `docs/roadmap/37_PHASE_37_CRYPTOGRAPHIC_NONCE_REPLAY_AND_TLS_PINNING.md` |

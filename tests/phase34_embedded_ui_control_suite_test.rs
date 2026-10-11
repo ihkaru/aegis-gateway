@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
-use aegis_gateway::control::web_ui::EmbeddedAdminServer;
-use aegis_gateway::AegisGateway;
+use propylon::control::web_ui::EmbeddedAdminServer;
+use propylon::PropylonGateway;
 use serde_json::json;
 
 #[tokio::test]
@@ -32,7 +32,7 @@ async fn test_phase34_backends_discovery_and_registration() {
 
 #[tokio::test]
 async fn test_phase34_tools_catalog_and_playground_execution() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let server = EmbeddedAdminServer::new(8485, true).with_gateway(gateway);
 
     // 1. Discover tools

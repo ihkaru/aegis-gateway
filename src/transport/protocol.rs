@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::backend::BackendRegistry;
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::transport::{
     JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, WireProtocolHandler,
     INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
@@ -17,11 +17,11 @@ use crate::core::types::{
 };
 use crate::discovery::ExecutionPlanner;
 use crate::transport::meta_handlers::MetaToolDispatcher;
-use crate::AegisGateway;
+use crate::PropylonGateway;
 
 /// Core MCP wire protocol engine handling standard JSON-RPC 2.0 lifecycle
 pub struct McpProtocolHandler {
-    gateway: Arc<AegisGateway>,
+    gateway: Arc<PropylonGateway>,
     registry: Option<Arc<dyn BackendRegistry>>,
     planner: ExecutionPlanner,
     tools: Arc<RwLock<Vec<ToolDefinition>>>,
@@ -29,12 +29,12 @@ pub struct McpProtocolHandler {
 }
 
 impl McpProtocolHandler {
-    pub fn new(gateway: Arc<AegisGateway>) -> Self {
+    pub fn new(gateway: Arc<PropylonGateway>) -> Self {
         Self::with_registry(gateway, None)
     }
 
     pub fn with_identity(
-        gateway: Arc<AegisGateway>,
+        gateway: Arc<PropylonGateway>,
         registry: Option<Arc<dyn BackendRegistry>>,
         identity: GatewayServerIdentity,
     ) -> Self {
@@ -48,7 +48,7 @@ impl McpProtocolHandler {
     }
 
     pub fn with_registry(
-        gateway: Arc<AegisGateway>,
+        gateway: Arc<PropylonGateway>,
         registry: Option<Arc<dyn BackendRegistry>>,
     ) -> Self {
         Self::with_identity(gateway, registry, GatewayServerIdentity::default())
@@ -214,7 +214,7 @@ impl McpProtocolHandler {
                 };
                 let resp = backend.send_request(&backend_req).await?;
                 if let Some(err) = resp.error {
-                    Err(AegisError::Internal(format!("Backend error: {}", err.message)))
+                    Err(PropylonError::Internal(format!("Backend error: {}", err.message)))
                 } else {
                     Ok(resp.result.unwrap_or_else(|| json!({})))
                 }
@@ -256,7 +256,7 @@ impl McpProtocolHandler {
 
 #[async_trait]
 impl WireProtocolHandler for McpProtocolHandler {
-    async fn handle_message(&self, raw_json: &str) -> AegisResult<Option<String>> {
+    async fn handle_message(&self, raw_json: &str) -> PropylonResult<Option<String>> {
         let req: JsonRpcRequest = match serde_json::from_str(raw_json) {
             Ok(r) => r,
             Err(_) => {

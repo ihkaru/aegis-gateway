@@ -18,7 +18,7 @@ This skill enforces strict software craftsmanship principles across the Rust cod
    - Core contracts MUST be defined in `src/core/` as pure asynchronous traits before any concrete adapter or storage driver is written.
 
 3. **Dependency Injection (DI) Pattern**:
-   - High-level orchestrators (`AegisGateway`) and pipeline services must receive trait objects (`Arc<dyn Trait>`) or bounded generics via constructor injection.
+   - High-level orchestrators (`PropylonGateway`) and pipeline services must receive trait objects (`Arc<dyn Trait>`) or bounded generics via constructor injection.
    - Concrete structs must NEVER be instantiated directly inside business services.
 
 4. **Enterprise Integration Patterns (EIP) & Channel Invariant**:
@@ -49,7 +49,7 @@ This skill enforces strict software craftsmanship principles across the Rust cod
 ## Rust Code Quality Standards
 
 - `#![deny(unsafe_code)]` at crate root.
-- No bare `unwrap()` or `expect()` in production codepaths (use `Result<T, AegisError>` and `?`).
+- No bare `unwrap()` or `expect()` in production codepaths (use `Result<T, PropylonError>` and `?`).
 - Pure asynchronous I/O via Tokio runtime.
 - Proper use of `Arc<dyn Trait + Send + Sync>` for thread-safe shared references.
 

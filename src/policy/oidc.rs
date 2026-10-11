@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::identity::TokenValidator;
 use crate::core::types::{CallerContext, TenantId};
 
@@ -79,31 +79,31 @@ impl Default for OidcTokenValidator {
 
 #[async_trait]
 impl TokenValidator for OidcTokenValidator {
-    async fn validate_token(&self, token: &str) -> AegisResult<CallerContext> {
+    async fn validate_token(&self, token: &str) -> PropylonResult<CallerContext> {
         let parts: Vec<&str> = token.split('.').collect();
         if parts.len() != 3 {
-            return Err(AegisError::AuthenticationFailed(
+            return Err(PropylonError::AuthenticationFailed(
                 "Invalid JWT format: expected 3 dot-separated segments".to_string(),
             ));
         }
 
         let header_raw = URL_SAFE_NO_PAD
             .decode(parts[0])
-            .map_err(|e| AegisError::AuthenticationFailed(format!("Invalid header base64: {}", e)))?;
+            .map_err(|e| PropylonError::AuthenticationFailed(format!("Invalid header base64: {}", e)))?;
         let _header: serde_json::Value = serde_json::from_slice(&header_raw)
-            .map_err(|e| AegisError::AuthenticationFailed(format!("Invalid header JSON: {}", e)))?;
+            .map_err(|e| PropylonError::AuthenticationFailed(format!("Invalid header JSON: {}", e)))?;
 
         let claims_raw = URL_SAFE_NO_PAD
             .decode(parts[1])
-            .map_err(|e| AegisError::AuthenticationFailed(format!("Invalid claims base64: {}", e)))?;
+            .map_err(|e| PropylonError::AuthenticationFailed(format!("Invalid claims base64: {}", e)))?;
         let claims: OidcClaims = serde_json::from_slice(&claims_raw)
-            .map_err(|e| AegisError::AuthenticationFailed(format!("Invalid claims JSON: {}", e)))?;
+            .map_err(|e| PropylonError::AuthenticationFailed(format!("Invalid claims JSON: {}", e)))?;
 
         // 1. Validate Expiration
         if let Some(exp) = claims.exp {
             let now = chrono::Utc::now().timestamp();
             if now >= exp {
-                return Err(AegisError::AuthenticationFailed(format!(
+                return Err(PropylonError::AuthenticationFailed(format!(
                     "Token expired: exp timestamp {} < current {}",
                     exp, now
                 )));
@@ -113,7 +113,7 @@ impl TokenValidator for OidcTokenValidator {
         // 2. Validate Issuer if configured
         if let Some(expected_iss) = &self.expected_issuer {
             if claims.iss.as_deref() != Some(expected_iss.as_str()) {
-                return Err(AegisError::AuthenticationFailed(format!(
+                return Err(PropylonError::AuthenticationFailed(format!(
                     "Issuer mismatch: expected '{}', got '{:?}'",
                     expected_iss, claims.iss
                 )));
@@ -129,7 +129,7 @@ impl TokenValidator for OidcTokenValidator {
             let expected_sig = URL_SAFE_NO_PAD.encode(hasher.finalize());
 
             if parts[2] != expected_sig {
-                return Err(AegisError::AuthenticationFailed(
+                return Err(PropylonError::AuthenticationFailed(
                     "JWT signature verification failed".to_string(),
                 ));
             }

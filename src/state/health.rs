@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::health::{HealthProbe, HealthReport, ProbeState};
 use crate::core::state::DistributedState;
 
@@ -17,7 +17,7 @@ impl GatewayHealthService {
     pub fn new(state_backend: Arc<dyn DistributedState>) -> Self {
         Self {
             state_backend,
-            service_name: "aegis-gateway".to_string(),
+            service_name: "propylon".to_string(),
         }
     }
 
@@ -42,15 +42,15 @@ impl GatewayHealthService {
 
 #[async_trait]
 impl HealthProbe for GatewayHealthService {
-    async fn liveness(&self) -> AegisResult<HealthReport> {
+    async fn liveness(&self) -> PropylonResult<HealthReport> {
         let mut report = HealthReport::ok(&self.service_name);
         report.details.insert("status".to_string(), "running".to_string());
         report.details.insert("uptime".to_string(), "nominal".to_string());
         Ok(report)
     }
 
-    async fn readiness(&self) -> AegisResult<HealthReport> {
-        let probe_key = "__aegis_k8s_readyz_probe__";
+    async fn readiness(&self) -> PropylonResult<HealthReport> {
+        let probe_key = "__propylon_k8s_readyz_probe__";
         let probe_val = serde_json::json!({"probe": "ok"});
 
         // Verify distributed state write & read

@@ -17,7 +17,7 @@ First-generation MCP gateways exhibited operational failures and complaints:
 - Resolves `MikkoParkkola/mcp-gateway#2508`
 - Resolves `MikkoParkkola/mcp-gateway#3034`
 
-Aegis Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
+Propylon Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
 
 ---
 

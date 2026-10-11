@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use serde::{Deserialize, Serialize};
 
 /// Security posture level for SSRF validation
@@ -103,21 +103,21 @@ impl SsrfRedirectValidator {
     }
 
     /// Validates an OAuth redirect hop or outbound target.
-    /// Under Hardened posture, private/internal destinations return typed `AegisError::SsrfBlocked`.
-    pub fn validate_redirect_target(&self, target_url: &str) -> AegisResult<()> {
+    /// Under Hardened posture, private/internal destinations return typed `PropylonError::SsrfBlocked`.
+    pub fn validate_redirect_target(&self, target_url: &str) -> PropylonResult<()> {
         let (scheme, host) = Self::extract_host(target_url).ok_or_else(|| {
-            AegisError::SsrfBlocked(format!("Malformed redirect URL '{}'", target_url))
+            PropylonError::SsrfBlocked(format!("Malformed redirect URL '{}'", target_url))
         })?;
 
         if !self.allowed_schemes.contains(&scheme) {
-            return Err(AegisError::SsrfBlocked(format!(
+            return Err(PropylonError::SsrfBlocked(format!(
                 "Scheme '{}' not permitted for redirect hop: '{}'",
                 scheme, target_url
             )));
         }
 
         if self.posture == SecurityPosture::Hardened && self.is_prohibited_target(&host) {
-            return Err(AegisError::SsrfBlocked(format!(
+            return Err(PropylonError::SsrfBlocked(format!(
                 "Redirect hop to private/metadata destination '{}' refused under {:?} posture",
                 target_url, self.posture
             )));

@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// Delegated short-lived OAuth token bound to a human caller
@@ -24,17 +24,17 @@ pub trait IdentityDelegationBroker: Send + Sync {
         &self,
         caller: &CallerContext,
         target_service: &str,
-    ) -> AegisResult<Option<DelegatedToken>>;
+    ) -> PropylonResult<Option<DelegatedToken>>;
 
     /// Store or update a delegated user token
     async fn store_user_token(
         &self,
         caller_id: &str,
         token: DelegatedToken,
-    ) -> AegisResult<()>;
+    ) -> PropylonResult<()>;
 
     /// Invalidate delegated user token on logout or session revocation
-    async fn revoke_user_token(&self, caller_id: &str, target_service: &str) -> AegisResult<()>;
+    async fn revoke_user_token(&self, caller_id: &str, target_service: &str) -> PropylonResult<()>;
 }
 
 /// Abstract contract for virtual blast-radius resource scoping
@@ -46,5 +46,5 @@ pub trait ResourceScoper: Send + Sync {
         caller: &CallerContext,
         target_resource: &str,
         operation: &str,
-    ) -> AegisResult<bool>;
+    ) -> PropylonResult<bool>;
 }

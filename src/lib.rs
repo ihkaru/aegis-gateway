@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 #![deny(unsafe_code)]
 
-//! # Aegis Gateway
+//! # Propylon Gateway
 //!
 //! Enterprise Zero-Trust MCP & Skill Gateway with Distributed State,
 //! Granular ABAC, Real-time DLP, and Tamper-Proof Audit.
@@ -31,7 +31,7 @@ use crate::core::audit::AuditSink;
 use crate::core::data_governance::{DataEgressPolicyEngine, InSituDataEnclave, PolicyTier};
 use crate::core::delegation::IdentityDelegationBroker;
 use crate::core::dlp::DlpPipeline;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::notification::{
     ApprovalChannelTarget, ApprovalNotificationDispatcher, DurableResumeRouter,
 };
@@ -48,7 +48,7 @@ use crate::core::types::{
 use crate::transport::run_tool_execution_pipeline;
 
 /// High-level Enterprise Gateway Orchestrator (Dependency Inversion applied)
-pub struct AegisGateway {
+pub struct PropylonGateway {
     state: Arc<dyn DistributedState>,
     policy: Arc<dyn PolicyEngine>,
     dlp: Arc<dyn DlpPipeline>,
@@ -67,7 +67,7 @@ pub struct AegisGateway {
     resume_router: Arc<dyn DurableResumeRouter>,
 }
 
-impl AegisGateway {
+impl PropylonGateway {
     pub fn new(
         state: Arc<dyn DistributedState>,
         policy: Arc<dyn PolicyEngine>,
@@ -84,14 +84,14 @@ impl AegisGateway {
             audit.clone(),
         ));
         let proxy = Arc::new(sandbox::LoopbackCredentialProxy::new(secret_store.clone()));
-        let approval = Arc::new(policy::ActionApprovalGate::new("aegis_default_approval_secret"));
+        let approval = Arc::new(policy::ActionApprovalGate::new("propylon_default_approval_secret"));
         let delegation = Arc::new(policy::UserIdentityDelegationBroker::new());
         let oauth_connect = Arc::new(policy::VendorAgnosticOAuthRouter::new(delegation.clone()));
-        let tier = std::env::var("AEGIS_POLICY_TIER")
+        let tier = std::env::var("PROPYLON_POLICY_TIER")
             .ok()
             .and_then(|s| s.parse::<PolicyTier>().ok())
             .unwrap_or(PolicyTier::Hybrid);
-        let max_egress = std::env::var("AEGIS_MAX_EGRESS_BYTES")
+        let max_egress = std::env::var("PROPYLON_MAX_EGRESS_BYTES")
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(10 * 1024 * 1024);
@@ -107,19 +107,19 @@ impl AegisGateway {
             ApprovalChannelTarget::ConsoleLog,
             ApprovalChannelTarget::InBandMcp,
         ];
-        if let Ok(url) = std::env::var("AEGIS_SLACK_WEBHOOK_URL") {
+        if let Ok(url) = std::env::var("PROPYLON_SLACK_WEBHOOK_URL") {
             channels.push(ApprovalChannelTarget::SlackWebhook {
                 webhook_url: url,
-                channel: std::env::var("AEGIS_SLACK_CHANNEL").ok(),
+                channel: std::env::var("PROPYLON_SLACK_CHANNEL").ok(),
             });
         }
-        if let Ok(url) = std::env::var("AEGIS_TEAMS_WEBHOOK_URL") {
+        if let Ok(url) = std::env::var("PROPYLON_TEAMS_WEBHOOK_URL") {
             channels.push(ApprovalChannelTarget::TeamsWebhook { webhook_url: url });
         }
-        if let Ok(url) = std::env::var("AEGIS_GENERIC_WEBHOOK_URL") {
+        if let Ok(url) = std::env::var("PROPYLON_GENERIC_WEBHOOK_URL") {
             channels.push(ApprovalChannelTarget::GenericWebhook {
                 url,
-                secret_token: std::env::var("AEGIS_GENERIC_WEBHOOK_SECRET").ok(),
+                secret_token: std::env::var("PROPYLON_GENERIC_WEBHOOK_SECRET").ok(),
             });
         }
         let approval_dispatcher = Arc::new(policy::MultiChannelApprovalDispatcher::new(channels));
@@ -230,10 +230,10 @@ impl AegisGateway {
         &self,
         req: ToolCallRequest,
         raw_executor: F,
-    ) -> AegisResult<ToolCallResponse>
+    ) -> PropylonResult<ToolCallResponse>
     where
         F: FnOnce() -> Fut,
-        Fut: std::future::Future<Output = AegisResult<serde_json::Value>>,
+        Fut: std::future::Future<Output = PropylonResult<serde_json::Value>>,
     {
         run_tool_execution_pipeline(
             &self.state,
@@ -251,8 +251,8 @@ impl AegisGateway {
     pub async fn execute_tool(
         &self,
         req: ToolCallRequest,
-        raw_executor: impl FnOnce() -> AegisResult<serde_json::Value>,
-    ) -> AegisResult<ToolCallResponse> {
+        raw_executor: impl FnOnce() -> PropylonResult<serde_json::Value>,
+    ) -> PropylonResult<ToolCallResponse> {
         self.execute_tool_async(req, || async { raw_executor() }).await
     }
 
@@ -267,7 +267,7 @@ impl AegisGateway {
     }
 }
 
-impl Default for AegisGateway {
+impl Default for PropylonGateway {
     fn default() -> Self {
         Self::new(
             Arc::new(state::InMemoryStateBackend::new()),

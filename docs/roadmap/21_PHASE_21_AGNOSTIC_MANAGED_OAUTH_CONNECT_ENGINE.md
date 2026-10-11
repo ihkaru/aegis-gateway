@@ -24,7 +24,7 @@ Phase 21 establishes an open, vendor-agnostic **Managed OAuth Connect Engine** a
 sequenceDiagram
     participant User as End-User (Alice)
     participant Client as Claude Desktop / Cursor
-    participant GW as Aegis Gateway
+    participant GW as Propylon Gateway
     participant IdP as Identity Provider (Google / GitHub)
 
     User->>Client: "Summarize Q3 financial sheet"
@@ -76,17 +76,17 @@ pub trait OAuthConnectEngine: Send + Sync {
         caller_id: &str,
         provider: &str,
         redirect_uri: &str,
-    ) -> AegisResult<(String, ConnectSession)>;
+    ) -> PropylonResult<(String, ConnectSession)>;
 
     /// Complete authorization callback and persist tokens
     async fn handle_callback(
         &self,
         code: &str,
         state: &str,
-    ) -> AegisResult<String>;
+    ) -> PropylonResult<String>;
 
     /// Check if caller has active authorized token for provider
-    async fn has_active_token(&self, caller_id: &str, provider: &str) -> AegisResult<bool>;
+    async fn has_active_token(&self, caller_id: &str, provider: &str) -> PropylonResult<bool>;
 }
 ```
 

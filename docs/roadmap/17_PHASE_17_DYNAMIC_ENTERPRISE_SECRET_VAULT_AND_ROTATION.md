@@ -18,11 +18,11 @@ First-generation MCP implementations and naive AI agent sandboxes rely on static
 
 ## 2. Core Architectural Design
 
-Phase 17 integrates Aegis Gateway directly with central secret managers (Infisical, HashiCorp Vault) using Universal Auth Machine Identities without storing plaintext secrets on disk.
+Phase 17 integrates Propylon Gateway directly with central secret managers (Infisical, HashiCorp Vault) using Universal Auth Machine Identities without storing plaintext secrets on disk.
 
 ```mermaid
 flowchart TD
-    Client["AI Agent / Tool Request"] --> Gateway["Aegis Gateway"]
+    Client["AI Agent / Tool Request"] --> Gateway["Propylon Gateway"]
     Gateway --> Broker["VaultCredentialBroker"]
     Broker --> ChainedStore["ChainedSecretStore"]
     
@@ -47,16 +47,16 @@ The implementation adheres to Interface-First and Dependency Inversion principle
 #[async_trait]
 pub trait SecretStore: Send + Sync {
     /// Retrieve secret value by name or hierarchical path
-    async fn get_secret(&self, key: &str) -> AegisResult<Option<String>>;
+    async fn get_secret(&self, key: &str) -> PropylonResult<Option<String>>;
 
     /// Store or update secret (subject to role permissions)
-    async fn set_secret(&self, key: &str, value: &str) -> AegisResult<()>;
+    async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()>;
 
     /// Invalidate in-memory cache entry for a given secret
-    async fn invalidate(&self, key: &str) -> AegisResult<()>;
+    async fn invalidate(&self, key: &str) -> PropylonResult<()>;
 
     /// Check backend vault availability
-    async fn health_check(&self) -> AegisResult<bool>;
+    async fn health_check(&self) -> PropylonResult<bool>;
 }
 ```
 

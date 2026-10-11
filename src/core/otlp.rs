@@ -1,4 +1,4 @@
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -44,7 +44,7 @@ pub struct OtlpExportResult {
 /// Interface contract for OpenTelemetry (OTLP) telemetry export.
 pub trait OtlpTelemetryExporter: Send + Sync {
     /// Export a batch of distributed trace spans to the configured OTLP collector.
-    fn export_batch(&self, batch: OtlpExportBatch) -> Result<OtlpExportResult, AegisError>;
+    fn export_batch(&self, batch: OtlpExportBatch) -> Result<OtlpExportResult, PropylonError>;
 
     /// Determine if an operation must be sampled based on security risk factors.
     fn should_sample(&self, has_dlp_alert: bool, has_hitl_suspension: bool, is_error: bool) -> bool;

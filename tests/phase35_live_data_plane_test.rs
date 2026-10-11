@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
-use aegis_gateway::control::web_ui::EmbeddedAdminServer;
-use aegis_gateway::core::approval::ApprovalDecision;
-use aegis_gateway::backend::SubprocessBackendRegistry;
-use aegis_gateway::AegisGateway;
+use propylon::control::web_ui::EmbeddedAdminServer;
+use propylon::core::approval::ApprovalDecision;
+use propylon::backend::SubprocessBackendRegistry;
+use propylon::PropylonGateway;
 use serde_json::json;
 
 #[tokio::test]
 async fn test_phase35_live_overview_telemetry_binding() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let registry = Arc::new(SubprocessBackendRegistry::new());
     let server = EmbeddedAdminServer::new(8485, true)
         .with_gateway(gateway)
@@ -30,7 +30,7 @@ async fn test_phase35_live_overview_telemetry_binding() {
 
 #[tokio::test]
 async fn test_phase35_live_hitl_queue_and_cryptographic_resolve() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let server = EmbeddedAdminServer::new(8485, true).with_gateway(Arc::clone(&gateway));
 
     // Initially HITL queue is empty

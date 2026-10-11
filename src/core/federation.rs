@@ -1,5 +1,5 @@
 use crate::core::data_governance::PolicyTier;
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -16,10 +16,10 @@ pub struct SamlAssertionContext {
 /// Interface contract for SAML 2.0 Service Provider (SP) operations.
 pub trait SamlServiceProvider: Send + Sync {
     /// Generate an XML AuthnRequest for redirecting a user to the enterprise IdP.
-    fn create_authn_request(&self, destination_url: &str) -> Result<String, AegisError>;
+    fn create_authn_request(&self, destination_url: &str) -> Result<String, PropylonError>;
 
     /// Parse and cryptographically validate an incoming SAML Response XML assertion.
-    fn validate_assertion(&self, saml_xml: &str) -> Result<SamlAssertionContext, AegisError>;
+    fn validate_assertion(&self, saml_xml: &str) -> Result<SamlAssertionContext, PropylonError>;
 }
 
 /// Event types supported by the SCIM 2.0 (RFC 7644) inbound receiver.
@@ -57,7 +57,7 @@ pub trait ScimInboundReceiver: Send + Sync {
         &self,
         event_type: ScimEventType,
         record: ScimUserRecord,
-    ) -> Result<ScimProvisionResult, AegisError>;
+    ) -> Result<ScimProvisionResult, PropylonError>;
 
     /// Determine the effective policy tier assigned to an enterprise group.
     fn map_group_to_tier(&self, group_name: &str) -> PolicyTier;

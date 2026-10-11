@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use crate::core::audit::{AuditAction, AuditEvent, AuditSink};
 use crate::core::dlp::DlpPipeline;
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 use crate::core::state::DistributedState;
 use crate::core::types::{ToolCallRequest, ToolCallResponse};
@@ -20,10 +20,10 @@ pub async fn run_tool_execution_pipeline<F, Fut>(
     drain: &Arc<DrainCoordinator>,
     req: ToolCallRequest,
     raw_executor: F,
-) -> AegisResult<ToolCallResponse>
+) -> PropylonResult<ToolCallResponse>
 where
     F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = AegisResult<serde_json::Value>>,
+    Fut: std::future::Future<Output = PropylonResult<serde_json::Value>>,
 {
     let _task_slot = drain.acquire_slot()?;
     let start = Instant::now();
@@ -44,7 +44,7 @@ where
                 metadata: serde_json::json!({ "refusal": "QuotaExceeded", "args": req.arguments }),
             })
             .await?;
-        return Err(AegisError::RateLimitExceeded {
+        return Err(PropylonError::RateLimitExceeded {
             tenant: req.caller.tenant_id.as_str().to_string(),
             message: "Monthly spending quota exceeded".to_string(),
         });
@@ -66,7 +66,7 @@ where
                 metadata: serde_json::json!({ "refusal": "RateLimitExceeded", "args": req.arguments }),
             })
             .await?;
-        return Err(AegisError::RateLimitExceeded {
+        return Err(PropylonError::RateLimitExceeded {
             tenant: req.caller.tenant_id.as_str().to_string(),
             message: "Too many concurrent requests".to_string(),
         });
@@ -88,7 +88,7 @@ where
                 metadata: serde_json::json!({ "refusal": "CircuitOpen", "server": req.server }),
             })
             .await?;
-        return Err(AegisError::CircuitOpen(req.server.clone()));
+        return Err(PropylonError::CircuitOpen(req.server.clone()));
     }
 
     // 4. Granular ABAC Policy Evaluation
@@ -116,7 +116,7 @@ where
                     metadata: serde_json::json!({ "arguments": req.arguments }),
                 })
                 .await?;
-            return Err(AegisError::PolicyDenied(reason));
+            return Err(PropylonError::PolicyDenied(reason));
         }
         PolicyDecision::Allow => {}
     }

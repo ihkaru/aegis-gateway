@@ -26,7 +26,7 @@ Phase 26 implements **Agent Verification, Threat Enrichment & Pre-Flight CORS**:
 ```mermaid
 sequenceDiagram
     participant BrowserAgent as Agent / Web IDE
-    participant GW as Aegis Gateway
+    participant GW as Propylon Gateway
     participant Trust as AgentTrustVerifier (AgentCert)
     participant Threat as ThreatEvidenceEnricher
     participant Upstream as Target MCP Backend
@@ -98,12 +98,12 @@ pub struct ThreatEvidenceReport {
 
 #[async_trait]
 pub trait AgentTrustVerifier: Send + Sync {
-    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> AegisResult<AgentVerificationOutcome>;
+    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> PropylonResult<AgentVerificationOutcome>;
 }
 
 #[async_trait]
 pub trait ThreatEvidenceEnricher: Send + Sync {
-    async fn inspect_and_enrich_url(&self, target_url: &str) -> AegisResult<ThreatEvidenceReport>;
+    async fn inspect_and_enrich_url(&self, target_url: &str) -> PropylonResult<ThreatEvidenceReport>;
 }
 
 pub trait CorsPolicyEnforcer: Send + Sync {

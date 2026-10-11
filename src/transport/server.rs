@@ -9,10 +9,10 @@ use axum::routing::{get, post};
 use axum::Router;
 use serde_json::json;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::transport::WireProtocolHandler;
 use crate::state::DrainCoordinator;
-use crate::transport::cors::{AegisCorsPolicy, CorsPolicyEnforcer};
+use crate::transport::cors::{PropylonCorsPolicy, CorsPolicyEnforcer};
 
 #[derive(Clone)]
 struct AppState {
@@ -33,8 +33,8 @@ impl LiveHttpServer {
         drain: Arc<DrainCoordinator>,
         host: &str,
         port: u16,
-    ) -> AegisResult<Self> {
-        Self::with_cors(handler, drain, Arc::new(AegisCorsPolicy::default()), host, port)
+    ) -> PropylonResult<Self> {
+        Self::with_cors(handler, drain, Arc::new(PropylonCorsPolicy::default()), host, port)
     }
 
     pub fn with_cors(
@@ -43,11 +43,11 @@ impl LiveHttpServer {
         cors: Arc<dyn CorsPolicyEnforcer>,
         host: &str,
         port: u16,
-    ) -> AegisResult<Self> {
+    ) -> PropylonResult<Self> {
         let addr_str = format!("{host}:{port}");
         let listen_addr: SocketAddr = addr_str
             .parse()
-            .map_err(|e| crate::core::error::AegisError::Internal(format!("Invalid socket address '{addr_str}': {e}")))?;
+            .map_err(|e| crate::core::error::PropylonError::Internal(format!("Invalid socket address '{addr_str}': {e}")))?;
 
         Ok(Self {
             state: AppState { handler, drain, cors },
@@ -84,16 +84,16 @@ impl LiveHttpServer {
     }
 
     /// Run the server until shutdown signal is received
-    pub async fn run(self) -> AegisResult<()> {
+    pub async fn run(self) -> PropylonResult<()> {
         let router = self.router();
         let listener = tokio::net::TcpListener::bind(&self.listen_addr).await?;
-        eprintln!("[AEGIS] Listening on Streamable HTTP http://{}", self.listen_addr);
+        eprintln!("[PROPYLON] Listening on Streamable HTTP http://{}", self.listen_addr);
 
         let drain_clone = self.state.drain.clone();
         axum::serve(listener, router)
             .with_graceful_shutdown(async move {
                 let _ = tokio::signal::ctrl_c().await;
-                eprintln!("[AEGIS] Received shutdown signal; draining active requests...");
+                eprintln!("[PROPYLON] Received shutdown signal; draining active requests...");
                 drain_clone.signal_shutdown();
             })
             .await?;

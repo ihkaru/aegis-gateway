@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::cluster::DistributedPubSubClusterSync;
-use aegis_gateway::core::cluster_sync::ClusterSyncEngine;
-use aegis_gateway::core::error::AegisError;
+use propylon::cluster::DistributedPubSubClusterSync;
+use propylon::core::cluster_sync::ClusterSyncEngine;
+use propylon::core::error::PropylonError;
 
 #[tokio::test]
 async fn test_multi_node_broadcast_and_ingestion() {
-    let node_a = DistributedPubSubClusterSync::new("aegis-pod-01", 1);
-    let node_b = DistributedPubSubClusterSync::new("aegis-pod-02", 1);
+    let node_a = DistributedPubSubClusterSync::new("propylon-pod-01", 1);
+    let node_b = DistributedPubSubClusterSync::new("propylon-pod-02", 1);
 
     // 1. Node A publishes an update
     let payload = r#"{"tenant_id":"global-fintech","rate_limit":500}"#;
@@ -16,7 +16,7 @@ async fn test_multi_node_broadcast_and_ingestion() {
         .await
         .expect("broadcast failed");
     assert_eq!(msg.version, 2);
-    assert_eq!(msg.source_node_id, "aegis-pod-01");
+    assert_eq!(msg.source_node_id, "propylon-pod-01");
     assert!(!msg.checksum_sha256.is_empty());
 
     // 2. Node B ingests the update
@@ -26,14 +26,14 @@ async fn test_multi_node_broadcast_and_ingestion() {
 
     // 3. Cluster node membership updated
     let nodes = node_b.get_cluster_nodes().await.expect("nodes query failed");
-    assert!(nodes.contains(&"aegis-pod-01".to_string()));
-    assert!(nodes.contains(&"aegis-pod-02".to_string()));
+    assert!(nodes.contains(&"propylon-pod-01".to_string()));
+    assert!(nodes.contains(&"propylon-pod-02".to_string()));
 }
 
 #[tokio::test]
 async fn test_checksum_mismatch_fails_closed() {
-    let node_a = DistributedPubSubClusterSync::new("aegis-pod-01", 1);
-    let node_b = DistributedPubSubClusterSync::new("aegis-pod-02", 1);
+    let node_a = DistributedPubSubClusterSync::new("propylon-pod-01", 1);
+    let node_b = DistributedPubSubClusterSync::new("propylon-pod-02", 1);
 
     let msg = node_a
         .broadcast_update("backend_registered", r#"{"name":"test"}"#)
@@ -46,7 +46,7 @@ async fn test_checksum_mismatch_fails_closed() {
 
     let res = node_b.ingest_peer_update(&tampered_msg).await;
     match res {
-        Err(AegisError::SecurityRefusal(err)) => {
+        Err(PropylonError::SecurityRefusal(err)) => {
             assert!(err.contains("checksum mismatch"));
         }
         other => panic!("Expected SecurityRefusal error, got: {other:?}"),
@@ -55,9 +55,9 @@ async fn test_checksum_mismatch_fails_closed() {
 
 #[tokio::test]
 async fn test_anti_regression_and_idempotence() {
-    let node_b = DistributedPubSubClusterSync::new("aegis-pod-02", 5);
+    let node_b = DistributedPubSubClusterSync::new("propylon-pod-02", 5);
 
-    let mut stale_msg = DistributedPubSubClusterSync::new("aegis-pod-01", 2)
+    let mut stale_msg = DistributedPubSubClusterSync::new("propylon-pod-01", 2)
         .broadcast_update("sync", "{}")
         .await
         .expect("broadcast failed");

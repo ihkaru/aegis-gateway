@@ -10,7 +10,7 @@
 
 Real-world software is rarely broken by generic happy paths; it breaks because different user personas operate with fundamentally conflicting expectations, skill levels, and environmental conditions.
 
-Aegis Gateway employs a **Persona-Driven Graduated Testing Framework** traversing 6 progressive tiers:
+Propylon Gateway employs a **Persona-Driven Graduated Testing Framework** traversing 6 progressive tiers:
 
 ```
 +-----------------------------------------------------------------------------+
@@ -46,7 +46,7 @@ Aegis Gateway employs a **Persona-Driven Graduated Testing Framework** traversin
 * **Test Implementation**: `tests/e2e_tier3_team_multiplexing.rs`.
 
 ### Tier 4: Enterprise DevOps & Cloud-Native HA
-* **Persona**: Platform / SRE Engineer running Aegis in Kubernetes behind AWS ALB / Ingress.
+* **Persona**: Platform / SRE Engineer running Propylon in Kubernetes behind AWS ALB / Ingress.
 * **Expectation**: Stateless Streamable HTTP (RFC 2025-03-26 `POST /mcp`), `/healthz` & `/readyz` probes, zero-downtime graceful shutdown draining.
 * **Breakpoints**: Kubernetes ALB dual-SSE session stickiness loss, dropped inflight requests during rolling updates.
 * **Test Implementation**: `tests/e2e_tier4_enterprise_ha_production.rs`.

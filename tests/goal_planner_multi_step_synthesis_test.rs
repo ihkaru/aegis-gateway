@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 use serde_json::json;
-use aegis_gateway::policy::AbacPolicyEngine;
-use aegis_gateway::core::types::{CallerContext, TenantId};
-use aegis_gateway::discovery::{default_enterprise_catalog, ExecutionPlanner, GoalPlanner};
+use propylon::policy::AbacPolicyEngine;
+use propylon::core::types::{CallerContext, TenantId};
+use propylon::discovery::{default_enterprise_catalog, ExecutionPlanner, GoalPlanner};
 
 #[tokio::test]
 async fn test_autonomous_goal_deconstruction_and_multi_tool_planning() {

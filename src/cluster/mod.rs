@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use sha2::{Digest, Sha256};
 
 use crate::core::cluster_sync::{ClusterSyncEngine, ClusterSyncMessage, ClusterSyncReceipt};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 fn to_hex(bytes: &[u8]) -> String {
     bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut acc, b| {
@@ -62,7 +62,7 @@ impl DistributedPubSubClusterSync {
 
 #[async_trait]
 impl ClusterSyncEngine for DistributedPubSubClusterSync {
-    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> AegisResult<ClusterSyncMessage> {
+    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> PropylonResult<ClusterSyncMessage> {
         let new_ver = self.current_version.fetch_add(1, Ordering::SeqCst) + 1;
         let ts = Self::now_unix();
         let checksum = Self::compute_checksum(event_type, payload_json, new_ver, &self.local_node_id);
@@ -79,7 +79,7 @@ impl ClusterSyncEngine for DistributedPubSubClusterSync {
         })
     }
 
-    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> AegisResult<ClusterSyncReceipt> {
+    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> PropylonResult<ClusterSyncReceipt> {
         // 1. Checksum validation against tampering
         let expected_checksum = Self::compute_checksum(
             &message.event_type,
@@ -89,7 +89,7 @@ impl ClusterSyncEngine for DistributedPubSubClusterSync {
         );
 
         if message.checksum_sha256 != expected_checksum {
-            return Err(AegisError::SecurityRefusal(format!(
+            return Err(PropylonError::SecurityRefusal(format!(
                 "Cluster sync message {} checksum mismatch: calculated {}, expected {}",
                 message.message_id, expected_checksum, message.checksum_sha256
             )));
@@ -118,7 +118,7 @@ impl ClusterSyncEngine for DistributedPubSubClusterSync {
         })
     }
 
-    async fn get_cluster_nodes(&self) -> AegisResult<Vec<String>> {
+    async fn get_cluster_nodes(&self) -> PropylonResult<Vec<String>> {
         let lock = self.known_nodes.read().await;
         let mut list: Vec<String> = lock.iter().cloned().collect();
         list.sort();

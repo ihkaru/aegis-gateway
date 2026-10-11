@@ -1,15 +1,15 @@
 ---
 name: enterprise-integration-patterns
-description: Standardized Enterprise Integration Patterns (EIP - Hohpe & Woolf) enforcing Channel Adapters, Message Endpoints, Pipes & Filters, Control Bus, and Zero Direct Vendor Coupling in Aegis Gateway.
+description: Standardized Enterprise Integration Patterns (EIP - Hohpe & Woolf) enforcing Channel Adapters, Message Endpoints, Pipes & Filters, Control Bus, and Zero Direct Vendor Coupling in Propylon Gateway.
 ---
 
 # Enterprise Integration Patterns (EIP) Skill
 
-This skill governs the integration architecture of Aegis Gateway based on the canonical patterns from Gregor Hohpe and Bobby Woolf (*Enterprise Integration Patterns*, 2003).
+This skill governs the integration architecture of Propylon Gateway based on the canonical patterns from Gregor Hohpe and Bobby Woolf (*Enterprise Integration Patterns*, 2003).
 
 ## 1. Core Architectural Separation
 
-In Aegis Gateway, outbound connections are partitioned into two strictly separated planes:
+In Propylon Gateway, outbound connections are partitioned into two strictly separated planes:
 
 | Dimension | MCP Tool Execution Plane | Enterprise Integration Channels |
 | :--- | :--- | :--- |
@@ -18,7 +18,7 @@ In Aegis Gateway, outbound connections are partitioned into two strictly separat
 | **Examples** | Stdio subprocesses, Remote SSE/HTTP servers | Slack, MS Teams, Redis, NATS, Splunk, Vault |
 | **Contract Location** | `src/core/backend.rs` (`BackendTransport`) | `src/core/` Channel traits (`ApprovalChannel`, etc.) |
 
-## 2. The EIP Pattern Catalog in Aegis Gateway
+## 2. The EIP Pattern Catalog in Propylon Gateway
 
 ### Pattern 1: Channel Adapter & Message Endpoint
 - **Rule**: Domain and orchestrator logic must NEVER depend directly on third-party vendor SDKs or raw HTTP endpoints.

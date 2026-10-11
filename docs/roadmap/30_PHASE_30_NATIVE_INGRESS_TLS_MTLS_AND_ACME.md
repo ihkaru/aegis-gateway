@@ -1,7 +1,7 @@
 # Phase 30: Native Ingress Hardening — Pure-Rust TLS (rustls), mTLS Zero-Trust & ACME Auto-Cert Lifecycle
 
 ## Executive Summary
-Phase 30 equips Aegis Gateway with native, memory-safe L4/L7 ingress hardening via pure-Rust TLS (`rustls`), Mutual TLS (mTLS) client verification for zero-trust microservice meshes, and automated certificate management via ACME (RFC 8555 / Let's Encrypt / Smallstep step-ca). This eliminates the mandatory dependency on external reverse proxies (such as NGINX or Caddy) while maintaining 100% interoperability with existing enterprise ingress controllers.
+Phase 30 equips Propylon Gateway with native, memory-safe L4/L7 ingress hardening via pure-Rust TLS (`rustls`), Mutual TLS (mTLS) client verification for zero-trust microservice meshes, and automated certificate management via ACME (RFC 8555 / Let's Encrypt / Smallstep step-ca). This eliminates the mandatory dependency on external reverse proxies (such as NGINX or Caddy) while maintaining 100% interoperability with existing enterprise ingress controllers.
 
 ---
 

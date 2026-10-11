@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
 #[derive(Debug, Clone)]
@@ -75,7 +75,7 @@ impl Default for OpaPolicyEngine {
 
 #[async_trait]
 impl PolicyEngine for OpaPolicyEngine {
-    async fn evaluate(&self, ctx: &PolicyContext) -> AegisResult<PolicyDecision> {
+    async fn evaluate(&self, ctx: &PolicyContext) -> PropylonResult<PolicyDecision> {
         for rule in &self.rules {
             if ctx.tool.contains(&rule.tool_pattern) || rule.tool_pattern.contains(&ctx.tool) {
                 // Verify Role
@@ -107,7 +107,7 @@ impl PolicyEngine for OpaPolicyEngine {
         Ok(PolicyDecision::Allow)
     }
 
-    fn eval_payload(&self, tool: &str, arguments: &Value) -> AegisResult<PolicyDecision> {
+    fn eval_payload(&self, tool: &str, arguments: &Value) -> PropylonResult<PolicyDecision> {
         for rule in &self.rules {
             if tool.contains(&rule.tool_pattern) || rule.tool_pattern.contains(tool) {
                 // 1. Check Amount Constraint

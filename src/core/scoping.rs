@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use crate::core::abac::PrincipalAttributes;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::ToolDefinition;
 
 /// Contract for scoping tool discovery responses to least privilege
@@ -13,5 +13,5 @@ pub trait CatalogScopingProvider: Send + Sync {
         &self,
         principal: &PrincipalAttributes,
         raw_tools: &[ToolDefinition],
-    ) -> AegisResult<Vec<ToolDefinition>>;
+    ) -> PropylonResult<Vec<ToolDefinition>>;
 }

@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkillMetadata {
@@ -24,18 +24,18 @@ pub struct SkillBundle {
 #[async_trait]
 pub trait SkillRegistry: Send + Sync {
     /// List available skills (metadata only — lightweight Tier 1)
-    async fn list_skills(&self) -> AegisResult<Vec<SkillMetadata>>;
+    async fn list_skills(&self) -> PropylonResult<Vec<SkillMetadata>>;
 
     /// Load full skill instructions on-demand (Tier 2 activation)
-    async fn load_skill(&self, name: &str) -> AegisResult<SkillBundle>;
+    async fn load_skill(&self, name: &str) -> PropylonResult<SkillBundle>;
 
     /// Refresh skills from disk / remote repo (hot-reload)
-    async fn reload(&self) -> AegisResult<usize>;
+    async fn reload(&self) -> PropylonResult<usize>;
 }
 
 /// Active scanner for tool/skill descriptions against prompt injection & tool poisoning
 pub trait PoisonScanner: Send + Sync {
-    fn detect_injection(&self, text: &str) -> AegisResult<()>;
+    fn detect_injection(&self, text: &str) -> PropylonResult<()>;
 }
 
 /// Skill SemVer and tool dependencies
@@ -67,6 +67,6 @@ pub struct GitOpsSyncReport {
 /// Semantic skill vector retriever for natural language discovery without prompt stuffing
 #[async_trait]
 pub trait SkillVectorRetriever: Send + Sync {
-    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> AegisResult<Vec<SkillMetadata>>;
+    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> PropylonResult<Vec<SkillMetadata>>;
 }
 

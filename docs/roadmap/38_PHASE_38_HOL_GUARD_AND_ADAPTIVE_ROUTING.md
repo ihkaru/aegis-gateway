@@ -16,7 +16,7 @@ In multi-tenant AI agent deployments:
 
 ---
 
-## 2. Aegis Gateway Architectural Solution
+## 2. Propylon Gateway Architectural Solution
 
 ```mermaid
 flowchart TD

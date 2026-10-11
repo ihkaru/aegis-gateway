@@ -23,7 +23,7 @@ Phase 24 establishes a dedicated **Zero-Buffer Streaming Binary Vault**:
 ```mermaid
 sequenceDiagram
     participant Agent as AI Agent (Claude / Antigravity)
-    participant GW as Aegis Gateway
+    participant GW as Propylon Gateway
     participant Vault as BinaryStreamingVault
     participant Storage as Object / Disk Store
 
@@ -42,7 +42,7 @@ sequenceDiagram
     Agent->>GW: finalize_upload(session_id, expected_sha256)
     GW->>Vault: finalize_upload()
     Vault->>Vault: Magic Byte Inspection & SHA-256 Checksum Validation
-    Vault-->>GW: StoredBlobDescriptor (urn:aegis:blob:<hash>)
+    Vault-->>GW: StoredBlobDescriptor (urn:propylon:blob:<hash>)
     GW-->>Agent: Lightweight Blob Reference & Ephemeral Egress Ticket
 ```
 
@@ -96,11 +96,11 @@ pub struct EphemeralEgressTicket {
 
 #[async_trait]
 pub trait BinaryStreamingVault: Send + Sync {
-    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> AegisResult<UploadSession>;
-    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> AegisResult<ChunkAck>;
-    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> AegisResult<StoredBlobDescriptor>;
-    async fn generate_ephemeral_egress_ticket(&self, blob_urn: &str, client_id: &str, ttl_secs: u64) -> AegisResult<EphemeralEgressTicket>;
-    async fn inspect_blob_content(&self, blob_urn: &str) -> AegisResult<MimeInspectionResult>;
+    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> PropylonResult<UploadSession>;
+    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> PropylonResult<ChunkAck>;
+    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> PropylonResult<StoredBlobDescriptor>;
+    async fn generate_ephemeral_egress_ticket(&self, blob_urn: &str, client_id: &str, ttl_secs: u64) -> PropylonResult<EphemeralEgressTicket>;
+    async fn inspect_blob_content(&self, blob_urn: &str) -> PropylonResult<MimeInspectionResult>;
 }
 ```
 

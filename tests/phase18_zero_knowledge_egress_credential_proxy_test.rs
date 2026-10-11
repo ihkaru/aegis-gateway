@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use aegis_gateway::core::proxy::CredentialProxyEngine;
-use aegis_gateway::core::secrets::SecretStore;
-use aegis_gateway::policy::secrets::EnvSecretStore;
-use aegis_gateway::sandbox::LoopbackCredentialProxy;
+use propylon::core::proxy::CredentialProxyEngine;
+use propylon::core::secrets::SecretStore;
+use propylon::policy::secrets::EnvSecretStore;
+use propylon::sandbox::LoopbackCredentialProxy;
 
 #[tokio::test]
 async fn test_loopback_proxy_binding_and_teardown() {
@@ -44,7 +44,7 @@ async fn test_loopback_proxy_transport_header_injection() {
     // Test Google header transformation
     let raw_headers = vec![
         ("Host".to_string(), "sheets.googleapis.com".to_string()),
-        ("User-Agent".to_string(), "AegisSandbox/1.0".to_string()),
+        ("User-Agent".to_string(), "PropylonSandbox/1.0".to_string()),
     ];
 
     let transformed = proxy

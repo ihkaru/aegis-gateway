@@ -7,7 +7,7 @@
 
 ## 1. Objectives
 
-Transform Aegis Gateway into an enterprise-wide Skill Operating System. Instead of bloating agent context windows with thousands of static system prompt lines or duplicating skill scripts across individual developer machines, Aegis provides a centralized, versioned, hot-reloadable skill catalog with on-demand progressive activation.
+Transform Propylon Gateway into an enterprise-wide Skill Operating System. Instead of bloating agent context windows with thousands of static system prompt lines or duplicating skill scripts across individual developer machines, Propylon provides a centralized, versioned, hot-reloadable skill catalog with on-demand progressive activation.
 
 ---
 
@@ -18,14 +18,14 @@ Defined in [`src/core/skills.rs`](../../src/core/skills.rs):
 ```rust
 #[async_trait]
 pub trait SkillRegistry: Send + Sync {
-    async fn list_skills(&self) -> AegisResult<Vec<SkillMetadata>>;
-    async fn load_skill(&self, name: &str) -> AegisResult<SkillBundle>;
-    async fn reload(&self) -> AegisResult<usize>;
+    async fn list_skills(&self) -> PropylonResult<Vec<SkillMetadata>>;
+    async fn load_skill(&self, name: &str) -> PropylonResult<SkillBundle>;
+    async fn reload(&self) -> PropylonResult<usize>;
 }
 
 #[async_trait]
 pub trait SkillVectorRetriever: Send + Sync {
-    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> AegisResult<Vec<SkillMetadata>>;
+    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> PropylonResult<Vec<SkillMetadata>>;
 }
 ```
 
@@ -43,7 +43,7 @@ pub trait ProgressiveDisclosure: Send + Sync {
 ```mermaid
 sequenceDiagram
     participant Agent as Coding Agent
-    participant Gateway as Aegis Gateway
+    participant Gateway as Propylon Gateway
     participant Registry as Central Skill Registry
     participant Git as Enterprise Git Repository
 

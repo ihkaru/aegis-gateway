@@ -5,7 +5,7 @@ use serde_json::json;
 
 use crate::core::backend::BackendRegistry;
 use crate::core::types::{CallerContext, ToolCallRequest};
-use crate::AegisGateway;
+use crate::PropylonGateway;
 
 /// REST API Dispatcher handling control plane operations for the Embedded Admin UI.
 pub struct WebApiDispatcher;
@@ -16,7 +16,7 @@ impl WebApiDispatcher {
         path: &str,
         body_bytes: &[u8],
         start_time: std::time::Instant,
-        gateway: Option<&Arc<AegisGateway>>,
+        gateway: Option<&Arc<PropylonGateway>>,
         registry: Option<&Arc<dyn BackendRegistry>>,
         recent_invocations: &std::sync::RwLock<Vec<serde_json::Value>>,
         recent_dlp_events: &std::sync::RwLock<Vec<serde_json::Value>>,
@@ -63,12 +63,12 @@ impl WebApiDispatcher {
                 let list = if let Some(reg) = registry {
                     let backends = reg.list_backends().await.unwrap_or_default();
                     if backends.is_empty() {
-                        vec!["aegis_local_engine".to_string()]
+                        vec!["propylon_local_engine".to_string()]
                     } else {
                         backends
                     }
                 } else {
-                    vec!["aegis_local_engine".to_string()]
+                    vec!["propylon_local_engine".to_string()]
                 };
                 let backends_info: Vec<_> = list.into_iter().map(|b| {
                     let is_remote = b.contains("remote") || b.contains("http");
@@ -112,7 +112,7 @@ impl WebApiDispatcher {
                 }
                 let formatted: Vec<_> = tools.into_iter().map(|t| {
                     let sig = format!("{}({}) -> Value", t.name, t.required_params.join(", "));
-                    let is_live = t.server == "aegis_local_engine" || t.server == "sqlite_ledger";
+                    let is_live = t.server == "propylon_local_engine" || t.server == "sqlite_ledger";
                     json!({
                         "name": t.name,
                         "backend": t.server,
@@ -134,7 +134,7 @@ impl WebApiDispatcher {
                     let raw_result = if let Some(reg) = registry {
                         let transport_opt = match reg.find_backend_for_tool(tool).await {
                             Ok(Some(t)) => Some(t),
-                            _ => reg.get("aegis_local_engine").await.ok(),
+                            _ => reg.get("propylon_local_engine").await.ok(),
                         };
                         if let Some(transport) = transport_opt {
                             let rpc_req = crate::core::transport::JsonRpcRequest {
@@ -169,7 +169,7 @@ impl WebApiDispatcher {
                                 session_id: "sess_playground".to_string(),
                             },
                         };
-                        // MOCK_WAIVER[id: "AEGIS-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
+                        // MOCK_WAIVER[id: "PROPYLON-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
                         let exec_res = gw.execute_tool_async(req, || async { Ok(raw_result.clone()) }).await;
                         let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
                         let is_unattached = raw_result.get("data").and_then(|d| d.get("status")).and_then(|s| s.as_str()) == Some("unattached") || raw_result.get("status").and_then(|s| s.as_str()) == Some("unattached");

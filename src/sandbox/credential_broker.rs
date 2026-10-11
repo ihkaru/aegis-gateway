@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::sandbox::CredentialBroker;
 use crate::core::secrets::SecretStore;
 
@@ -32,7 +32,7 @@ impl VaultCredentialBroker {
         }
     }
 
-    async fn broker_google(&self, envs: &mut HashMap<String, String>) -> AegisResult<()> {
+    async fn broker_google(&self, envs: &mut HashMap<String, String>) -> PropylonResult<()> {
         let candidate_keys = [
             "AINA_GDRIVE_TOKEN_JSON",
             "GOOGLE_CREDENTIALS",
@@ -71,7 +71,7 @@ impl VaultCredentialBroker {
         Ok(())
     }
 
-    async fn broker_github(&self, envs: &mut HashMap<String, String>) -> AegisResult<()> {
+    async fn broker_github(&self, envs: &mut HashMap<String, String>) -> PropylonResult<()> {
         if let Some(val) = self.secret_store.get_secret("GITHUB_TOKEN").await? {
             envs.insert("GITHUB_TOKEN".to_string(), val.clone());
             self.register_secret(&val).await;
@@ -79,7 +79,7 @@ impl VaultCredentialBroker {
         Ok(())
     }
 
-    async fn broker_aws(&self, envs: &mut HashMap<String, String>) -> AegisResult<()> {
+    async fn broker_aws(&self, envs: &mut HashMap<String, String>) -> PropylonResult<()> {
         if let Some(val) = self.secret_store.get_secret("AWS_ACCESS_KEY_ID").await? {
             envs.insert("AWS_ACCESS_KEY_ID".to_string(), val);
         }
@@ -90,7 +90,7 @@ impl VaultCredentialBroker {
         Ok(())
     }
 
-    async fn broker_generic(&self, service: &str, envs: &mut HashMap<String, String>) -> AegisResult<()> {
+    async fn broker_generic(&self, service: &str, envs: &mut HashMap<String, String>) -> PropylonResult<()> {
         let clean = service.to_uppercase().replace(['-', '.'], "_");
         let token_key = format!("{clean}_TOKEN");
         let api_key = format!("{clean}_API_KEY");
@@ -108,7 +108,7 @@ impl VaultCredentialBroker {
 
 #[async_trait]
 impl CredentialBroker for VaultCredentialBroker {
-    async fn broker_credentials(&self, services: &[String]) -> AegisResult<HashMap<String, String>> {
+    async fn broker_credentials(&self, services: &[String]) -> PropylonResult<HashMap<String, String>> {
         let mut envs = HashMap::new();
         for svc in services {
             match svc.to_lowercase().as_str() {

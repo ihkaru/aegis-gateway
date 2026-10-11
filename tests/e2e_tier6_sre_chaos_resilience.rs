@@ -8,12 +8,12 @@
 
 use std::collections::HashMap;
 
-use aegis_gateway::backend::HermeticSubprocessBackend;
-use aegis_gateway::core::backend::{BackendConfig, BackendTransport};
-use aegis_gateway::core::state::{BudgetManager, DistributedCircuitBreaker, QuotaEngine, TenantBudget};
-use aegis_gateway::core::transport::{JsonRpcId, JsonRpcRequest};
-use aegis_gateway::core::types::TenantId;
-use aegis_gateway::state::{HardFreezeQuota, InMemoryStateBackend};
+use propylon::backend::HermeticSubprocessBackend;
+use propylon::core::backend::{BackendConfig, BackendTransport};
+use propylon::core::state::{BudgetManager, DistributedCircuitBreaker, QuotaEngine, TenantBudget};
+use propylon::core::transport::{JsonRpcId, JsonRpcRequest};
+use propylon::core::types::TenantId;
+use propylon::state::{HardFreezeQuota, InMemoryStateBackend};
 
 #[tokio::test]
 async fn test_chaos_circuit_breaker_tripping_and_reset() {

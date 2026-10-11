@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo " [AEGIS AUDIT] SOLID, Interface-First & 350-Line Limit Audit"
+echo " [PROPYLON AUDIT] SOLID, Interface-First & 350-Line Limit Audit"
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -41,21 +41,21 @@ for trait_name in "${CORE_TRAITS[@]}"; do
   fi
 done
 
-echo "--> 4. Verifying Dependency Injection (DI) Pattern in AegisGateway..."
-if grep -q "pub struct AegisGateway" src/lib.rs && \
+echo "--> 4. Verifying Dependency Injection (DI) Pattern in PropylonGateway..."
+if grep -q "pub struct PropylonGateway" src/lib.rs && \
    grep -q "Arc<dyn DistributedState>" src/lib.rs && \
    grep -q "Arc<dyn PolicyEngine>" src/lib.rs && \
    grep -q "Arc<dyn DlpPipeline>" src/lib.rs && \
    grep -q "Arc<dyn AuditSink>" src/lib.rs && \
    grep -q "Arc<dyn SkillRegistry>" src/lib.rs; then
-  echo "  [PASS] AegisGateway constructor uses strict trait Dependency Injection"
+  echo "  [PASS] PropylonGateway constructor uses strict trait Dependency Injection"
 else
-  echo "  [FAIL] AegisGateway violates Dependency Injection; concrete types coupled"
+  echo "  [FAIL] PropylonGateway violates Dependency Injection; concrete types coupled"
   FAILURES=$((FAILURES + 1))
 fi
 
 echo "--> 5. Checking for dangerous bare unwrap() in production src/..."
-UNWRAP_COUNT=$(grep -rn "\.unwrap()" src/ --exclude="*test*" --exclude="main.rs" --exclude="aegis_audit.rs" 2>/dev/null | grep -v "unwrap_or" | wc -l || true)
+UNWRAP_COUNT=$(grep -rn "\.unwrap()" src/ --exclude="*test*" --exclude="main.rs" --exclude="propylon_audit.rs" 2>/dev/null | grep -v "unwrap_or" | wc -l || true)
 if [ "$UNWRAP_COUNT" -eq 0 ]; then
   echo "  [PASS] Zero unwrap() found in production library code"
 else

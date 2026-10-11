@@ -18,13 +18,13 @@ Defined in [`src/core/policy.rs`](../../src/core/policy.rs), [`src/core/identity
 ```rust
 #[async_trait]
 pub trait PolicyEngine: Send + Sync {
-    async fn evaluate(&self, ctx: &PolicyContext) -> AegisResult<PolicyDecision>;
-    fn eval_payload(&self, tool: &str, arguments: &Value) -> AegisResult<PolicyDecision>;
+    async fn evaluate(&self, ctx: &PolicyContext) -> PropylonResult<PolicyDecision>;
+    fn eval_payload(&self, tool: &str, arguments: &Value) -> PropylonResult<PolicyDecision>;
 }
 
 #[async_trait]
 pub trait TokenValidator: Send + Sync {
-    async fn validate_token(&self, token: &str) -> AegisResult<CallerContext>;
+    async fn validate_token(&self, token: &str) -> PropylonResult<CallerContext>;
 }
 ```
 

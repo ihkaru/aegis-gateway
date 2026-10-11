@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 use crate::core::secrets::SecretStore;
 
@@ -39,18 +39,18 @@ impl VaultSecretStore {
 
 #[async_trait]
 impl SecretStore for VaultSecretStore {
-    async fn get_secret(&self, key: &str) -> AegisResult<Option<String>> {
+    async fn get_secret(&self, key: &str) -> PropylonResult<Option<String>> {
         let read = self.local_secrets.read().await;
         Ok(read.get(key).cloned())
     }
 
-    async fn set_secret(&self, key: &str, value: &str) -> AegisResult<()> {
+    async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()> {
         let mut write = self.local_secrets.write().await;
         write.insert(key.to_string(), value.to_string());
         Ok(())
     }
 
-    async fn health_check(&self) -> AegisResult<bool> {
+    async fn health_check(&self) -> PropylonResult<bool> {
         Ok(!self.vault_addr.is_empty())
     }
 }
@@ -69,7 +69,7 @@ impl EnvSecretStore {
 
 #[async_trait]
 impl SecretStore for EnvSecretStore {
-    async fn get_secret(&self, key: &str) -> AegisResult<Option<String>> {
+    async fn get_secret(&self, key: &str) -> PropylonResult<Option<String>> {
         let overrides = self.overrides.read().await;
         if let Some(val) = overrides.get(key) {
             return Ok(Some(val.clone()));
@@ -78,13 +78,13 @@ impl SecretStore for EnvSecretStore {
         Ok(std::env::var(&sanitized_key).ok())
     }
 
-    async fn set_secret(&self, key: &str, value: &str) -> AegisResult<()> {
+    async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()> {
         let mut overrides = self.overrides.write().await;
         overrides.insert(key.to_string(), value.to_string());
         Ok(())
     }
 
-    async fn health_check(&self) -> AegisResult<bool> {
+    async fn health_check(&self) -> PropylonResult<bool> {
         Ok(true)
     }
 }

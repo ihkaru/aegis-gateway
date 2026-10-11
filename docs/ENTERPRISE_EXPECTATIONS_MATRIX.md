@@ -1,4 +1,4 @@
-# Aegis Gateway: Enterprise End-to-End Expectations Matrix
+# Propylon Gateway: Enterprise End-to-End Expectations Matrix
 
 > [!IMPORTANT]
 > **Living Contract & Architectural Truth**:
@@ -35,7 +35,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | C1 | **Zero-Downtime Dynamic Reconciler**<br/>Registrasi backend, reload policy, dan kuota via RCU/RwLock tanpa restart | Platform SRE | **VERIFIED** | Atomic state swap terbukti di `tests/phase34_embedded_ui_control_suite_test.rs` |
 | C2 | **Distributed HA State & Redis Cluster**<br/>Multi-pod state synchronization, rate limiting Lua, dan circuit breaker | Architect & SRE | **VERIFIED** | `RedisStateBackend` & health probes terbukti di `tests/phase1_distributed_test.rs` |
-| C3 | **Declarative Kubernetes CRD Operator**<br/>GitOps controller untuk Custom Resource `AegisBackend` & `AegisPolicy` | Platform SRE | **VERIFIED** | Parsing, validasi skema & zero-restart reconciliation terbukti di `tests/phase45_kubernetes_crd_operator_test.rs` |
+| C3 | **Declarative Kubernetes CRD Operator**<br/>GitOps controller untuk Custom Resource `PropylonBackend` & `PropylonPolicy` | Platform SRE | **VERIFIED** | Parsing, validasi skema & zero-restart reconciliation terbukti di `tests/phase45_kubernetes_crd_operator_test.rs` |
 | C4 | **Distributed Cluster Sync Bus**<br/>Sinkronisasi multi-node dengan rolling checksum SHA-256 anti-split-brain | Architect | **VERIFIED** | Sync bus pub/sub terbukti di `tests/phase1_distributed_test.rs` |
 
 ---
@@ -80,6 +80,6 @@
 
 Agar seluruh ekspektasi end-to-end ini tidak pernah hilang atau terlupakan saat context window berganti:
 
-1. **Penyimpanan Primer**: Berkas ini disimpan di [docs/ENTERPRISE_EXPECTATIONS_MATRIX.md](file:///root/projects/aegis-gateway/docs/ENTERPRISE_EXPECTATIONS_MATRIX.md) sebagai kontrak hidup repositori.
+1. **Penyimpanan Primer**: Berkas ini disimpan di [docs/ENTERPRISE_EXPECTATIONS_MATRIX.md](file:///root/projects/propylon/docs/ENTERPRISE_EXPECTATIONS_MATRIX.md) sebagai kontrak hidup repositori.
 2. **Penegakan Invariant Global**: [GEMINI.md](file:///root/GEMINI.md) memuat klausul wajib (Principle 11) yang mengikat setiap sesi AI Agent untuk menyelaraskan roadmap dan pengujian dengan matriks ini.
-3. **Automated Gauntlet Enforcement**: Skrip [scripts/gauntlet.sh](file:///root/projects/aegis-gateway/scripts/gauntlet.sh) dan scanner tata kelola menjamin bahwa seluruh verifikasi dilakukan secara empiris tanpa silent mocks.
+3. **Automated Gauntlet Enforcement**: Skrip [scripts/gauntlet.sh](file:///root/projects/propylon/scripts/gauntlet.sh) dan scanner tata kelola menjamin bahwa seluruh verifikasi dilakukan secara empiris tanpa silent mocks.

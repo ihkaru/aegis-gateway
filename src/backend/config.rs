@@ -2,24 +2,24 @@
 
 use std::collections::HashMap;
 
-use crate::core::backend::{AegisTopologyConfig, BackendConfig};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::backend::{PropylonTopologyConfig, BackendConfig};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// Topology configuration loader supporting YAML and JSON
 pub struct TopologyConfigLoader;
 
 impl TopologyConfigLoader {
     /// Parse configuration from YAML or JSON string
-    pub fn parse_str(raw: &str) -> AegisResult<AegisTopologyConfig> {
+    pub fn parse_str(raw: &str) -> PropylonResult<PropylonTopologyConfig> {
         let trimmed = raw.trim();
 
-        let mut cfg: AegisTopologyConfig = if trimmed.starts_with('{') {
-            serde_json::from_str::<AegisTopologyConfig>(trimmed).map_err(|e| {
-                AegisError::Internal(format!("Failed to parse topology JSON configuration: {e}"))
+        let mut cfg: PropylonTopologyConfig = if trimmed.starts_with('{') {
+            serde_json::from_str::<PropylonTopologyConfig>(trimmed).map_err(|e| {
+                PropylonError::Internal(format!("Failed to parse topology JSON configuration: {e}"))
             })?
         } else {
-            serde_yaml::from_str::<AegisTopologyConfig>(trimmed).map_err(|e| {
-                AegisError::Internal(format!("Failed to parse topology YAML configuration: {e}"))
+            serde_yaml::from_str::<PropylonTopologyConfig>(trimmed).map_err(|e| {
+                PropylonError::Internal(format!("Failed to parse topology YAML configuration: {e}"))
             })?
         };
 
@@ -33,15 +33,15 @@ impl TopologyConfigLoader {
     }
 
     /// Alias for parse_str
-    pub fn load_from_str(raw: &str) -> AegisResult<AegisTopologyConfig> {
+    pub fn load_from_str(raw: &str) -> PropylonResult<PropylonTopologyConfig> {
         Self::parse_str(raw)
     }
 
     /// Validate server configurations
-    pub fn validate(config: &AegisTopologyConfig) -> AegisResult<()> {
+    pub fn validate(config: &PropylonTopologyConfig) -> PropylonResult<()> {
         for (name, srv) in &config.mcp_servers {
             if srv.command.is_none() && srv.url.is_none() {
-                return Err(AegisError::Internal(format!(
+                return Err(PropylonError::Internal(format!(
                     "Backend '{}' is invalid: must specify either 'command' or 'url'",
                     name
                 )));
@@ -51,7 +51,7 @@ impl TopologyConfigLoader {
     }
 
     /// Generate default template config
-    pub fn template() -> AegisTopologyConfig {
+    pub fn template() -> PropylonTopologyConfig {
         let mut servers = HashMap::new();
         servers.insert(
             "postgres".to_string(),
@@ -65,7 +65,7 @@ impl TopologyConfigLoader {
                 enabled: true,
             },
         );
-        AegisTopologyConfig {
+        PropylonTopologyConfig {
             mcp_servers: servers,
             default_tenant: Some("enterprise-corp".to_string()),
         }

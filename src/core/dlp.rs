@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SensitivityLevel {
@@ -43,9 +43,9 @@ pub trait FastPatternMatcher: Send + Sync {
 #[async_trait]
 pub trait DlpPipeline: Send + Sync {
     /// Scan and mask PII/PCI/PHI from response value before returning to agent
-    async fn sanitize_response(&self, payload: Value) -> AegisResult<(Value, Vec<DlpFinding>)>;
+    async fn sanitize_response(&self, payload: Value) -> PropylonResult<(Value, Vec<DlpFinding>)>;
 
     /// Scan input argument payload to prevent data exfiltration
-    async fn inspect_request_arguments(&self, arguments: &Value) -> AegisResult<Vec<DlpFinding>>;
+    async fn inspect_request_arguments(&self, arguments: &Value) -> PropylonResult<Vec<DlpFinding>>;
 }
 

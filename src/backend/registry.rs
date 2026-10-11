@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::backend::{BackendRegistry, BackendTransport};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::transport::{JsonRpcId, JsonRpcRequest};
 use crate::core::types::ToolDefinition;
 
@@ -25,8 +25,8 @@ impl SubprocessBackendRegistry {
     pub fn with_default_local_engine() -> Self {
         let mut map: HashMap<String, Arc<dyn BackendTransport>> = HashMap::new();
         map.insert(
-            "aegis_local_engine".to_string(),
-            Arc::new(crate::backend::LocalAegisBackend::new()),
+            "propylon_local_engine".to_string(),
+            Arc::new(crate::backend::LocalPropylonBackend::new()),
         );
         Self {
             backends: Arc::new(RwLock::new(map)),
@@ -36,25 +36,25 @@ impl SubprocessBackendRegistry {
 
 #[async_trait]
 impl BackendRegistry for SubprocessBackendRegistry {
-    async fn register(&self, name: &str, transport: Arc<dyn BackendTransport>) -> AegisResult<()> {
+    async fn register(&self, name: &str, transport: Arc<dyn BackendTransport>) -> PropylonResult<()> {
         let mut write = self.backends.write().await;
         write.insert(name.to_string(), transport);
         Ok(())
     }
 
-    async fn get(&self, name: &str) -> AegisResult<Arc<dyn BackendTransport>> {
+    async fn get(&self, name: &str) -> PropylonResult<Arc<dyn BackendTransport>> {
         let read = self.backends.read().await;
         read.get(name)
             .cloned()
-            .ok_or_else(|| AegisError::Internal(format!("Backend '{name}' not found in registry")))
+            .ok_or_else(|| PropylonError::Internal(format!("Backend '{name}' not found in registry")))
     }
 
-    async fn list_backends(&self) -> AegisResult<Vec<String>> {
+    async fn list_backends(&self) -> PropylonResult<Vec<String>> {
         let read = self.backends.read().await;
         Ok(read.keys().cloned().collect())
     }
 
-    async fn discover_all_tools(&self) -> AegisResult<Vec<ToolDefinition>> {
+    async fn discover_all_tools(&self) -> PropylonResult<Vec<ToolDefinition>> {
         let read = self.backends.read().await;
         let mut all_tools = Vec::new();
 
@@ -99,7 +99,7 @@ impl BackendRegistry for SubprocessBackendRegistry {
         Ok(all_tools)
     }
 
-    async fn find_backend_for_tool(&self, tool_name: &str) -> AegisResult<Option<Arc<dyn BackendTransport>>> {
+    async fn find_backend_for_tool(&self, tool_name: &str) -> PropylonResult<Option<Arc<dyn BackendTransport>>> {
         let read = self.backends.read().await;
         for (_name, transport) in read.iter() {
             if !transport.is_healthy().await {

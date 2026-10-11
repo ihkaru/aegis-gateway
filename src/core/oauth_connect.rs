@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Agnostic OAuth 2.1 Provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,15 +43,15 @@ pub trait OAuthConnectEngine: Send + Sync {
         caller_id: &str,
         provider: &str,
         redirect_uri: &str,
-    ) -> AegisResult<(String, ConnectSession)>;
+    ) -> PropylonResult<(String, ConnectSession)>;
 
     /// Complete authorization callback and persist tokens
     async fn handle_callback(
         &self,
         code: &str,
         state: &str,
-    ) -> AegisResult<String>;
+    ) -> PropylonResult<String>;
 
     /// Check if caller has active authorized token for provider
-    async fn has_active_token(&self, caller_id: &str, provider: &str) -> AegisResult<bool>;
+    async fn has_active_token(&self, caller_id: &str, provider: &str) -> PropylonResult<bool>;
 }

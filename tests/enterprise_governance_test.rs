@@ -3,14 +3,14 @@
 
 use std::sync::Arc;
 
-use aegis_gateway::audit::StructuredAuditLogger;
-use aegis_gateway::core::types::{CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition};
-use aegis_gateway::dlp::PiiDlpPipeline;
-use aegis_gateway::policy::AbacPolicyEngine;
-use aegis_gateway::skills::{DefaultPoisonScanner, LocalSkillRegistry};
-use aegis_gateway::state::InMemoryStateBackend;
-use aegis_gateway::AegisGateway;
-use aegis_gateway::core::skills::{PoisonScanner, SkillBundle, SkillMetadata, SkillRegistry};
+use propylon::audit::StructuredAuditLogger;
+use propylon::core::types::{CallerContext, DisclosureTier, TenantId, ToolCallRequest, ToolDefinition};
+use propylon::dlp::PiiDlpPipeline;
+use propylon::policy::AbacPolicyEngine;
+use propylon::skills::{DefaultPoisonScanner, LocalSkillRegistry};
+use propylon::state::InMemoryStateBackend;
+use propylon::PropylonGateway;
+use propylon::core::skills::{PoisonScanner, SkillBundle, SkillMetadata, SkillRegistry};
 
 #[tokio::test]
 async fn test_solid_architecture_dependency_inversion() {
@@ -20,7 +20,7 @@ async fn test_solid_architecture_dependency_inversion() {
     let audit = Arc::new(StructuredAuditLogger::new());
     let skills = Arc::new(LocalSkillRegistry::new());
 
-    let gateway = AegisGateway::new(state, policy, dlp, audit, skills);
+    let gateway = PropylonGateway::new(state, policy, dlp, audit, skills);
 
     let tools = vec![ToolDefinition {
         name: "test_tool".to_string(),
@@ -40,7 +40,7 @@ async fn test_solid_architecture_dependency_inversion() {
 
 #[tokio::test]
 async fn test_abac_policy_denies_unauthorized_destructive_call() {
-    let gateway = AegisGateway::new(
+    let gateway = PropylonGateway::new(
         Arc::new(InMemoryStateBackend::new()),
         Arc::new(AbacPolicyEngine::new()),
         Arc::new(PiiDlpPipeline::new()),
@@ -72,7 +72,7 @@ async fn test_abac_policy_denies_unauthorized_destructive_call() {
 
 #[tokio::test]
 async fn test_dlp_masks_credit_card_and_api_keys() {
-    let gateway = AegisGateway::new(
+    let gateway = PropylonGateway::new(
         Arc::new(InMemoryStateBackend::new()),
         Arc::new(AbacPolicyEngine::new()),
         Arc::new(PiiDlpPipeline::new()),

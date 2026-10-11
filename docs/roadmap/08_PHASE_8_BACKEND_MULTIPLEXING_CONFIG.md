@@ -8,7 +8,7 @@
 
 ## 1. Objectives
 
-Enable Aegis Gateway to act as a secure, production-grade reverse proxy for arbitrary backend MCP servers (Node.js/npx, Python, Go, Docker, or remote HTTP/SSE servers). Load server topologies declaratively from configuration files (`aegis.yaml`), enforce hermetic subprocess sandboxing, manage process lifecycles without leaking host credentials, and dynamically aggregate tool catalogs.
+Enable Propylon Gateway to act as a secure, production-grade reverse proxy for arbitrary backend MCP servers (Node.js/npx, Python, Go, Docker, or remote HTTP/SSE servers). Load server topologies declaratively from configuration files (`propylon.yaml`), enforce hermetic subprocess sandboxing, manage process lifecycles without leaking host credentials, and dynamically aggregate tool catalogs.
 
 ---
 
@@ -19,18 +19,18 @@ Defined in `src/core/backend.rs`:
 ```rust
 #[async_trait]
 pub trait BackendTransport: Send + Sync {
-    async fn start(&self) -> AegisResult<()>;
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse>;
+    async fn start(&self) -> PropylonResult<()>;
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse>;
     async fn is_healthy(&self) -> bool;
-    async fn stop(&self) -> AegisResult<()>;
+    async fn stop(&self) -> PropylonResult<()>;
 }
 
 #[async_trait]
 pub trait BackendRegistry: Send + Sync {
-    async fn register(&self, name: &str, transport: Arc<dyn BackendTransport>) -> AegisResult<()>;
-    async fn get(&self, name: &str) -> AegisResult<Arc<dyn BackendTransport>>;
-    async fn list_backends(&self) -> AegisResult<Vec<String>>;
-    async fn discover_all_tools(&self) -> AegisResult<Vec<ToolDefinition>>;
+    async fn register(&self, name: &str, transport: Arc<dyn BackendTransport>) -> PropylonResult<()>;
+    async fn get(&self, name: &str) -> PropylonResult<Arc<dyn BackendTransport>>;
+    async fn list_backends(&self) -> PropylonResult<Vec<String>>;
+    async fn discover_all_tools(&self) -> PropylonResult<Vec<ToolDefinition>>;
 }
 ```
 
@@ -38,7 +38,7 @@ pub trait BackendRegistry: Send + Sync {
 
 1. **Hermetic Environment Variable Sanitization (Anti-Secret Exfiltration)**:
    - *Threat (OWASP LLM08)*: Third-party MCP packages (npm/pip) running locally blindly inherit host environment variables containing `AWS_SECRET_ACCESS_KEY`, database passwords, and API keys.
-   - *Aegis Mitigation*: Subprocesses are launched with strict `env_clear()`. Only safe OS primitives (`PATH`, `HOME`, `TMPDIR`) and explicitly declared backend environment variables are injected.
+   - *Propylon Mitigation*: Subprocesses are launched with strict `env_clear()`. Only safe OS primitives (`PATH`, `HOME`, `TMPDIR`) and explicitly declared backend environment variables are injected.
 2. **Anti-Command-Injection Execution (CWE-78 Defense)**:
    - Command arguments are strictly passed as typed string vectors `Vec<String>` without shell interpolation (`sh -c` or `bash -c` string formatting is strictly prohibited).
 3. **Anti-Zombie Process Group Guarantee**:
@@ -50,9 +50,9 @@ pub trait BackendRegistry: Send + Sync {
 
 ## 3. Milestones & Checklist
 
-- [x] **8.1 Declarative Configuration Parser (`aegis.yaml`)**: Parse backend topologies supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml` (verified in `tests/phase8_backend_multiplexing_test.rs`).
+- [x] **8.1 Declarative Configuration Parser (`propylon.yaml`)**: Parse backend topologies supporting `command`, `args`, `env`, and remote `url` formats compatible with Claude Desktop and legacy `gateway.yaml` (verified in `tests/phase8_backend_multiplexing_test.rs`).
 - [x] **8.2 Hermetic Subprocess Spawner & Lifecycle Supervisor**: Spawn asynchronous child processes with strict `env_clear()`, `kill_on_drop(true)`, and piped standard IO (verified in `tests/phase8_backend_multiplexing_test.rs` & `tests/e2e_tier3_team_multiplexing.rs`).
 - [x] **8.3 Remote HTTP/SSE Backend Connector**: Forward tool calls to remote network-attached MCP endpoints with connection pooling and timeouts (verified in `tests/phase8_backend_multiplexing_test.rs`).
-- [x] **8.4 Automated Catalog Aggregation**: Interrogate all registered backends via `tools/list` upon startup, map to Aegis `ToolDefinition`, and populate the registry dynamically (verified in `tests/phase8_backend_multiplexing_test.rs` & `tests/e2e_tier3_team_multiplexing.rs`).
+- [x] **8.4 Automated Catalog Aggregation**: Interrogate all registered backends via `tools/list` upon startup, map to Propylon `ToolDefinition`, and populate the registry dynamically (verified in `tests/phase8_backend_multiplexing_test.rs` & `tests/e2e_tier3_team_multiplexing.rs`).
 - [x] **8.5 Full End-to-End Operational Pipeline**: Complete transparent bidirectional proxying uniting Client Ingress, Enterprise Control Plane, and Upstream Backends (verified in `tests/phase8_backend_multiplexing_test.rs`).
 

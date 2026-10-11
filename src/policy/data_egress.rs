@@ -8,7 +8,7 @@ use crate::core::approval::{ApprovalDecision, ApprovalGate};
 use crate::core::data_governance::{
     DataClassification, DataEgressDecision, DataEgressPolicyEngine, PolicyTier,
 };
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// Configurable, multi-tiered enterprise data egress policy engine
@@ -50,7 +50,7 @@ impl DataEgressPolicyEngine for TieredDataEgressEngine {
         _mime_type: &str,
         classification: DataClassification,
         caller: &CallerContext,
-    ) -> AegisResult<DataEgressDecision> {
+    ) -> PropylonResult<DataEgressDecision> {
         let tier = *self.active_tier.read().await;
 
         // 1. Developer tier: completely frictionless, full egress allowed

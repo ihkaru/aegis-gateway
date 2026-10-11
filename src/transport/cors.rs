@@ -29,7 +29,7 @@ pub trait CorsPolicyEnforcer: Send + Sync {
 
 /// Standard Enterprise CORS Policy Implementation
 #[derive(Debug, Clone)]
-pub struct AegisCorsPolicy {
+pub struct PropylonCorsPolicy {
     allowed_origins: Vec<String>,
     allowed_methods: Vec<String>,
     allowed_headers: Vec<String>,
@@ -38,7 +38,7 @@ pub struct AegisCorsPolicy {
     max_age_secs: u32,
 }
 
-impl Default for AegisCorsPolicy {
+impl Default for PropylonCorsPolicy {
     fn default() -> Self {
         Self {
             allowed_origins: vec!["*".to_string()],
@@ -53,11 +53,11 @@ impl Default for AegisCorsPolicy {
                 "authorization".to_string(),
                 "mcp-protocol-version".to_string(),
                 "x-request-id".to_string(),
-                "x-aegis-correlation-id".to_string(),
+                "x-propylon-correlation-id".to_string(),
             ],
             exposed_headers: vec![
                 "mcp-protocol-version".to_string(),
-                "x-aegis-correlation-id".to_string(),
+                "x-propylon-correlation-id".to_string(),
             ],
             allow_credentials: false,
             max_age_secs: 86400,
@@ -65,7 +65,7 @@ impl Default for AegisCorsPolicy {
     }
 }
 
-impl AegisCorsPolicy {
+impl PropylonCorsPolicy {
     pub fn new(allowed_origins: Vec<String>) -> Self {
         Self {
             allowed_origins,
@@ -93,7 +93,7 @@ impl AegisCorsPolicy {
     }
 }
 
-impl CorsPolicyEnforcer for AegisCorsPolicy {
+impl CorsPolicyEnforcer for PropylonCorsPolicy {
     fn evaluate_origin(&self, origin: Option<&str>) -> CorsOriginOutcome {
         match origin {
             None => CorsOriginOutcome::Omitted,
@@ -156,7 +156,7 @@ impl CorsPolicyEnforcer for AegisCorsPolicy {
             }
             CorsOriginOutcome::Disallowed(org) => {
                 headers.insert(
-                    "x-aegis-cors-rejection",
+                    "x-propylon-cors-rejection",
                     HeaderValue::from_str(&format!("Origin '{org}' not in whitelist"))
                         .unwrap_or(HeaderValue::from_static("rejected")),
                 );

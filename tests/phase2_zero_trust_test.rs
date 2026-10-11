@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::core::identity::TokenValidator;
-use aegis_gateway::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
-use aegis_gateway::core::secrets::SecretStore;
-use aegis_gateway::core::session::SessionRevocationRegistry;
-use aegis_gateway::core::types::{CallerContext, TenantId};
-use aegis_gateway::policy::{
+use propylon::core::identity::TokenValidator;
+use propylon::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
+use propylon::core::secrets::SecretStore;
+use propylon::core::session::SessionRevocationRegistry;
+use propylon::core::types::{CallerContext, TenantId};
+use propylon::policy::{
     EnvSecretStore, MemoryRevocationRegistry, OidcClaims, OidcTokenValidator, OpaPolicyEngine,
     VaultSecretStore,
 };

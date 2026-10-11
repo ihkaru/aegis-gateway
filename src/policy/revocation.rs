@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::session::SessionRevocationRegistry;
 
 /// Thread-safe in-memory session revocation and SCIM deactivation registry
@@ -23,7 +23,7 @@ impl MemoryRevocationRegistry {
 
 #[async_trait]
 impl SessionRevocationRegistry for MemoryRevocationRegistry {
-    async fn is_revoked(&self, session_id: &str, subject: &str) -> AegisResult<bool> {
+    async fn is_revoked(&self, session_id: &str, subject: &str) -> PropylonResult<bool> {
         let sessions = self.revoked_sessions.read().await;
         if sessions.contains(session_id) {
             return Ok(true);
@@ -37,13 +37,13 @@ impl SessionRevocationRegistry for MemoryRevocationRegistry {
         Ok(false)
     }
 
-    async fn revoke_session(&self, session_id: &str, _reason: &str) -> AegisResult<()> {
+    async fn revoke_session(&self, session_id: &str, _reason: &str) -> PropylonResult<()> {
         let mut sessions = self.revoked_sessions.write().await;
         sessions.insert(session_id.to_string());
         Ok(())
     }
 
-    async fn deactivate_subject(&self, subject: &str, _reason: &str) -> AegisResult<()> {
+    async fn deactivate_subject(&self, subject: &str, _reason: &str) -> PropylonResult<()> {
         let mut subjects = self.deactivated_subjects.write().await;
         subjects.insert(subject.to_string());
         Ok(())

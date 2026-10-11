@@ -20,12 +20,12 @@ Enterprise CISO policies mandate that autonomous tools must be bounded by **Huma
 
 ## 2. Core Architectural Design
 
-Phase 19 equips Aegis Gateway with a **Declarative Risk Classifier and Async Approval Interceptor**.
+Phase 19 equips Propylon Gateway with a **Declarative Risk Classifier and Async Approval Interceptor**.
 
 ```mermaid
 sequenceDiagram
     participant LLM as AI Agent / Claude
-    participant GW as Aegis Gateway
+    participant GW as Propylon Gateway
     participant Gate as ApprovalGate (HITL)
     participant State as DistributedState (Redis)
     participant Human as Approver (Slack/Teams/UI)
@@ -77,13 +77,13 @@ pub struct ApprovalTicket {
 #[async_trait]
 pub trait ApprovalGate: Send + Sync {
     /// Classify proposed action into risk tiers
-    async fn evaluate_risk(&self, tool_name: &str, payload: &serde_json::Value) -> AegisResult<RiskTier>;
+    async fn evaluate_risk(&self, tool_name: &str, payload: &serde_json::Value) -> PropylonResult<RiskTier>;
 
     /// Create and persist an approval ticket, suspending task execution
-    async fn create_ticket(&self, ticket: ApprovalTicket) -> AegisResult<()>;
+    async fn create_ticket(&self, ticket: ApprovalTicket) -> PropylonResult<()>;
 
     /// Validate cryptographically signed approval and resume execution
-    async fn resolve_ticket(&self, ticket_id: &str, signature: &str, approved: bool) -> AegisResult<bool>;
+    async fn resolve_ticket(&self, ticket_id: &str, signature: &str, approved: bool) -> PropylonResult<bool>;
 }
 ```
 

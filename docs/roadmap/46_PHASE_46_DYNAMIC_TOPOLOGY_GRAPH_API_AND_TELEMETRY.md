@@ -5,7 +5,7 @@
 > **Target Enterprise Gaps & Standards**:
 > - Exposes unified graph topology API (`GET /api/v1/topology/graph`) returning DAG nodes (Clients, Ingress, ABAC/DLP Filters, Router, MCP Backends, Integration Channels) and directed edges.
 > - Computes live telemetry per node: throughput RPS, P99 latency, circuit breaker state (`CLOSED`, `OPEN`, `HALF_OPEN`), and pending HITL queue depth.
-> - Pure-Rust Zero-Mock Aggregation: Binds directly to `AegisGateway` runtime state and `BackendRegistry`.
+> - Pure-Rust Zero-Mock Aggregation: Binds directly to `PropylonGateway` runtime state and `BackendRegistry`.
 
 ---
 
@@ -42,7 +42,7 @@ pub struct TopologyGraphEdge {
 
 #[async_trait]
 pub trait TopologyGraphProvider: Send + Sync {
-    async fn get_topology_graph(&self) -> AegisResult<TopologyGraphResponse>;
+    async fn get_topology_graph(&self) -> PropylonResult<TopologyGraphResponse>;
 }
 ```
 

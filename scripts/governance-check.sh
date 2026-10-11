@@ -3,7 +3,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo "    AEGIS GATEWAY: UNIFIED ENTERPRISE GOVERNANCE RUNNER     "
+echo "    PROPYLON GATEWAY: UNIFIED ENTERPRISE GOVERNANCE RUNNER     "
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

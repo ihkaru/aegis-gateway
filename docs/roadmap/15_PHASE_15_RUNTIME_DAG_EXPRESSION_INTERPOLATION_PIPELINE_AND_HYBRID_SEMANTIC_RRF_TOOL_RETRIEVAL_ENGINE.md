@@ -3,17 +3,17 @@
 > **Milestone Tag**: `v1.15.0-runtime_dag_expression_interpolation_pipeline_and_hybrid_semantic_rrf_tool_retrieval_engine`  
 > **Status**: `In Progress`  
 > **Target Gaps & Standards**:
-- Resolves `Aegis/Scale#101`
-- Resolves `Aegis/Scale#102`
+- Resolves `Propylon/Scale#101`
+- Resolves `Propylon/Scale#102`
 
 ---
 
 ## 1. Problem Statement & Motivation
 First-generation MCP gateways exhibited operational failures and complaints:
-- Resolves `Aegis/Scale#101`
-- Resolves `Aegis/Scale#102`
+- Resolves `Propylon/Scale#101`
+- Resolves `Propylon/Scale#102`
 
-Aegis Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
+Propylon Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
 
 ---
 

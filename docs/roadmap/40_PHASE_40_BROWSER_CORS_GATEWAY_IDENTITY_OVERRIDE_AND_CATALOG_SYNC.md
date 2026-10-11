@@ -25,7 +25,7 @@ First-generation MCP gateways exhibited three prominent production limitations w
 
 ## 2. Technical Architecture & Trait Contracts
 
-Aegis Gateway introduces three dedicated core abstractions in `src/transport/` and `src/discovery/`:
+Propylon Gateway introduces three dedicated core abstractions in `src/transport/` and `src/discovery/`:
 
 ### A. Dynamic Browser CORS Enforcer (`src/transport/cors.rs`)
 ```rust
@@ -46,7 +46,7 @@ pub struct GatewayServerIdentity {
     pub protocol_version: String,
 }
 ```
-- Configurable via `aegis.yaml` (`server_info.name`), CLI (`--server-name <NAME>`), or environment variable (`AEGIS_SERVER_NAME`).
+- Configurable via `propylon.yaml` (`server_info.name`), CLI (`--server-name <NAME>`), or environment variable (`PROPYLON_SERVER_NAME`).
 - Propagated deterministically into JSON-RPC `initialize` responses:
   ```json
   {

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Principal attributes extracted from OAuth 2.1 / SAML / OIDC tokens
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -122,14 +122,14 @@ pub struct PolicySimulationResult {
 #[async_trait]
 pub trait AbacPolicyEngine: Send + Sync {
     /// Evaluates 4-dimensional context deterministically
-    async fn evaluate(&self, ctx: &AbacContext) -> AegisResult<AbacDecision>;
+    async fn evaluate(&self, ctx: &AbacContext) -> PropylonResult<AbacDecision>;
 
     /// Simulates evaluation for SecOps dry-run testing
-    async fn simulate(&self, ctx: &AbacContext) -> AegisResult<PolicySimulationResult>;
+    async fn simulate(&self, ctx: &AbacContext) -> PropylonResult<PolicySimulationResult>;
 
     /// Atomically updates active rules in memory without restart
-    async fn reload_policy(&self, policy: AbacPolicy) -> AegisResult<()>;
+    async fn reload_policy(&self, policy: AbacPolicy) -> PropylonResult<()>;
 
     /// Fetches the currently active policy document
-    async fn get_active_policy(&self) -> AegisResult<AbacPolicy>;
+    async fn get_active_policy(&self) -> PropylonResult<AbacPolicy>;
 }

@@ -33,6 +33,6 @@ Agent Query (SQL/Aggregation)
 ```
 
 ### Key Guarantees:
-- **Honest Failures**: Returns `AegisError::NotFound` if the dataset file does not exist on disk.
+- **Honest Failures**: Returns `PropylonError::NotFound` if the dataset file does not exist on disk.
 - **Genuine Egress Reduction**: Calculates real `raw_bytes_read` from `fs::metadata` and real `egress_bytes_returned` from the formatted Markdown table, proving >99.9% reduction.
 - **Real Schema Extraction**: Dynamically inspects column headers and row count.

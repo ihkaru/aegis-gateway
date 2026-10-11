@@ -9,7 +9,7 @@ use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::Mutex;
 
 use crate::core::backend::{BackendConfig, BackendTransport};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::transport::{JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, INTERNAL_ERROR};
 
 struct ProcessHandle {
@@ -79,7 +79,7 @@ impl HermeticSubprocessBackend {
         let first_word = command.split_whitespace().next().unwrap_or(command);
         let prog = first_word.rsplit('/').next().unwrap_or(first_word).trim();
         let safe_name = Self::sanitize_component(backend_name);
-        let base_cache = std::env::temp_dir().join("aegis-cache");
+        let base_cache = std::env::temp_dir().join("propylon-cache");
 
         if matches!(prog, "npx" | "npm" | "pnpm" | "yarn" | "bunx") && !explicit_env.contains_key("npm_config_cache") {
             cmd.env("npm_config_cache", base_cache.join("npm").join(&safe_name));
@@ -125,9 +125,9 @@ impl HermeticSubprocessBackend {
 
 #[async_trait]
 impl BackendTransport for HermeticSubprocessBackend {
-    async fn start(&self) -> AegisResult<()> {
+    async fn start(&self) -> PropylonResult<()> {
         let command_str = self.config.command.as_ref().ok_or_else(|| {
-            AegisError::Internal(format!("No command specified for backend '{}'", self.config.name))
+            PropylonError::Internal(format!("No command specified for backend '{}'", self.config.name))
         })?;
 
         let mut cmd = Self::build_command_for_backend(
@@ -137,15 +137,15 @@ impl BackendTransport for HermeticSubprocessBackend {
             &self.config.env,
         );
         let mut child = cmd.spawn().map_err(|e| {
-            AegisError::Internal(format!("Failed to spawn backend process '{}': {e}", self.config.name))
+            PropylonError::Internal(format!("Failed to spawn backend process '{}': {e}", self.config.name))
         })?;
 
         let stdin = child.stdin.take().ok_or_else(|| {
-            AegisError::Internal(format!("Failed to open stdin for backend '{}'", self.config.name))
+            PropylonError::Internal(format!("Failed to open stdin for backend '{}'", self.config.name))
         })?;
 
         let stdout = child.stdout.take().ok_or_else(|| {
-            AegisError::Internal(format!("Failed to open stdout for backend '{}'", self.config.name))
+            PropylonError::Internal(format!("Failed to open stdout for backend '{}'", self.config.name))
         })?;
 
         let mut guard = self.handle.lock().await;
@@ -158,7 +158,7 @@ impl BackendTransport for HermeticSubprocessBackend {
         Ok(())
     }
 
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         let mut guard = self.handle.lock().await;
         let proc = match guard.as_mut() {
             Some(p) => p,
@@ -179,7 +179,7 @@ impl BackendTransport for HermeticSubprocessBackend {
         match proc.reader.read_line(&mut line).await {
             Ok(bytes) if bytes > 0 => {
                 let resp: JsonRpcResponse = serde_json::from_str(line.trim()).map_err(|e| {
-                    AegisError::Internal(format!(
+                    PropylonError::Internal(format!(
                         "Invalid JSON-RPC response from backend '{}': {e}",
                         self.config.name
                     ))
@@ -204,7 +204,7 @@ impl BackendTransport for HermeticSubprocessBackend {
         }
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         let mut guard = self.handle.lock().await;
         if let Some(mut proc) = guard.take() {
             // Stage 1: Explicitly drop stdin to signal EOF to the child process (Issue #2530)

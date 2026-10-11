@@ -8,13 +8,13 @@ use axum::http::Request;
 use serde_json::json;
 use tower::ServiceExt;
 
-use aegis_gateway::backend::reaper::ProcessGroupReaper;
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::policy::oauth_metadata::ProtectedResourceMetadata;
-use aegis_gateway::state::DrainCoordinator;
-use aegis_gateway::transport::buffer::ReusableStreamBuffer;
-use aegis_gateway::transport::server::LiveHttpServer;
-use aegis_gateway::transport::signer::McpMessageSigner;
+use propylon::backend::reaper::ProcessGroupReaper;
+use propylon::core::transport::WireProtocolHandler;
+use propylon::policy::oauth_metadata::ProtectedResourceMetadata;
+use propylon::state::DrainCoordinator;
+use propylon::transport::buffer::ReusableStreamBuffer;
+use propylon::transport::server::LiveHttpServer;
+use propylon::transport::signer::McpMessageSigner;
 
 #[tokio::test]
 async fn test_microsoft_issue_48_reusable_stream_buffer_multi_read() {
@@ -46,7 +46,7 @@ async fn test_microsoft_issue_48_reusable_stream_buffer_multi_read() {
             use std::io::Read;
             let mut read_buf = Vec::new();
             cursor.read_to_end(&mut read_buf).map_err(|e| {
-                aegis_gateway::core::error::AegisError::StateError(e.to_string())
+                propylon::core::error::PropylonError::StateError(e.to_string())
             })?;
             assert_eq!(read_buf.len(), buffer.len());
             Ok(idx)
@@ -67,7 +67,7 @@ async fn test_microsoft_issue_17_and_docker_474_oauth_protected_resource_metadat
         "https://login.microsoftonline.com/common/v2.0",
     )
     .with_scopes(vec!["mcp:read".to_string(), "mcp:write".to_string()])
-    .with_documentation("https://aegis-gateway.dev/docs/oauth");
+    .with_documentation("https://propylon.dev/docs/oauth");
 
     // 1. Validate metadata attributes
     assert_eq!(metadata.resource, "http://localhost:39400/mcp");
@@ -83,7 +83,7 @@ async fn test_microsoft_issue_17_and_docker_474_oauth_protected_resource_metadat
     struct DummyHandler;
     #[async_trait::async_trait]
     impl WireProtocolHandler for DummyHandler {
-        async fn handle_message(&self, _msg: &str) -> aegis_gateway::core::error::AegisResult<Option<String>> {
+        async fn handle_message(&self, _msg: &str) -> propylon::core::error::PropylonResult<Option<String>> {
             Ok(None)
         }
     }
@@ -148,7 +148,7 @@ async fn test_docker_issue_483_concurrency_process_reaper() {
 #[tokio::test]
 async fn test_docker_issue_453_mcp_message_signer_and_verification() {
     let secret = "enterprise-hmac-sha256-signing-secret";
-    let gateway_id = "aegis-gw-us-east-1a";
+    let gateway_id = "propylon-gw-us-east-1a";
     let signer = McpMessageSigner::new(secret, gateway_id);
 
     let payload = r#"{"jsonrpc":"2.0","result":{"temperature":22.5},"id":1}"#;

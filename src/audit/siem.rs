@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::audit::{AuditEvent, AuditSink};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Splunk HTTP Event Collector (HEC) Audit Sink
 pub struct SplunkHecSink {
@@ -34,10 +34,10 @@ impl SplunkHecSink {
 
 #[async_trait]
 impl AuditSink for SplunkHecSink {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         let splunk_payload = serde_json::json!({
             "time": event.timestamp.timestamp(),
-            "host": "aegis-gateway",
+            "host": "propylon",
             "source": "mcp-control-plane",
             "sourcetype": "_json",
             "event": event,
@@ -71,9 +71,9 @@ impl DatadogAuditSink {
 
 #[async_trait]
 impl AuditSink for DatadogAuditSink {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         let dd_payload = serde_json::json!({
-            "ddsource": "aegis-gateway",
+            "ddsource": "propylon",
             "service": "mcp-proxy",
             "message": serde_json::to_string(event).unwrap_or_default(),
             "status": "info",
@@ -104,7 +104,7 @@ impl MultiplexedAuditSink {
 
 #[async_trait]
 impl AuditSink for MultiplexedAuditSink {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         for sink in &self.sinks {
             sink.emit(event).await?;
         }

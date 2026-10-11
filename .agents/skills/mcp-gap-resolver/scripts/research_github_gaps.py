@@ -2,7 +2,7 @@
 """
 Research GitHub Gaps for MCP Gateways.
 Queries open & closed issues from reference MCP gateway repositories,
-categorizes operational failure modes, and cross-references against local Aegis code
+categorizes operational failure modes, and cross-references against local Propylon code
 and docs/ISSUES_PARITY_MATRIX.md to filter out already-resolved issues.
 """
 
@@ -57,7 +57,7 @@ def fetch_issues_gh(repo: str, state: str, limit: int, query: str = "") -> List[
 
 def fetch_issues_rest(repo: str, state: str, limit: int) -> List[Dict[str, Any]]:
     url = f"https://api.github.com/repos/{repo}/issues?state={state}&per_page={min(limit, 100)}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Aegis-Gap-Research/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Propylon-Gap-Research/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -179,7 +179,7 @@ def generate_report(results: List[Dict[str, Any]], repos: List[str], format_type
 
     meta_parts = [
         f"**Target Issues Evaluated**: {total}",
-        f"**Covered in Aegis**: {resolved}",
+        f"**Covered in Propylon**: {resolved}",
         f"**Unresolved Gaps**: {len(unresolved)}"
     ]
     if excluded_count > 0:
@@ -205,13 +205,13 @@ def generate_report(results: List[Dict[str, Any]], repos: List[str], format_type
         )
 
     if not unresolved:
-        lines.append("| - | - | - | - | **N/A** | All scanned issues are resolved in Aegis! |")
+        lines.append("| - | - | - | - | **N/A** | All scanned issues are resolved in Propylon! |")
 
     lines.extend([
         "",
         "## 2. Already Resolved Gaps & Parity Proof",
         "",
-        "| Repo | Issue | Category | Aegis Verification Evidence |",
+        "| Repo | Issue | Category | Propylon Verification Evidence |",
         "| :--- | :--- | :--- | :--- |"
     ])
 
@@ -236,8 +236,8 @@ def main():
                         help="Optional search query filter")
     parser.add_argument("--exclude-resolved", action="store_true",
                         help="Exclude already resolved/covered issues documented in parity ledger")
-    parser.add_argument("--local-root", default="/root/projects/aegis-gateway",
-                        help="Path to local Aegis Gateway repository")
+    parser.add_argument("--local-root", default="/root/projects/propylon",
+                        help="Path to local Propylon Gateway repository")
     parser.add_argument("--format", default="markdown", choices=["markdown", "json"],
                         help="Output format")
     parser.add_argument("--output", default="",
@@ -248,7 +248,7 @@ def main():
 
     parity_matrix = load_parity_matrix(args.local_root)
     total_ledger_issues = sum(len(m) for m in parity_matrix.values())
-    print(f"[*] Loaded {total_ledger_issues} resolved issues from Aegis Parity Matrix ({os.path.join(args.local_root, 'docs/ISSUES_PARITY_MATRIX.md')})", file=sys.stderr)
+    print(f"[*] Loaded {total_ledger_issues} resolved issues from Propylon Parity Matrix ({os.path.join(args.local_root, 'docs/ISSUES_PARITY_MATRIX.md')})", file=sys.stderr)
 
     all_results = []
     excluded_count = 0

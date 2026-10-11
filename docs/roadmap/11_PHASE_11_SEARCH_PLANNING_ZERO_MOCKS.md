@@ -20,7 +20,7 @@ While early architectural phases established traits for enterprise security and 
 
 ### 2.1 Real Backend Forwarding (`src/transport/protocol.rs` & `src/lib.rs`)
 - Invocations for non-meta tools look up the registered backend via `BackendRegistry`.
-- `AegisGateway::execute_tool_async` executes the pipeline:
+- `PropylonGateway::execute_tool_async` executes the pipeline:
   1. ABAC authorization evaluation (`PolicyEngine::evaluate_payload`).
   2. Rate limiting check (`DistributedRateLimiter`).
   3. Pre-execution argument DLP inspection (`DlpPipeline::inspect_request_arguments`).

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 use std::collections::HashMap;
-use aegis_gateway::backend::HermeticSubprocessBackend;
-use aegis_gateway::core::backend::{BackendConfig, BackendTransport};
-use aegis_gateway::core::session::{SessionFence, SessionLifecycleStatus};
-use aegis_gateway::state::InMemorySessionFence;
+use propylon::backend::HermeticSubprocessBackend;
+use propylon::core::backend::{BackendConfig, BackendTransport};
+use propylon::core::session::{SessionFence, SessionLifecycleStatus};
+use propylon::state::InMemorySessionFence;
 
 #[tokio::test]
 async fn test_phase36_time_bounded_subprocess_teardown() {

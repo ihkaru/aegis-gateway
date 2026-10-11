@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::audit::{AuditEvent, AuditSink, OtelTraceContext};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// OpenTelemetry Distributed Tracing Sink with W3C TraceContext propagation
 pub struct OtelAuditSink {
@@ -49,13 +49,13 @@ impl OtelAuditSink {
 
 impl Default for OtelAuditSink {
     fn default() -> Self {
-        Self::new("aegis-gateway")
+        Self::new("propylon")
     }
 }
 
 #[async_trait]
 impl AuditSink for OtelAuditSink {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         let trace_ctx = Self::create_trace_context(&event.event_id);
 
         let otel_span = serde_json::json!({

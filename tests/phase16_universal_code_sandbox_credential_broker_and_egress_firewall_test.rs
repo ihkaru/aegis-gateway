@@ -3,19 +3,19 @@
 use std::sync::Arc;
 use serde_json::json;
 
-use aegis_gateway::audit::HashChainSequencer;
-use aegis_gateway::core::audit::AuditChainVerifier;
-use aegis_gateway::core::error::AegisResult;
-use aegis_gateway::core::sandbox::{
+use propylon::audit::HashChainSequencer;
+use propylon::core::audit::AuditChainVerifier;
+use propylon::core::error::PropylonResult;
+use propylon::core::sandbox::{
     CodeSandboxEngine, ExecutionLanguage, SandboxExecutionRequest,
 };
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::policy::secrets::VaultSecretStore;
-use aegis_gateway::sandbox::{
+use propylon::core::transport::WireProtocolHandler;
+use propylon::policy::secrets::VaultSecretStore;
+use propylon::sandbox::{
     EgressFilterEngine, HermeticProcessSandbox, VaultCredentialBroker,
 };
-use aegis_gateway::transport::protocol::McpProtocolHandler;
-use aegis_gateway::AegisGateway;
+use propylon::transport::protocol::McpProtocolHandler;
+use propylon::PropylonGateway;
 
 fn build_test_sandbox(secret_store: Arc<VaultSecretStore>) -> (Arc<HermeticProcessSandbox>, Arc<HashChainSequencer>) {
     let egress = Arc::new(EgressFilterEngine::new());
@@ -26,13 +26,13 @@ fn build_test_sandbox(secret_store: Arc<VaultSecretStore>) -> (Arc<HermeticProce
 }
 
 #[tokio::test]
-async fn test_phase16_golden_python_execution() -> AegisResult<()> {
+async fn test_phase16_golden_python_execution() -> PropylonResult<()> {
     let secret_store = Arc::new(VaultSecretStore::new("vault://local"));
     let (sandbox, audit) = build_test_sandbox(secret_store);
 
     let req = SandboxExecutionRequest {
         language: ExecutionLanguage::Python,
-        code: "import json\ndata = {'sum': 40 + 2, 'platform': 'aegis'}\nprint(json.dumps(data))".to_string(),
+        code: "import json\ndata = {'sum': 40 + 2, 'platform': 'propylon'}\nprint(json.dumps(data))".to_string(),
         timeout_secs: Some(5),
         services: vec![],
         env_vars: std::collections::HashMap::new(),
@@ -44,7 +44,7 @@ async fn test_phase16_golden_python_execution() -> AegisResult<()> {
     assert!(result.success);
     assert_eq!(result.exit_code, 0);
     assert!(result.stdout.contains("\"sum\": 42"));
-    assert!(result.stdout.contains("\"platform\": \"aegis\""));
+    assert!(result.stdout.contains("\"platform\": \"propylon\""));
     assert!(!result.code_hash_sha256.is_empty());
     assert!(result.attestation.is_some());
 
@@ -106,7 +106,7 @@ async fn test_phase16_egress_unauthorized_domain_rejection() {
 }
 
 #[tokio::test]
-async fn test_phase16_zero_knowledge_credential_injection_and_redaction() -> AegisResult<()> {
+async fn test_phase16_zero_knowledge_credential_injection_and_redaction() -> PropylonResult<()> {
     let raw_secret = "ya29.sample_oauth_token_enterprise_secret_99887766";
     let secret_json = json!({
         "access_token": raw_secret,
@@ -152,7 +152,7 @@ print("Found Token:", token)
 }
 
 #[tokio::test]
-async fn test_phase16_execution_timeout_containment() -> AegisResult<()> {
+async fn test_phase16_execution_timeout_containment() -> PropylonResult<()> {
     let secret_store = Arc::new(VaultSecretStore::new("vault://local"));
     let (sandbox, _) = build_test_sandbox(secret_store);
 
@@ -175,8 +175,8 @@ async fn test_phase16_execution_timeout_containment() -> AegisResult<()> {
 }
 
 #[tokio::test]
-async fn test_phase16_wire_protocol_execute_code() -> AegisResult<()> {
-    let gateway = Arc::new(AegisGateway::default());
+async fn test_phase16_wire_protocol_execute_code() -> PropylonResult<()> {
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = McpProtocolHandler::new(gateway);
 
     let wire_req = json!({

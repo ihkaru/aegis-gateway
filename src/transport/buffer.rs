@@ -2,7 +2,7 @@
 //! Resolves microsoft/mcp-gateway#48 ("The stream was already consumed. It cannot be read again.")
 //! Enables multi-pass reading across DLP, ABAC policy, and backend proxies without stream exhaustion.
 
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use serde_json::Value;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -24,10 +24,10 @@ impl ReusableStreamBuffer {
         }
     }
 
-    pub fn with_max_capacity(data: impl Into<Vec<u8>>, max_capacity: usize) -> Result<Self, AegisError> {
+    pub fn with_max_capacity(data: impl Into<Vec<u8>>, max_capacity: usize) -> Result<Self, PropylonError> {
         let vec: Vec<u8> = data.into();
         if vec.len() > max_capacity {
-            return Err(AegisError::StateError(format!(
+            return Err(PropylonError::StateError(format!(
                 "Payload size {} exceeds maximum buffer capacity {}",
                 vec.len(),
                 max_capacity
@@ -61,26 +61,26 @@ impl ReusableStreamBuffer {
     }
 
     /// Parse JSON payload safely multiple times without stream exhaustion
-    pub fn read_json(&self) -> Result<Value, AegisError> {
+    pub fn read_json(&self) -> Result<Value, PropylonError> {
         if self.data.is_empty() {
-            return Err(AegisError::StateError("Cannot parse empty buffer as JSON".to_string()));
+            return Err(PropylonError::StateError("Cannot parse empty buffer as JSON".to_string()));
         }
         serde_json::from_slice(&self.data).map_err(|e| {
-            AegisError::StateError(format!("Malformed JSON in reusable stream buffer: {}", e))
+            PropylonError::StateError(format!("Malformed JSON in reusable stream buffer: {}", e))
         })
     }
 
     /// Read buffer contents as a UTF-8 string without consuming
-    pub fn read_utf8(&self) -> Result<String, AegisError> {
+    pub fn read_utf8(&self) -> Result<String, PropylonError> {
         String::from_utf8(self.data.to_vec()).map_err(|e| {
-            AegisError::StateError(format!("Invalid UTF-8 in stream buffer: {}", e))
+            PropylonError::StateError(format!("Invalid UTF-8 in stream buffer: {}", e))
         })
     }
 
     /// Simulate multiple consumer passes over the stream
-    pub fn multi_pass_consume<T, F>(&self, passes: usize, mut consumer: F) -> Result<Vec<T>, AegisError>
+    pub fn multi_pass_consume<T, F>(&self, passes: usize, mut consumer: F) -> Result<Vec<T>, PropylonError>
     where
-        F: FnMut(&mut Cursor<Arc<[u8]>>, usize) -> Result<T, AegisError>,
+        F: FnMut(&mut Cursor<Arc<[u8]>>, usize) -> Result<T, PropylonError>,
     {
         let mut results = Vec::with_capacity(passes);
         for pass_idx in 0..passes {

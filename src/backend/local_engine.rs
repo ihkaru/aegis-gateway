@@ -6,22 +6,22 @@ use std::sync::Arc;
 
 use crate::core::backend::BackendTransport;
 use crate::core::database::SqlEngine;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
 
 /// Real In-Memory Local Loopback Backend with Dependency Injection (DIP & ISP)
 #[derive(Clone)]
-pub struct LocalAegisBackend {
+pub struct LocalPropylonBackend {
     sql_engine: Arc<dyn SqlEngine>,
 }
 
-impl Default for LocalAegisBackend {
+impl Default for LocalPropylonBackend {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl LocalAegisBackend {
+impl LocalPropylonBackend {
     pub fn new() -> Self {
         Self {
             sql_engine: Arc::new(crate::backend::LocalSqliteEngine::with_default_path()),
@@ -34,8 +34,8 @@ impl LocalAegisBackend {
 }
 
 #[async_trait]
-impl BackendTransport for LocalAegisBackend {
-    async fn start(&self) -> AegisResult<()> {
+impl BackendTransport for LocalPropylonBackend {
+    async fn start(&self) -> PropylonResult<()> {
         Ok(())
     }
 
@@ -43,24 +43,24 @@ impl BackendTransport for LocalAegisBackend {
         self.sql_engine.is_healthy().await
     }
 
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         let req_id = request.id.clone().unwrap_or(JsonRpcId::Number(1));
         match request.method.as_str() {
             "tools/list" => {
                 let tools = json!({
                     "tools": [
                         {
-                            "name": "aegis_system_health",
+                            "name": "propylon_system_health",
                             "description": "Inspect live gateway health and resource metrics",
                             "inputSchema": { "type": "object", "properties": {} }
                         },
                         {
-                            "name": "aegis_ping",
+                            "name": "propylon_ping",
                             "description": "Ping local loopback backend for roundtrip latency test",
                             "inputSchema": { "type": "object", "properties": { "echo": { "type": "string" } } }
                         },
                         {
-                            "name": "aegis_sqlite_query",
+                            "name": "propylon_sqlite_query",
                             "description": "Execute live SQL query on local persistent SQLite database",
                             "inputSchema": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
                         }
@@ -79,16 +79,16 @@ impl BackendTransport for LocalAegisBackend {
                 let args = params.get("arguments").cloned().unwrap_or(json!({}));
 
                 let data = match tool_name {
-                    "aegis_system_health" => json!({
+                    "propylon_system_health" => json!({
                         "status": "HEALTHY",
                         "memory_mb": read_rss_mb(),
                         "mtls_enforced": true
                     }),
-                    "aegis_ping" => json!({
+                    "propylon_ping" => json!({
                         "status": "pong",
                         "echo": args.get("echo").and_then(|e| e.as_str()).unwrap_or("hello")
                     }),
-                    "aegis_sqlite_query" | "sqlite_query" => {
+                    "propylon_sqlite_query" | "sqlite_query" => {
                         let query = args.get("query").and_then(|q| q.as_str()).unwrap_or("SELECT * FROM customer_accounts LIMIT 5");
                         match self.sql_engine.execute(query).await {
                             Ok(res) => res.to_json_value(),
@@ -132,7 +132,7 @@ impl BackendTransport for LocalAegisBackend {
         }
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         Ok(())
     }
 }

@@ -1,7 +1,7 @@
 # Enterprise IAM, SSO Federation & ABAC Access Control Guide
 
 > **Authoritative Technical Specification & Operational Runbook**  
-> **Applicable Version**: Aegis Gateway v1.49.0+  
+> **Applicable Version**: Propylon Gateway v1.49.0+  
 > **Security Standards Compliance**: NIST SP 800-207 Zero Trust, OAuth 2.1, RFC 8628, RFC 8693, RFC 8707, SOC 2 Type II, ISO 27001  
 
 ---
@@ -13,14 +13,14 @@ As enterprises deploy Model Context Protocol (MCP) servers across departments, d
 - **Audit Blind Spots**: Lack of centralized, immutable logging for tool calls and sensitive data exfiltration.
 - **The Confused Deputy Vulnerability**: AI agents manipulated via prompt injection to run privileged actions.
 
-**Aegis Gateway enforces the NIST Zero Trust Policy Enforcement Point (PEP) & Policy Decision Point (PDP) model**:
-1. AI clients authenticate **once** to Aegis Gateway via enterprise Single Sign-On (SAML 2.0 / OIDC) using **OAuth 2.1 Device Flow (RFC 8628)** or mTLS.
+**Propylon Gateway enforces the NIST Zero Trust Policy Enforcement Point (PEP) & Policy Decision Point (PDP) model**:
+1. AI clients authenticate **once** to Propylon Gateway via enterprise Single Sign-On (SAML 2.0 / OIDC) using **OAuth 2.1 Device Flow (RFC 8628)** or mTLS.
 2. The Gateway evaluates every single JSON-RPC tool invocation against declarative **Attribute-Based Access Control (ABAC)** rules.
 3. Downstream MCP servers remain **pure workers** isolated in private networks, receiving cryptographically signed user claims.
 
 ```
 +------------------+          +--------------------------------------------+          +-------------------+
-|  Developer CLI / |          |          AEGIS GATEWAY (PEP + PDP)         |          | Downstream MCP    |
+|  Developer CLI / |          |          PROPYLON GATEWAY (PEP + PDP)         |          | Downstream MCP    |
 |  AI Agent Client | -------> | 1. OAuth 2.1 / SAML Assertion Exchange     | -------> | Pure Workers      |
 |  (Cursor/Claude) |          | 2. Declarative ABAC Policy Evaluation      |  (mTLS)  | (Isolated Subnet) |
 +------------------+          | 3. Dynamic Catalog Scoping (Least-Priv)   |          +-------------------+
@@ -34,15 +34,15 @@ As enterprises deploy Model Context Protocol (MCP) servers across departments, d
 
 ### A. Interactive CLI / Desktop Agent Flow (RFC 8628 Device Authorization)
 
-CLI agents cannot render SAML browser forms directly. Aegis Gateway bridges this via the OAuth 2.1 Device Authorization Grant:
+CLI agents cannot render SAML browser forms directly. Propylon Gateway bridges this via the OAuth 2.1 Device Authorization Grant:
 
 1. **Initiation**: The agent issues a connection request to `POST /api/v1/auth/device/code`.
-2. **Challenge**: Aegis responds with a `verification_uri` and a user code:
+2. **Challenge**: Propylon responds with a `verification_uri` and a user code:
    ```json
    {
      "device_code": "dev_9f81a7b2c0",
      "user_code": "WDJB-9532",
-     "verification_uri": "https://aegis.corp.internal/activate",
+     "verification_uri": "https://propylon.corp.internal/activate",
      "expires_in": 900,
      "interval": 5
    }
@@ -63,14 +63,14 @@ For non-interactive background workers (e.g., automated ETL, orchestrators):
 Legacy enterprises (banking, healthcare, manufacturing) often maintain on-premises Active Directory or SAML-only IdPs without modern OIDC endpoints.
 
 ### Pattern 1: SAML 2.0 Assertion Exchange Broker
-Aegis Gateway acts as an RFC 8693 Token Exchange Broker:
-- Aegis consumes raw XML SAML 2.0 assertions signed by on-premises ADFS.
-- Aegis validates the X.509 signature against the IdP certificate keystore.
-- Aegis maps SAML AttributeStatements (`Department`, `SecurityClearance`, `CostCenter`) into normalized claims within the scoped access token.
+Propylon Gateway acts as an RFC 8693 Token Exchange Broker:
+- Propylon consumes raw XML SAML 2.0 assertions signed by on-premises ADFS.
+- Propylon validates the X.509 signature against the IdP certificate keystore.
+- Propylon maps SAML AttributeStatements (`Department`, `SecurityClearance`, `CostCenter`) into normalized claims within the scoped access token.
 
 ### Pattern 2: Air-Gapped / Perimeter DMZ Deployment
 In air-gapped environments where downstream MCP tools cannot reach the internet:
-- Aegis Gateway is positioned as the single ingress proxy in the DMZ.
+- Propylon Gateway is positioned as the single ingress proxy in the DMZ.
 - Public IdP signing keys (JWKS) are pre-cached locally with configurable offline TTL.
 - Downstream backends do not make outbound network calls.
 
@@ -87,7 +87,7 @@ Access control is defined declaratively and version-controlled in Git. Policies 
 ### Example Policy Contract (`policies/abac.yaml`)
 
 ```yaml
-version: aegis.gateway/v1alpha1
+version: propylon.gateway/v1alpha1
 kind: AccessPolicy
 metadata:
   name: corporate-data-access
@@ -134,17 +134,17 @@ SecOps teams test policies prior to deployment without risking operational downt
 - Returns evaluation trace, matched rule names, and resulting decision (`Allow`, `Deny`, `RequireHitl`).
 
 ### B. Downstream Signed Identity Propagation
-When downstream databases require Row-Level Security (RLS), Aegis Gateway injects cryptographically signed HTTP headers:
-- `X-Aegis-User-Id`: The authenticated enterprise principal.
-- `X-Aegis-Tenant-Id`: The corporate tenant / cost center.
-- `X-Aegis-Signature`: HMAC-SHA256 signature calculated over timestamp and user ID, preventing header forgery.
+When downstream databases require Row-Level Security (RLS), Propylon Gateway injects cryptographically signed HTTP headers:
+- `X-Propylon-User-Id`: The authenticated enterprise principal.
+- `X-Propylon-Tenant-Id`: The corporate tenant / cost center.
+- `X-Propylon-Signature`: HMAC-SHA256 signature calculated over timestamp and user ID, preventing header forgery.
 
 ---
 
 ## 6. Why Downstream Evaluation is an Anti-Pattern
 
-| Evaluation at Downstream MCP Servers (Anti-Pattern) | Centralized Evaluation at Aegis Gateway (Best Practice) |
+| Evaluation at Downstream MCP Servers (Anti-Pattern) | Centralized Evaluation at Propylon Gateway (Best Practice) |
 | :--- | :--- |
 | **Inconsistent Security**: Each tool author implements custom JWT parsers and auth checks, introducing zero-day gaps. | **Uniform Zero Trust**: Single hardened Rust engine enforces policies across all 100+ tools identically. |
-| **Credential Sprawl**: Every MCP server must be registered as an OAuth client with enterprise IdP credentials. | **Zero Sprawl**: Only Aegis connects to the IdP; downstreams require zero IdP configuration. |
+| **Credential Sprawl**: Every MCP server must be registered as an OAuth client with enterprise IdP credentials. | **Zero Sprawl**: Only Propylon connects to the IdP; downstreams require zero IdP configuration. |
 | **Fragmented Audit Trail**: Logs are distributed across 20+ servers in diverse formats. | **Unified Cryptographic Audit**: Centralized SOC 2 Type II hash chain and real-time SIEM streaming. |

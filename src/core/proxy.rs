@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 use async_trait::async_trait;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Ephemeral proxy socket binding allocation
 #[derive(Debug, Clone)]
@@ -15,15 +15,15 @@ pub struct ProxyBinding {
 #[async_trait]
 pub trait CredentialProxyEngine: Send + Sync {
     /// Bind an ephemeral loopback proxy for given execution session
-    async fn bind_proxy(&self, session_id: &str) -> AegisResult<ProxyBinding>;
+    async fn bind_proxy(&self, session_id: &str) -> PropylonResult<ProxyBinding>;
 
     /// Transform request headers to inject authorization token at transport layer
     async fn transform_request_headers(
         &self,
         service: &str,
         raw_headers: &[(String, String)],
-    ) -> AegisResult<Vec<(String, String)>>;
+    ) -> PropylonResult<Vec<(String, String)>>;
 
     /// Teardown ephemeral proxy socket and flush internal buffers
-    async fn teardown_proxy(&self, session_id: &str) -> AegisResult<()>;
+    async fn teardown_proxy(&self, session_id: &str) -> PropylonResult<()>;
 }

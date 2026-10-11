@@ -4,7 +4,7 @@
 > **Status**: `In Planning & Implementation`  
 > **Target Enterprise Gaps & Standards**:
 > - Delivers real-time interactive approval requests for suspended high-risk agent operations to corporate messaging platforms (Slack & Microsoft Teams).
-> - Cryptographic Attestation: Every webhook payload includes `X-Aegis-Signature` (HMAC-SHA256) and `X-Aegis-Timestamp` to prevent spoofing or replay attacks.
+> - Cryptographic Attestation: Every webhook payload includes `X-Propylon-Signature` (HMAC-SHA256) and `X-Propylon-Timestamp` to prevent spoofing or replay attacks.
 > - Standard Compliance: NIST SP 800-53 Rev. 5 (AC-2/AC-3), SOC 2 Trust Services Criteria CC6.1.
 
 ---
@@ -14,7 +14,7 @@
 Prior implementations tracked suspended actions in in-memory queues and the embedded Web UI, but lacked:
 1. Automated outward notification dispatchers to IT operations channels where managers actually work.
 2. Structured message formatting for Slack BlockKit (interactive blocks with action buttons) and Microsoft Teams Adaptive Cards.
-3. Cryptographic payload signing so receiving endpoints can verify that the approval card originated from the verified Aegis Gateway instance.
+3. Cryptographic payload signing so receiving endpoints can verify that the approval card originated from the verified Propylon Gateway instance.
 
 ---
 
@@ -26,7 +26,7 @@ pub trait HitlWebhookDispatcher: Send + Sync {
     async fn dispatch_approval_request(
         &self,
         request: &ApprovalWebhookPayload,
-    ) -> AegisResult<WebhookDispatchResult>;
+    ) -> PropylonResult<WebhookDispatchResult>;
 }
 ```
 

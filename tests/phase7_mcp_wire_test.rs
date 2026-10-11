@@ -5,21 +5,21 @@ use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use serde_json::json;
 
-use aegis_gateway::audit::StructuredAuditLogger;
-use aegis_gateway::core::transport::{
+use propylon::audit::StructuredAuditLogger;
+use propylon::core::transport::{
     JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, WireProtocolHandler,
     INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
 };
-use aegis_gateway::core::types::ToolDefinition;
-use aegis_gateway::dlp::PiiDlpPipeline;
-use aegis_gateway::policy::AbacPolicyEngine;
-use aegis_gateway::skills::LocalSkillRegistry;
-use aegis_gateway::state::InMemoryStateBackend;
-use aegis_gateway::transport::{McpProtocolHandler, StdioTransport, StreamableHttpTransport};
-use aegis_gateway::AegisGateway;
+use propylon::core::types::ToolDefinition;
+use propylon::dlp::PiiDlpPipeline;
+use propylon::policy::AbacPolicyEngine;
+use propylon::skills::LocalSkillRegistry;
+use propylon::state::InMemoryStateBackend;
+use propylon::transport::{McpProtocolHandler, StdioTransport, StreamableHttpTransport};
+use propylon::PropylonGateway;
 
-fn build_test_gateway() -> Arc<AegisGateway> {
-    Arc::new(AegisGateway::new(
+fn build_test_gateway() -> Arc<PropylonGateway> {
+    Arc::new(PropylonGateway::new(
         Arc::new(InMemoryStateBackend::new()),
         Arc::new(AbacPolicyEngine::new()),
         Arc::new(PiiDlpPipeline::new()),
@@ -71,7 +71,7 @@ async fn test_mcp_wire_lifecycle_initialize_and_ping() {
     let val: serde_json::Value = serde_json::from_str(&resp).expect("valid json");
     assert_eq!(val["id"], 1);
     assert_eq!(val["result"]["protocolVersion"], "2024-11-05");
-    assert_eq!(val["result"]["serverInfo"]["name"], "aegis-gateway");
+    assert_eq!(val["result"]["serverInfo"]["name"], "propylon");
 
     // 2. Initialized Notification (should produce NO response)
     let notif = json!({

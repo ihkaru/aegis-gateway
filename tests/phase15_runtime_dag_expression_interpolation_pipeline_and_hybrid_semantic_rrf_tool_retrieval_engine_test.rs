@@ -1,13 +1,13 @@
 //! Phase 15 Integration Test Suite: Runtime DAG Expression Interpolation Pipeline and Hybrid Semantic RRF Tool Retrieval Engine
-//! Target Gaps: Aegis/Scale#101 (Runtime Data Piping), Aegis/Scale#102 (Hybrid Semantic Search at Scale)
+//! Target Gaps: Propylon/Scale#101 (Runtime Data Piping), Propylon/Scale#102 (Hybrid Semantic Search at Scale)
 
 #![deny(unsafe_code)]
 
 use serde_json::json;
 use std::time::Instant;
 
-use aegis_gateway::core::types::{DisclosureTier, ToolDefinition};
-use aegis_gateway::discovery::{
+use propylon::core::types::{DisclosureTier, ToolDefinition};
+use propylon::discovery::{
     DagPipelineEngine, ExecutionPlan, HybridSearchEngine, PlanStep,
 };
 

@@ -7,12 +7,12 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::json;
 
-use aegis_gateway::backend::{
+use propylon::backend::{
     HermeticSubprocessBackend, RemoteHttpBackend, SubprocessBackendRegistry, TopologyConfigLoader,
 };
-use aegis_gateway::core::backend::{BackendConfig, BackendRegistry, BackendTransport};
-use aegis_gateway::core::error::AegisResult;
-use aegis_gateway::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
+use propylon::core::backend::{BackendConfig, BackendRegistry, BackendTransport};
+use propylon::core::error::PropylonResult;
+use propylon::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
 
 /// Mock upstream backend transport for testing registry aggregation
 struct MockBackendTransport {
@@ -34,12 +34,12 @@ impl MockBackendTransport {
 
 #[async_trait]
 impl BackendTransport for MockBackendTransport {
-    async fn start(&self) -> AegisResult<()> {
+    async fn start(&self) -> PropylonResult<()> {
         self.healthy.store(true, Ordering::SeqCst);
         Ok(())
     }
 
-    async fn send_request(&self, _request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, _request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         Ok(self.tools_response.clone())
     }
 
@@ -47,7 +47,7 @@ impl BackendTransport for MockBackendTransport {
         self.healthy.load(Ordering::SeqCst)
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         self.healthy.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -162,7 +162,7 @@ for line in sys.stdin:
 
 #[tokio::test]
 async fn test_remote_http_backend_lifecycle() {
-    let remote = RemoteHttpBackend::new("cloud-mcp", "https://api.aegis.cloud/mcp");
+    let remote = RemoteHttpBackend::new("cloud-mcp", "https://api.propylon.cloud/mcp");
     assert!(remote.is_healthy().await);
 
     let req = JsonRpcRequest {

@@ -10,16 +10,16 @@ use std::sync::Arc;
 use serde_json::json;
 use tokio::io::AsyncWriteExt;
 
-use aegis_gateway::backend::TopologyConfigLoader;
-use aegis_gateway::core::transport::{
+use propylon::backend::TopologyConfigLoader;
+use propylon::core::transport::{
     WireProtocolHandler, INVALID_PARAMS, METHOD_NOT_FOUND, PARSE_ERROR,
 };
-use aegis_gateway::transport::{McpProtocolHandler, StdioTransport};
-use aegis_gateway::AegisGateway;
+use propylon::transport::{McpProtocolHandler, StdioTransport};
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_negative_malformed_json_inputs() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = McpProtocolHandler::new(gateway);
 
     let garbage_cases = vec![
@@ -44,7 +44,7 @@ async fn test_negative_malformed_json_inputs() {
 
 #[tokio::test]
 async fn test_negative_method_and_params_taxonomy() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = McpProtocolHandler::new(gateway);
 
     // 1. Unknown Method -> METHOD_NOT_FOUND (-32601)
@@ -96,7 +96,7 @@ async fn test_negative_method_and_params_taxonomy() {
 
 #[tokio::test]
 async fn test_negative_stream_abrupt_client_disconnect() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler: Arc<dyn WireProtocolHandler> = Arc::new(McpProtocolHandler::new(gateway));
     let stdio_transport = StdioTransport::new(handler);
 

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::delegation::{DelegatedToken, IdentityDelegationBroker, ResourceScoper};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// In-memory user-delegated OAuth token broker implementing OBO resolution
@@ -27,7 +27,7 @@ impl IdentityDelegationBroker for UserIdentityDelegationBroker {
         &self,
         caller: &CallerContext,
         target_service: &str,
-    ) -> AegisResult<Option<DelegatedToken>> {
+    ) -> PropylonResult<Option<DelegatedToken>> {
         let read = self.tokens.read().await;
         if let Some(user_map) = read.get(&caller.subject) {
             if let Some(token) = user_map.get(target_service) {
@@ -44,14 +44,14 @@ impl IdentityDelegationBroker for UserIdentityDelegationBroker {
         &self,
         caller_id: &str,
         token: DelegatedToken,
-    ) -> AegisResult<()> {
+    ) -> PropylonResult<()> {
         let mut write = self.tokens.write().await;
         let user_map = write.entry(caller_id.to_string()).or_default();
         user_map.insert(token.service.clone(), token);
         Ok(())
     }
 
-    async fn revoke_user_token(&self, caller_id: &str, target_service: &str) -> AegisResult<()> {
+    async fn revoke_user_token(&self, caller_id: &str, target_service: &str) -> PropylonResult<()> {
         let mut write = self.tokens.write().await;
         if let Some(user_map) = write.get_mut(caller_id) {
             user_map.remove(target_service);
@@ -87,7 +87,7 @@ impl ResourceScoper for VirtualResourceScoper {
         caller: &CallerContext,
         target_resource: &str,
         _operation: &str,
-    ) -> AegisResult<bool> {
+    ) -> PropylonResult<bool> {
         let read = self.allowed_scopes.read().await;
         if let Some(allowed) = read.get(&caller.subject) {
             if allowed.is_empty() || allowed.iter().any(|s| s == "*") {

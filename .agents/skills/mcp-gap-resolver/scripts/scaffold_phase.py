@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scaffold a new implementation phase in Aegis Gateway based on identified gaps.
+Scaffold a new implementation phase in Propylon Gateway based on identified gaps.
 Generates roadmap specification, integration test skeleton, and registers phase in ledgers.
 """
 
@@ -33,7 +33,7 @@ def generate_roadmap_content(phase_num: int, title: str, issues: list) -> str:
 First-generation MCP gateways exhibited operational failures and complaints:
 {issue_lines}
 
-Aegis Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
+Propylon Gateway addresses these gaps via strict interface-first architecture, zero unsafe code, and zero mock closures.
 
 ---
 
@@ -96,11 +96,11 @@ def update_overview_table(phase_num: int, title: str, file_name: str, local_root
             print(f"[+] Updated 00_ROADMAP_OVERVIEW.md with Phase {phase_num}", file=sys.stderr)
 
 def main():
-    parser = argparse.ArgumentParser(description="Scaffold a new Aegis Gateway Phase")
+    parser = argparse.ArgumentParser(description="Scaffold a new Propylon Gateway Phase")
     parser.add_argument("--phase-num", type=int, required=True, help="Phase number (e.g. 12)")
     parser.add_argument("--title", required=True, help="Phase title")
     parser.add_argument("--issues", default="", help="Comma-separated issues (e.g. docker/mcp-gateway#591)")
-    parser.add_argument("--local-root", default="/root/projects/aegis-gateway", help="Aegis root dir")
+    parser.add_argument("--local-root", default="/root/projects/propylon", help="Propylon root dir")
 
     args = parser.parse_args()
     issues = [i.strip() for i in args.issues.split(",") if i.strip()]

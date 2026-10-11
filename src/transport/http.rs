@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::transport::{IngressTransport, WireProtocolHandler};
 
 /// Streamable HTTP Transport processor (RFC 2025-03-26 single-endpoint architecture)
@@ -30,7 +30,7 @@ impl StreamableHttpTransport {
         path: &str,
         method: &str,
         body: &str,
-    ) -> AegisResult<(u16, String, String)> {
+    ) -> PropylonResult<(u16, String, String)> {
         match (method, path) {
             // Modern RFC 2025-03-26 Streamable HTTP unified endpoint
             ("POST", "/mcp") => {
@@ -48,7 +48,7 @@ impl StreamableHttpTransport {
             ("GET", "/health") | ("GET", "/healthz") => {
                 Ok((200, "application/json".to_string(), r#"{"status":"healthy"}"#.to_string()))
             }
-            _ => Err(AegisError::Internal(format!(
+            _ => Err(PropylonError::Internal(format!(
                 "HTTP 404: Route not found for {method} {path}"
             ))),
         }
@@ -57,8 +57,8 @@ impl StreamableHttpTransport {
 
 #[async_trait]
 impl IngressTransport for StreamableHttpTransport {
-    async fn run(&self) -> AegisResult<()> {
-        eprintln!("[AEGIS] Streamable HTTP transport listening on {}", self.listen_addr);
+    async fn run(&self) -> PropylonResult<()> {
+        eprintln!("[PROPYLON] Streamable HTTP transport listening on {}", self.listen_addr);
         Ok(())
     }
 }

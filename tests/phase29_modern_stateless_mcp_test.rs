@@ -2,10 +2,10 @@
 
 use serde_json::json;
 
-use aegis_gateway::core::protocol_negotiation::{
+use propylon::core::protocol_negotiation::{
     HeaderRoutingMetadata, McpProtocolNegotiator, McpProtocolVersion,
 };
-use aegis_gateway::transport::StatelessProtocolNegotiator;
+use propylon::transport::StatelessProtocolNegotiator;
 
 #[test]
 fn test_detect_protocol_version_header() {

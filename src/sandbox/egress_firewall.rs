@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use regex::Regex;
 use std::sync::OnceLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::sandbox::EgressFirewall;
 
 static URL_REGEX: OnceLock<Regex> = OnceLock::new();
@@ -135,21 +135,21 @@ impl EgressFilterEngine {
         false
     }
 
-    fn evaluate_host(&self, host: &str) -> AegisResult<()> {
+    fn evaluate_host(&self, host: &str) -> PropylonResult<()> {
         if self.block_cloud_metadata && self.is_cloud_metadata(host) {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "SSRF violation: destination host '{host}' is prohibited cloud metadata"
             )));
         }
 
         if self.block_internal_networks && self.is_private_network(host) {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "SSRF violation: destination host '{host}' is prohibited private/loopback network"
             )));
         }
 
         if !self.is_domain_permitted(host) {
-            return Err(AegisError::PolicyDenied(format!(
+            return Err(PropylonError::PolicyDenied(format!(
                 "Egress firewall violation: destination host '{host}' is not in allowed domain whitelist"
             )));
         }
@@ -160,10 +160,10 @@ impl EgressFilterEngine {
 
 #[async_trait]
 impl EgressFirewall for EgressFilterEngine {
-    async fn check_code_egress(&self, code: &str) -> AegisResult<()> {
+    async fn check_code_egress(&self, code: &str) -> PropylonResult<()> {
         // Direct metadata/private IP string search
         if code.contains("169.254.169.254") || code.contains("metadata.google.internal") {
-            return Err(AegisError::PolicyDenied(
+            return Err(PropylonError::PolicyDenied(
                 "SSRF violation: source code contains prohibited cloud metadata references".to_string(),
             ));
         }
@@ -180,7 +180,7 @@ impl EgressFirewall for EgressFilterEngine {
         Ok(())
     }
 
-    async fn check_destination(&self, host: &str, _port: u16) -> AegisResult<()> {
+    async fn check_destination(&self, host: &str, _port: u16) -> PropylonResult<()> {
         self.evaluate_host(host)
     }
 }

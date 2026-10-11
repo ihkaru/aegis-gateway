@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::core::audit::{AuditAction, AuditEvent, AuditSink};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::sandbox::{
     CodeSandboxEngine, CredentialBroker, EgressFirewall, ExecutionLanguage,
     SandboxExecutionRequest, SandboxExecutionResult,
@@ -73,7 +73,7 @@ impl CodeSandboxEngine for HermeticProcessSandbox {
             .is_ok()
     }
 
-    async fn execute(&self, req: &SandboxExecutionRequest) -> AegisResult<SandboxExecutionResult> {
+    async fn execute(&self, req: &SandboxExecutionRequest) -> PropylonResult<SandboxExecutionResult> {
         let code_hash = Self::compute_sha256(&req.code);
         let start = Instant::now();
 
@@ -114,13 +114,13 @@ impl CodeSandboxEngine for HermeticProcessSandbox {
 
         // 3. Ephemeral Temp Directory Isolation
         let temp_dir = tempfile::tempdir()
-            .map_err(|e| AegisError::Internal(format!("Failed to create ephemeral sandbox dir: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Failed to create ephemeral sandbox dir: {e}")))?;
         let (binary, filename) = self.resolve_runner(req.language);
         let script_path: PathBuf = temp_dir.path().join(filename);
 
         tokio::fs::write(&script_path, &req.code)
             .await
-            .map_err(|e| AegisError::Internal(format!("Failed to write script into sandbox: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Failed to write script into sandbox: {e}")))?;
 
         // 4. Hermetic Command Spawner with env_clear()
         let mut cmd = tokio::process::Command::new(binary);

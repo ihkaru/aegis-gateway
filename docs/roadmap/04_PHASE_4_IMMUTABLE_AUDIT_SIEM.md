@@ -18,12 +18,12 @@ Defined in [`src/core/audit.rs`](../../src/core/audit.rs):
 ```rust
 #[async_trait]
 pub trait AuditSink: Send + Sync {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()>;
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()>;
 }
 
 #[async_trait]
 pub trait AuditChainVerifier: Send + Sync {
-    async fn verify_chain(&self) -> AegisResult<bool>;
+    async fn verify_chain(&self) -> PropylonResult<bool>;
 }
 ```
 

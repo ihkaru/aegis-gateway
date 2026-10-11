@@ -9,7 +9,7 @@ pub mod sqlite_engine;
 pub mod subprocess;
 
 pub use config::TopologyConfigLoader;
-pub use local_engine::LocalAegisBackend;
+pub use local_engine::LocalPropylonBackend;
 pub use reaper::ProcessGroupReaper;
 pub use registry::SubprocessBackendRegistry;
 pub use remote_http::RemoteHttpBackend;

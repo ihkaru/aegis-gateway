@@ -53,10 +53,10 @@
     <div class="container mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 min-w-0">
         <div class="h-7 w-7 shrink-0 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs tracking-tight shadow-sm">
-          AG
+          PP
         </div>
         <div class="flex items-center gap-2 truncate">
-          <span class="font-bold text-sm tracking-tight truncate">AEGIS GATEWAY</span>
+          <span class="font-bold text-sm tracking-tight truncate">PROPYLON GATEWAY</span>
           <span class="hidden sm:inline-block text-[10px] font-medium tracking-wide uppercase text-muted-foreground border border-border px-1.5 py-0.5 rounded">
             CONTROL PLANE
           </span>
@@ -230,7 +230,7 @@
         <span class="tabular-nums">Zero-Downtime Dynamic Control Plane Active</span>
       </div>
       <div>
-        <span>Aegis Enterprise Control Plane v1.34.0</span>
+        <span>Propylon Enterprise Control Plane v1.34.0</span>
       </div>
     </div>
   </footer>

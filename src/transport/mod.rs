@@ -16,7 +16,7 @@ pub mod tls_listener;
 
 pub use buffer::ReusableStreamBuffer;
 pub use command_split::{split_command, split_command_unix, split_command_windows};
-pub use cors::{AegisCorsPolicy, CorsOriginOutcome, CorsPolicyEnforcer};
+pub use cors::{PropylonCorsPolicy, CorsOriginOutcome, CorsPolicyEnforcer};
 pub use execution_pipeline::run_tool_execution_pipeline;
 pub use http::StreamableHttpTransport;
 pub use modern_mcp::StatelessProtocolNegotiator;

@@ -136,7 +136,7 @@
   --xy-edge-label-color: hsl(var(--foreground));
 }
 
-/* Edge Label Badge conforming to Aegis Theme Tokens */
+/* Edge Label Badge conforming to Propylon Theme Tokens */
 .svelte-flow__edge-label {
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;

@@ -10,16 +10,16 @@ use std::sync::Arc;
 use serde_json::json;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 
-use aegis_gateway::backend::TopologyConfigLoader;
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::core::types::ToolDefinition;
-use aegis_gateway::transport::{McpProtocolHandler, StdioTransport};
-use aegis_gateway::AegisGateway;
+use propylon::backend::TopologyConfigLoader;
+use propylon::core::transport::WireProtocolHandler;
+use propylon::core::types::ToolDefinition;
+use propylon::transport::{McpProtocolHandler, StdioTransport};
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_hobbyist_zero_config_initialization() {
     // Zero-config: 1-line creation with default in-memory drivers
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = McpProtocolHandler::new(gateway);
 
     // 1. Initialize Handshake (Claude Desktop startup sequence)
@@ -37,7 +37,7 @@ async fn test_hobbyist_zero_config_initialization() {
 
     let val: serde_json::Value = serde_json::from_str(&init_resp).expect("valid json-rpc");
     assert_eq!(val["id"], 1);
-    assert_eq!(val["result"]["serverInfo"]["name"], "aegis-gateway");
+    assert_eq!(val["result"]["serverInfo"]["name"], "propylon");
     assert_eq!(val["result"]["protocolVersion"], "2024-11-05");
 
     // 2. Ping Healthcheck
@@ -54,7 +54,7 @@ async fn test_hobbyist_zero_config_initialization() {
 #[tokio::test]
 async fn test_hobbyist_stdio_clean_channel_and_tool_call() {
     // Register a simple hobbyist tool
-    let protocol = McpProtocolHandler::new(Arc::new(AegisGateway::default()));
+    let protocol = McpProtocolHandler::new(Arc::new(PropylonGateway::default()));
     protocol
         .register_tools(vec![ToolDefinition {
             name: "greet_user".to_string(),

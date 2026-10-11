@@ -1,4 +1,4 @@
-# Aegis Gateway: Master Multi-Phase Enterprise Roadmap
+# Propylon Gateway: Master Multi-Phase Enterprise Roadmap
 
 > **Status**: Active Living Roadmap  
 > **Target Standard**: SOC 2 Type II, ISO 27001, HIPAA, PCI-DSS, NIST AI RMF, OWASP Agentic AI Top 10  
@@ -8,9 +8,9 @@
 ---
 ## Executive Summary
 
-`Aegis Gateway` is engineered to solve the fundamental enterprise readiness deficit present in first-generation MCP gateways. First-generation proxies suffer from in-memory state lock-in, coarse role bits, zero data-loss prevention, and non-commercial license traps.
+`Propylon Gateway` is engineered to solve the fundamental enterprise readiness deficit present in first-generation MCP gateways. First-generation proxies suffer from in-memory state lock-in, coarse role bits, zero data-loss prevention, and non-commercial license traps.
 
-Aegis Gateway establishes a **Cloud-Native, Enterprise-by-Design Control Plane** mediating all AI agent tool and skill invocations.
+Propylon Gateway establishes a **Cloud-Native, Enterprise-by-Design Control Plane** mediating all AI agent tool and skill invocations.
 
 ```mermaid
 flowchart LR

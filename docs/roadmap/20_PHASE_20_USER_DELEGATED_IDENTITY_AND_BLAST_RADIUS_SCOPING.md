@@ -23,7 +23,7 @@ Phase 20 implements **User-Delegated 3-Legged OAuth Impersonation** and **Virtua
 ```mermaid
 flowchart TD
     User["Human User (Alice)"] --> AI["AI Client / Claude"]
-    AI -->|"Bearer JWT (sub: alice@company.com)"| Gateway["Aegis Gateway"]
+    AI -->|"Bearer JWT (sub: alice@company.com)"| Gateway["Propylon Gateway"]
     Gateway --> AuthCtx["CallerContext Extractor"]
     
     subgraph DelegationEngine["Identity Delegation Engine"]
@@ -49,10 +49,10 @@ pub trait IdentityDelegationBroker: Send + Sync {
         &self,
         caller: &CallerContext,
         target_service: &str,
-    ) -> AegisResult<DelegatedToken>;
+    ) -> PropylonResult<DelegatedToken>;
 
     /// Invalidate delegated session token on user sign-out
-    async fn revoke_user_session(&self, session_id: &str) -> AegisResult<()>;
+    async fn revoke_user_session(&self, session_id: &str) -> PropylonResult<()>;
 }
 
 #[async_trait]
@@ -63,7 +63,7 @@ pub trait ResourceScoper: Send + Sync {
         caller: &CallerContext,
         target_resource: &str,
         operation: &str,
-    ) -> AegisResult<bool>;
+    ) -> PropylonResult<bool>;
 }
 ```
 

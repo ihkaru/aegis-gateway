@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde_json::Value;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// Context provided to the ABAC policy evaluator
@@ -25,8 +25,8 @@ pub enum PolicyDecision {
 #[async_trait]
 pub trait PolicyEngine: Send + Sync {
     /// Evaluate whether caller can invoke the given tool with specific arguments
-    async fn evaluate(&self, ctx: &PolicyContext) -> AegisResult<PolicyDecision>;
+    async fn evaluate(&self, ctx: &PolicyContext) -> PropylonResult<PolicyDecision>;
 
     /// Evaluate argument payload constraints (e.g. max dollar amount, forbidden params)
-    fn eval_payload(&self, tool: &str, arguments: &Value) -> AegisResult<PolicyDecision>;
+    fn eval_payload(&self, tool: &str, arguments: &Value) -> PropylonResult<PolicyDecision>;
 }

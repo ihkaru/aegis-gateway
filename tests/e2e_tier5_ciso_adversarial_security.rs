@@ -8,15 +8,15 @@
 use std::collections::HashMap;
 use serde_json::json;
 
-use aegis_gateway::audit::HashChainSequencer;
-use aegis_gateway::backend::HermeticSubprocessBackend;
-use aegis_gateway::core::audit::{AuditAction, AuditEvent};
-use aegis_gateway::core::policy::PolicyEngine;
-use aegis_gateway::core::skills::PoisonScanner;
-use aegis_gateway::core::types::{CallerContext, TenantId, ToolCallRequest};
-use aegis_gateway::policy::OpaPolicyEngine;
-use aegis_gateway::skills::DefaultPoisonScanner;
-use aegis_gateway::AegisGateway;
+use propylon::audit::HashChainSequencer;
+use propylon::backend::HermeticSubprocessBackend;
+use propylon::core::audit::{AuditAction, AuditEvent};
+use propylon::core::policy::PolicyEngine;
+use propylon::core::skills::PoisonScanner;
+use propylon::core::types::{CallerContext, TenantId, ToolCallRequest};
+use propylon::policy::OpaPolicyEngine;
+use propylon::skills::DefaultPoisonScanner;
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_ciso_owasp_llm01_prompt_injection_defense() {
@@ -53,7 +53,7 @@ async fn test_ciso_owasp_llm08_hermetic_subprocess_isolation() {
 
 #[tokio::test]
 async fn test_ciso_abac_destructive_payload_bounds() {
-    use aegis_gateway::core::policy::{PolicyContext, PolicyDecision};
+    use propylon::core::policy::{PolicyContext, PolicyDecision};
 
     let opa = OpaPolicyEngine::with_enterprise_defaults();
 
@@ -94,7 +94,7 @@ async fn test_ciso_abac_destructive_payload_bounds() {
 
 #[tokio::test]
 async fn test_ciso_pci_dss_pan_masking() {
-    let gateway = AegisGateway::default();
+    let gateway = PropylonGateway::default();
 
     let caller = CallerContext {
         tenant_id: TenantId::new("fin-corp"),
@@ -134,7 +134,7 @@ async fn test_ciso_pci_dss_pan_masking() {
 
 #[tokio::test]
 async fn test_ciso_tamper_evident_siem_hash_chain() {
-    use aegis_gateway::core::audit::AuditChainVerifier;
+    use propylon::core::audit::AuditChainVerifier;
 
     let sequencer = HashChainSequencer::new();
 

@@ -1,8 +1,8 @@
-# Aegis Gateway: Embedded Web UI Control Plane Specification
+# Propylon Gateway: Embedded Web UI Control Plane Specification
 
 > [!IMPORTANT]
 > **Single Source of Truth & Governance Invariant**:
-> Dokumen ini adalah spesifikasi wajib (*living contract*) untuk Embedded Web UI Control Plane Aegis Gateway.
+> Dokumen ini adalah spesifikasi wajib (*living contract*) untuk Embedded Web UI Control Plane Propylon Gateway.
 > Setiap penambahan fitur, perubahan komponen antarmuka, perbaikan UX, atau ekspektasi baru terkait Web UI **WAJIB dicatat dan diperbarui di dokumen ini**. Ketentuan ini ditegakkan dalam `/root/GEMINI.md`.
 
 ---
@@ -11,7 +11,7 @@
 
 1. **Zero-Mock & Honest Preflight Invariant (Non-Negotiable)**:
    - Dilarang keras menampilkan data dummy statis atau memalsukan eksekusi backend.
-   - **Status LIVE**: Tool yang terhubung ke backend riil yang sedang aktif (`aegis_local_engine`, `sqlite_ledger`). Eksekusi dijalankan langsung ke mesin eksekusi (misal: query SQL riil ke file database `data/aegis_local.db`).
+   - **Status LIVE**: Tool yang terhubung ke backend riil yang sedang aktif (`propylon_local_engine`, `sqlite_ledger`). Eksekusi dijalankan langsung ke mesin eksekusi (misal: query SQL riil ke file database `data/propylon_local.db`).
    - **Status TEMPLATE**: Skema kontrak integrasi enterprise resmi (Postgres, Stripe, S3, Docker, Slack, dll.) yang didaftarkan untuk autonomous goal planning dan validasi preflight guardrail.
    - **Eksekusi Jujur**: Jika tool berstatus TEMPLATE dijalankan tanpa backend upstream yang terpasang, gateway mengembalikan status jujur `PREFLIGHT_GUARDRAIL_ONLY` dengan keterangan `status: "unattached"`, bukan simulasi data palsu.
 2. **Zero-Emoticon & Professional Aesthetics**:
@@ -58,7 +58,7 @@
     - `PREFLIGHT VERIFIED` (kuning): Evaluasi guardrail ABAC/DLP untuk tool unattached.
 
 ### Tab 4: Topology & Config (`TopologyTab.svelte` & `ConfigTab.svelte`)
-- **Tujuan**: Visualisasi DAG topologi interaktif berbasis Svelte Flow (`@xyflow/svelte`) dan editor deklaratif in-browser untuk `aegis.yaml`.
+- **Tujuan**: Visualisasi DAG topologi interaktif berbasis Svelte Flow (`@xyflow/svelte`) dan editor deklaratif in-browser untuk `propylon.yaml`.
 - **REST Binding**: `GET /api/v1/topology/graph`, `GET /api/v1/config/raw`, `POST /api/v1/config/apply`.
 - **Ekspektasi Data & Aksi**:
   - **Svelte Flow Canvas**: Graf DAG interaktif (pan, zoom, minimap) memetakan alur request: `Clients -> Ingress (:8484) -> Security Filters -> Tool Router -> MCP Backends & Integration Channels`.

@@ -25,7 +25,7 @@ Community analysis of reference Rust implementations identified critical concurr
 
 ## 2. Technical Architecture & Trait Contracts
 
-Aegis Gateway enforces strict concurrency fences in `src/state/` and `src/audit/`:
+Propylon Gateway enforces strict concurrency fences in `src/state/` and `src/audit/`:
 
 ### A. Session-Bound Idempotency Scope (`src/state/idempotency.rs`)
 ```rust
@@ -37,8 +37,8 @@ pub struct IdempotencyKey {
 }
 
 pub trait ScopedIdempotencyStore: Send + Sync {
-    async fn check_or_insert(&self, key: &IdempotencyKey) -> AegisResult<IdempotencyOutcome>;
-    async fn record_result(&self, key: &IdempotencyKey, response: &serde_json::Value) -> AegisResult<()>;
+    async fn check_or_insert(&self, key: &IdempotencyKey) -> PropylonResult<IdempotencyOutcome>;
+    async fn record_result(&self, key: &IdempotencyKey, response: &serde_json::Value) -> PropylonResult<()>;
 }
 ```
 - Replay verification strictly checks `(tenant_id, session_id, hash)`. Any request matching a hash from a differing session is treated as a distinct execution, eliminating cross-session data leakage.
@@ -62,7 +62,7 @@ pub struct GenerationSlot<T> {
     pub data: Option<T>,
 }
 ```
-- When a slot is recycled or evicted, its monotonic `epoch` counter increments. Late responses arriving with an older `epoch` are discarded immediately with a telemetry metric (`aegis_stale_answer_discarded_total`).
+- When a slot is recycled or evicted, its monotonic `epoch` counter increments. Late responses arriving with an older `epoch` are discarded immediately with a telemetry metric (`propylon_stale_answer_discarded_total`).
 
 ---
 

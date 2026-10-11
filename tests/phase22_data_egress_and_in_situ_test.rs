@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
-use aegis_gateway::core::approval::ApprovalGate;
-use aegis_gateway::core::data_governance::{
+use propylon::core::approval::ApprovalGate;
+use propylon::core::data_governance::{
     DataClassification, DataEgressDecision, DataEgressPolicyEngine, InSituDataEnclave, PolicyTier,
 };
-use aegis_gateway::core::types::{CallerContext, TenantId};
-use aegis_gateway::policy::{ActionApprovalGate, TieredDataEgressEngine};
-use aegis_gateway::sandbox::{HermeticProcessSandbox, SandboxedInSituEnclave};
-use aegis_gateway::sandbox::egress_firewall::EgressFilterEngine;
-use aegis_gateway::sandbox::credential_broker::VaultCredentialBroker;
-use aegis_gateway::policy::secrets::EnvSecretStore;
-use aegis_gateway::audit::StructuredAuditLogger;
+use propylon::core::types::{CallerContext, TenantId};
+use propylon::policy::{ActionApprovalGate, TieredDataEgressEngine};
+use propylon::sandbox::{HermeticProcessSandbox, SandboxedInSituEnclave};
+use propylon::sandbox::egress_firewall::EgressFilterEngine;
+use propylon::sandbox::credential_broker::VaultCredentialBroker;
+use propylon::policy::secrets::EnvSecretStore;
+use propylon::audit::StructuredAuditLogger;
 
 fn make_test_caller() -> CallerContext {
     CallerContext {

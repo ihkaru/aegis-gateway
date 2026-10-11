@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Audit Gap Coverage across Aegis Gateway test suites and source code.
+Audit Gap Coverage across Propylon Gateway test suites and source code.
 Cross-references a catalog of known legacy MCP complaints and issues against test assertions,
 and cryptographically audits the integrity of docs/ISSUES_PARITY_MATRIX.md.
 """
@@ -127,7 +127,7 @@ def print_report(results, matrix_entries):
     coverage_pct = (covered_count / total) * 100 if total else 0
 
     print("=" * 65)
-    print("      AEGIS GATEWAY: OPERATIONAL GAP COVERAGE SCORECARD        ")
+    print("      PROPYLON GATEWAY: OPERATIONAL GAP COVERAGE SCORECARD        ")
     print("=" * 65)
     print(f"Total Canonical Complaints Audited : {total}")
     print(f"Directly Verified in Test Suites   : {covered_count}")
@@ -147,7 +147,7 @@ def print_report(results, matrix_entries):
         matrix_pct = (valid_matrix / total_matrix) * 100 if total_matrix else 0
 
         print("\n" + "=" * 65)
-        print("    AEGIS GATEWAY: MASTER PARITY MATRIX INTEGRITY AUDIT        ")
+        print("    PROPYLON GATEWAY: MASTER PARITY MATRIX INTEGRITY AUDIT        ")
         print("=" * 65)
         print(f"Total Ledger Entries Audited       : {total_matrix}")
         print(f"Verified Source & Test Traces      : {valid_matrix}")
@@ -177,7 +177,7 @@ def print_report(results, matrix_entries):
 
 def main():
     parser = argparse.ArgumentParser(description="Audit operational gap test coverage")
-    parser.add_argument("--local-root", default="/root/projects/aegis-gateway", help="Aegis root dir")
+    parser.add_argument("--local-root", default="/root/projects/propylon", help="Propylon root dir")
     args = parser.parse_args()
 
     results = scan_codebase(args.local_root)

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::audit::{AuditChainVerifier, AuditEvent, HashChainedEvent};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// Cryptographically chained tamper-evident audit log sequencer (SOC 2 Type II compliant)
 pub struct HashChainSequencer {
@@ -106,7 +106,7 @@ impl Default for HashChainSequencer {
 }
 
 impl AuditChainVerifier for HashChainSequencer {
-    fn verify_chain(&self, events: &[HashChainedEvent]) -> AegisResult<bool> {
+    fn verify_chain(&self, events: &[HashChainedEvent]) -> PropylonResult<bool> {
         if events.is_empty() {
             return Ok(true);
         }
@@ -115,14 +115,14 @@ impl AuditChainVerifier for HashChainSequencer {
 
         for (idx, item) in events.iter().enumerate() {
             if item.sequence != idx as u64 {
-                return Err(AegisError::AuditError(format!(
+                return Err(PropylonError::AuditError(format!(
                     "Chain sequence discontinuity at index {}: item has sequence {}",
                     idx, item.sequence
                 )));
             }
 
             if item.previous_hash != expected_prev {
-                return Err(AegisError::AuditError(format!(
+                return Err(PropylonError::AuditError(format!(
                     "Tampering detected at sequence {}: previous_hash mismatch! expected '{}', found '{}'",
                     item.sequence, expected_prev, item.previous_hash
                 )));
@@ -130,7 +130,7 @@ impl AuditChainVerifier for HashChainSequencer {
 
             let expected_hash = Self::compute_event_hash(&expected_prev, item.sequence, &item.event);
             if item.event_hash != expected_hash {
-                return Err(AegisError::AuditError(format!(
+                return Err(PropylonError::AuditError(format!(
                     "Tampering detected at sequence {}: hash payload mismatch! expected '{}', found '{}'",
                     item.sequence, expected_hash, item.event_hash
                 )));
@@ -145,7 +145,7 @@ impl AuditChainVerifier for HashChainSequencer {
 
 #[async_trait::async_trait]
 impl crate::core::audit::AuditSink for HashChainSequencer {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         self.record(event.clone()).await;
         Ok(())
     }

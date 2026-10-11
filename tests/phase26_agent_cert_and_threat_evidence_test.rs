@@ -4,11 +4,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use sha2::{Digest, Sha256};
 
-use aegis_gateway::core::trust::{
+use propylon::core::trust::{
     AgentCertEnvelope, AgentTrustLevel, AgentTrustVerifier, CorsPolicyEnforcer,
     ThreatEvidenceEnricher,
 };
-use aegis_gateway::trust::{
+use propylon::trust::{
     ConfigurableCorsEnforcer, Ed25519AgentTrustVerifier, HeuristicThreatEvidenceEnricher,
 };
 
@@ -96,7 +96,7 @@ async fn test_threat_evidence_enricher_intercepts_ssrf_and_malicious_domains() {
     assert!(report_mal.threat_categories.iter().any(|c| c.contains("KNOWN_MALICIOUS")));
 
     // 3. Clean external target
-    let clean_url = "https://api.github.com/repos/ihkaru/aegis-gateway";
+    let clean_url = "https://api.github.com/repos/ihkaru/propylon";
     let report_clean = enricher.inspect_and_enrich_url(clean_url).await.expect("enrich failed");
     assert!(!report_clean.malicious);
     assert!(report_clean.risk_score < 0.2);

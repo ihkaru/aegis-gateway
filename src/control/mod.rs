@@ -12,7 +12,7 @@ use crate::core::control_plane::{
     ConfigurationWatcher, DynamicControlPlane, DynamicControlPlaneStatus,
     RuntimeBackendUpdate, RuntimePolicyUpdate,
 };
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// Production In-Memory Dynamic Runtime Control Plane
 pub struct HttpAdminControlPlane {
@@ -48,16 +48,16 @@ impl HttpAdminControlPlane {
 
 #[async_trait]
 impl DynamicControlPlane for HttpAdminControlPlane {
-    async fn apply_backend_update(&self, update: &RuntimeBackendUpdate) -> AegisResult<u64> {
+    async fn apply_backend_update(&self, update: &RuntimeBackendUpdate) -> PropylonResult<u64> {
         let transport = update.transport.to_lowercase();
         if transport != "stdio" && transport != "sse" && transport != "http" {
-            return Err(AegisError::Validation(format!(
+            return Err(PropylonError::Validation(format!(
                 "Unsupported transport '{transport}': expected stdio, sse, or http"
             )));
         }
 
         if update.endpoint_or_cmd.trim().is_empty() {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "Backend endpoint_or_cmd cannot be empty".into(),
             ));
         }
@@ -71,7 +71,7 @@ impl DynamicControlPlane for HttpAdminControlPlane {
         Ok(new_ver)
     }
 
-    async fn remove_backend(&self, backend_name: &str) -> AegisResult<bool> {
+    async fn remove_backend(&self, backend_name: &str) -> PropylonResult<bool> {
         let mut lock = self.backends.write().await;
         let existed = lock.remove(backend_name).is_some();
         if existed {
@@ -81,10 +81,10 @@ impl DynamicControlPlane for HttpAdminControlPlane {
         Ok(existed)
     }
 
-    async fn apply_policy_update(&self, update: &RuntimePolicyUpdate) -> AegisResult<u64> {
+    async fn apply_policy_update(&self, update: &RuntimePolicyUpdate) -> PropylonResult<u64> {
         let tier = update.policy_tier.to_lowercase();
         if tier != "dev" && tier != "hybrid" && tier != "strict" {
-            return Err(AegisError::Validation(format!(
+            return Err(PropylonError::Validation(format!(
                 "Invalid policy tier '{tier}': expected dev, hybrid, or strict"
             )));
         }
@@ -98,7 +98,7 @@ impl DynamicControlPlane for HttpAdminControlPlane {
         Ok(new_ver)
     }
 
-    async fn get_status(&self) -> AegisResult<DynamicControlPlaneStatus> {
+    async fn get_status(&self) -> PropylonResult<DynamicControlPlaneStatus> {
         let b_lock = self.backends.read().await;
         let p_lock = self.policies.read().await;
 
@@ -124,13 +124,13 @@ impl FileSignalConfigurationWatcher {
 
 #[async_trait]
 impl ConfigurationWatcher for FileSignalConfigurationWatcher {
-    async fn trigger_reload(&self) -> AegisResult<u64> {
+    async fn trigger_reload(&self) -> PropylonResult<u64> {
         // Atomic status poll & tick verification
         let status = self.control_plane.get_status().await?;
         Ok(status.config_version)
     }
 
-    async fn watch_signal(&self) -> AegisResult<()> {
+    async fn watch_signal(&self) -> PropylonResult<()> {
         // Zero-overhead SIGHUP signal listener registration
         Ok(())
     }
@@ -151,7 +151,7 @@ pub use abac_engine::LocalAbacEngine;
 pub use auth_api::AuthApiDispatcher;
 pub use catalog_scoper::AbacCatalogScoper;
 pub use config_api::ConfigApiDispatcher;
-pub use crd_operator::{AegisBackendCrd, AegisPolicyCrd, CrdOperatorEngine, ReconciliationReport};
+pub use crd_operator::{PropylonBackendCrd, PropylonPolicyCrd, CrdOperatorEngine, ReconciliationReport};
 pub use downstream_signer::DownstreamIdentitySigner;
 pub use identity_broker::LocalIdentityBroker;
 pub use topology_api::TopologyApiDispatcher;

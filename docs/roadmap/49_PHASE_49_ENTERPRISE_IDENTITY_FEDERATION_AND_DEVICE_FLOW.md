@@ -25,17 +25,17 @@ Enterprise AI agents run either as interactive developer tools (CLI / IDE extens
 #[async_trait]
 pub trait IdentityFederationBroker: Send + Sync {
     /// Ingests an enterprise SAML assertion or OIDC ID Token and issues a scoped JWT
-    async fn exchange_assertion(&self, req: AssertionExchangeRequest) -> AegisResult<FederatedTokenResponse>;
+    async fn exchange_assertion(&self, req: AssertionExchangeRequest) -> PropylonResult<FederatedTokenResponse>;
 
     /// Initiates RFC 8628 Device Authorization Grant for CLI clients
-    async fn start_device_flow(&self, client_id: &str, scopes: Vec<String>) -> AegisResult<DeviceAuthInitResponse>;
+    async fn start_device_flow(&self, client_id: &str, scopes: Vec<String>) -> PropylonResult<DeviceAuthInitResponse>;
 
     /// Polls device flow status during user browser verification
-    async fn poll_device_flow(&self, device_code: &str) -> AegisResult<DeviceFlowPollResponse>;
+    async fn poll_device_flow(&self, device_code: &str) -> PropylonResult<DeviceFlowPollResponse>;
 }
 ```
 
 ### Key Guarantees:
-- **Zero-Touch Provisioning**: Ingests enterprise group claims (`groups: ["Finance-Engineers"]`) and maps them to Aegis clearance attributes.
+- **Zero-Touch Provisioning**: Ingests enterprise group claims (`groups: ["Finance-Engineers"]`) and maps them to Propylon clearance attributes.
 - **RFC 8707 Resource Indicators**: Every issued token binds strictly to target MCP server URIs.
 - **Deterministic Token Lifetime**: Default TTL 900s (15 min) with cryptographic revocation checks.

@@ -1,7 +1,7 @@
 # Phase 33: Single-Binary Embedded Admin Web UI (Svelte 5, Bun, shadcn-svelte, Multi-Theme)
 
 ## Executive Summary
-Phase 33 provides a zero-dependency, single-binary Administrative Web Dashboard for Aegis Gateway. Built with Svelte 5 (Runes), Bun, TypeScript, and shadcn-svelte, the interface delivers high information density and instant observability for Security Officers, CISOs, and Platform Architects. It enforces strict "anti-slop" engineering principles: clean neo-grotesque typography, tabular numbers, monochrome geometric SVG icons (Lucide), multiple enterprise themes (Zinc, Slate, Neutral, OLED Black), and a strict zero-emoji policy.
+Phase 33 provides a zero-dependency, single-binary Administrative Web Dashboard for Propylon Gateway. Built with Svelte 5 (Runes), Bun, TypeScript, and shadcn-svelte, the interface delivers high information density and instant observability for Security Officers, CISOs, and Platform Architects. It enforces strict "anti-slop" engineering principles: clean neo-grotesque typography, tabular numbers, monochrome geometric SVG icons (Lucide), multiple enterprise themes (Zinc, Slate, Neutral, OLED Black), and a strict zero-emoji policy.
 
 ---
 

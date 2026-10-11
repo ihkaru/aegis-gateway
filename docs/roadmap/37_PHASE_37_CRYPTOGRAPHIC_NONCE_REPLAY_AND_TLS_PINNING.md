@@ -16,7 +16,7 @@ In first-generation enterprise MCP architectures:
 
 ---
 
-## 2. Aegis Gateway Architectural Defense
+## 2. Propylon Gateway Architectural Defense
 
 ```mermaid
 flowchart TD
@@ -36,4 +36,4 @@ flowchart TD
 - Downstream TLS handshakes enforce SPKI pinning across dynamic reconnects and restarts.
 
 ### Pillar 3: Immutable Chained Attribution
-- Multi-step tool calls retain an immutable cryptographic correlation context header (`X-Aegis-Correlation-Id`), linking retries to the original caller subject.
+- Multi-step tool calls retain an immutable cryptographic correlation context header (`X-Propylon-Correlation-Id`), linking retries to the original caller subject.

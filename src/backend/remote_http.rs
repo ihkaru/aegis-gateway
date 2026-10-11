@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::core::backend::BackendTransport;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::transport::{JsonRpcError, JsonRpcId, JsonRpcRequest, JsonRpcResponse, INTERNAL_ERROR};
 
 /// Remote network-attached MCP backend adapter
@@ -30,12 +30,12 @@ impl RemoteHttpBackend {
 
 #[async_trait]
 impl BackendTransport for RemoteHttpBackend {
-    async fn start(&self) -> AegisResult<()> {
+    async fn start(&self) -> PropylonResult<()> {
         self.healthy.store(true, Ordering::SeqCst);
         Ok(())
     }
 
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         if !self.healthy.load(Ordering::SeqCst) {
             return Ok(JsonRpcResponse::error(
                 request.id.clone().unwrap_or(JsonRpcId::Null),
@@ -61,7 +61,7 @@ impl BackendTransport for RemoteHttpBackend {
         self.healthy.load(Ordering::SeqCst)
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         self.healthy.store(false, Ordering::SeqCst);
         Ok(())
     }

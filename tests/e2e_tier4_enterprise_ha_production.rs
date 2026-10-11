@@ -2,20 +2,20 @@
 #![deny(unsafe_code)]
 
 //! E2E Tier 4: Enterprise DevOps & Cloud-Native HA Test Suite
-//! Persona: SRE / Platform Engineer deploying Aegis Gateway in Kubernetes clusters
+//! Persona: SRE / Platform Engineer deploying Propylon Gateway in Kubernetes clusters
 //! behind AWS ALB / Ingress Controller with health probes and zero-downtime draining.
 
 use std::sync::Arc;
 use serde_json::json;
 
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::state::DrainCoordinator;
-use aegis_gateway::transport::{McpProtocolHandler, StreamableHttpTransport};
-use aegis_gateway::AegisGateway;
+use propylon::core::transport::WireProtocolHandler;
+use propylon::state::DrainCoordinator;
+use propylon::transport::{McpProtocolHandler, StreamableHttpTransport};
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_enterprise_ha_streamable_http_rfc_compliance() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler: Arc<dyn WireProtocolHandler> = Arc::new(McpProtocolHandler::new(gateway));
     let http = StreamableHttpTransport::new(handler, "0.0.0.0:8443");
 
@@ -49,7 +49,7 @@ async fn test_enterprise_ha_streamable_http_rfc_compliance() {
 
 #[tokio::test]
 async fn test_enterprise_ha_k8s_health_probes() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler: Arc<dyn WireProtocolHandler> = Arc::new(McpProtocolHandler::new(gateway));
     let http = StreamableHttpTransport::new(handler, "0.0.0.0:8080");
 

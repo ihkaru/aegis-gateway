@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::session::{SessionFence, SessionLifecycleStatus};
 
 #[derive(Debug, Clone)]
@@ -55,10 +55,10 @@ impl InMemorySessionFence {
 
 #[async_trait]
 impl SessionFence for InMemorySessionFence {
-    async fn register_session(&self, session_id: &str, tenant: &str) -> AegisResult<()> {
+    async fn register_session(&self, session_id: &str, tenant: &str) -> PropylonResult<()> {
         let tombs = self.tombstones.read().await;
         if tombs.contains(session_id) {
-            return Err(AegisError::SessionTerminated(format!(
+            return Err(PropylonError::SessionTerminated(format!(
                 "Cannot register session '{}': permanently tombstoned",
                 session_id
             )));
@@ -80,10 +80,10 @@ impl SessionFence for InMemorySessionFence {
         Ok(())
     }
 
-    async fn acquire_lease(&self, session_id: &str) -> AegisResult<u64> {
+    async fn acquire_lease(&self, session_id: &str) -> PropylonResult<u64> {
         let tombs = self.tombstones.read().await;
         if tombs.contains(session_id) {
-            return Err(AegisError::SessionTerminated(format!(
+            return Err(PropylonError::SessionTerminated(format!(
                 "Session '{}' is tombstoned; lease acquisition denied",
                 session_id
             )));
@@ -92,7 +92,7 @@ impl SessionFence for InMemorySessionFence {
 
         let mut s = self.sessions.write().await;
         let record = s.get_mut(session_id).ok_or_else(|| {
-            AegisError::SessionRevoked(format!("Session '{}' does not exist", session_id))
+            PropylonError::SessionRevoked(format!("Session '{}' does not exist", session_id))
         })?;
 
         match record.status {
@@ -103,7 +103,7 @@ impl SessionFence for InMemorySessionFence {
                 Ok(lease_id)
             }
             SessionLifecycleStatus::Terminating | SessionLifecycleStatus::Tombstoned => {
-                Err(AegisError::SessionTerminated(format!(
+                Err(PropylonError::SessionTerminated(format!(
                     "Session '{}' is in {:?} state; rejecting new lease",
                     session_id, record.status
                 )))
@@ -111,7 +111,7 @@ impl SessionFence for InMemorySessionFence {
         }
     }
 
-    async fn release_lease(&self, session_id: &str, lease_id: u64) -> AegisResult<()> {
+    async fn release_lease(&self, session_id: &str, lease_id: u64) -> PropylonResult<()> {
         let mut s = self.sessions.write().await;
         if let Some(record) = s.get_mut(session_id) {
             record.active_leases.remove(&lease_id);
@@ -125,7 +125,7 @@ impl SessionFence for InMemorySessionFence {
         Ok(())
     }
 
-    async fn terminate_session(&self, session_id: &str, reason: &str) -> AegisResult<()> {
+    async fn terminate_session(&self, session_id: &str, reason: &str) -> PropylonResult<()> {
         let mut s = self.sessions.write().await;
         if let Some(record) = s.get_mut(session_id) {
             record.termination_reason = Some(reason.to_string());
@@ -144,7 +144,7 @@ impl SessionFence for InMemorySessionFence {
         Ok(())
     }
 
-    async fn get_status(&self, session_id: &str) -> AegisResult<SessionLifecycleStatus> {
+    async fn get_status(&self, session_id: &str) -> PropylonResult<SessionLifecycleStatus> {
         let s = self.sessions.read().await;
         if let Some(rec) = s.get(session_id) {
             return Ok(rec.status);
@@ -159,10 +159,10 @@ impl SessionFence for InMemorySessionFence {
         }
     }
 
-    async fn write_session_state(&self, session_id: &str, key: &str, value: Value) -> AegisResult<()> {
+    async fn write_session_state(&self, session_id: &str, key: &str, value: Value) -> PropylonResult<()> {
         let tombs = self.tombstones.read().await;
         if tombs.contains(session_id) {
-            return Err(AegisError::SessionTerminated(format!(
+            return Err(PropylonError::SessionTerminated(format!(
                 "Session '{}' was terminated; refusing to recreate or mutate state",
                 session_id
             )));
@@ -171,14 +171,14 @@ impl SessionFence for InMemorySessionFence {
 
         let mut s = self.sessions.write().await;
         let record = s.get_mut(session_id).ok_or_else(|| {
-            AegisError::SessionTerminated(format!(
+            PropylonError::SessionTerminated(format!(
                 "Session '{}' does not exist; cannot write orphaned state",
                 session_id
             ))
         })?;
 
         if record.status != SessionLifecycleStatus::Active {
-            return Err(AegisError::SessionTerminated(format!(
+            return Err(PropylonError::SessionTerminated(format!(
                 "Session '{}' is {:?}; state write rejected",
                 session_id, record.status
             )));
@@ -188,7 +188,7 @@ impl SessionFence for InMemorySessionFence {
         Ok(())
     }
 
-    async fn read_session_state(&self, session_id: &str, key: &str) -> AegisResult<Option<Value>> {
+    async fn read_session_state(&self, session_id: &str, key: &str) -> PropylonResult<Option<Value>> {
         let tombs = self.tombstones.read().await;
         if tombs.contains(session_id) {
             return Ok(None);

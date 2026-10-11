@@ -2,10 +2,10 @@
 
 use thiserror::Error;
 
-pub type AegisResult<T> = Result<T, AegisError>;
+pub type PropylonResult<T> = Result<T, PropylonError>;
 
 #[derive(Error, Debug)]
-pub enum AegisError {
+pub enum PropylonError {
     #[error("Authentication failed: {0}")]
     AuthenticationFailed(String),
 
@@ -95,19 +95,19 @@ pub enum AegisError {
     Internal(String),
 }
 
-impl AegisError {
+impl PropylonError {
     /// Maps domain error to standard JSON-RPC 2.0 error code
     pub fn to_rpc_code(&self) -> i32 {
         match self {
-            AegisError::SsrfBlocked(_) => crate::core::transport::INVALID_REQUEST,
-            AegisError::SessionTerminated(_) => crate::core::transport::INVALID_REQUEST,
-            AegisError::PolicyDenied(_) => crate::core::transport::INVALID_REQUEST,
-            AegisError::RateLimitExceeded { .. } => crate::core::transport::INVALID_REQUEST,
-            AegisError::BudgetFrozen { .. } => crate::core::transport::INVALID_REQUEST,
-            AegisError::BudgetExceeded { .. } => crate::core::transport::INVALID_REQUEST,
-            AegisError::ToolNotFound(_) => crate::core::transport::METHOD_NOT_FOUND,
-            AegisError::SkillNotFound(_) => crate::core::transport::METHOD_NOT_FOUND,
-            AegisError::Serialization(_) => crate::core::transport::PARSE_ERROR,
+            PropylonError::SsrfBlocked(_) => crate::core::transport::INVALID_REQUEST,
+            PropylonError::SessionTerminated(_) => crate::core::transport::INVALID_REQUEST,
+            PropylonError::PolicyDenied(_) => crate::core::transport::INVALID_REQUEST,
+            PropylonError::RateLimitExceeded { .. } => crate::core::transport::INVALID_REQUEST,
+            PropylonError::BudgetFrozen { .. } => crate::core::transport::INVALID_REQUEST,
+            PropylonError::BudgetExceeded { .. } => crate::core::transport::INVALID_REQUEST,
+            PropylonError::ToolNotFound(_) => crate::core::transport::METHOD_NOT_FOUND,
+            PropylonError::SkillNotFound(_) => crate::core::transport::METHOD_NOT_FOUND,
+            PropylonError::Serialization(_) => crate::core::transport::PARSE_ERROR,
             _ => crate::core::transport::INTERNAL_ERROR,
         }
     }

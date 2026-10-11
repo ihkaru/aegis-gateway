@@ -1,7 +1,7 @@
 # Phase 35: Live Data Plane Control Binding, Zero-Mock UI & Embedded State Engine
 
 ## Executive Summary
-Phase 35 eliminates all static fixtures, dummy data, and disconnected mock placeholders across the Aegis Gateway Control Plane and Web UI. Rather than introducing a heavy external database (which breaks the single-binary, sub-30MB RAM, zero-dependency model required by enterprise edge proxies), Phase 35 connects the embedded administration server directly to the live pure-Rust runtime engine via Dependency Injection. The Svelte 5 frontend fetches, renders, and mutates real operational state—real discovered MCP backends, live process RSS memory, dynamic HITL approval tickets, cryptographic SIEM audit trails, and multi-tenant token counters.
+Phase 35 eliminates all static fixtures, dummy data, and disconnected mock placeholders across the Propylon Gateway Control Plane and Web UI. Rather than introducing a heavy external database (which breaks the single-binary, sub-30MB RAM, zero-dependency model required by enterprise edge proxies), Phase 35 connects the embedded administration server directly to the live pure-Rust runtime engine via Dependency Injection. The Svelte 5 frontend fetches, renders, and mutates real operational state—real discovered MCP backends, live process RSS memory, dynamic HITL approval tickets, cryptographic SIEM audit trails, and multi-tenant token counters.
 
 ---
 
@@ -12,10 +12,10 @@ High-performance API gateways (Envoy, Caddy, Traefik, Kong, Cloudflare Workers) 
 1. **Stateless Core & Resilience**: Database downtime must never take down tool proxying between AI models and internal services.
 2. **Sub-Millisecond Wire Overhead**: Querying an external database on every tool execution adds 5–20ms of network latency. Pure-Rust in-memory state (`Arc<RwLock<...>>`) guarantees sub-0.5ms evaluation.
 3. **Pluggable Persistence Architecture**:
-   - **Standalone / Local Development**: In-memory state backed by declarative files (`aegis.yaml`), atomic file mutations, and append-only hash-chained audit logs.
+   - **Standalone / Local Development**: In-memory state backed by declarative files (`propylon.yaml`), atomic file mutations, and append-only hash-chained audit logs.
    - **Kubernetes Production Clusters**: High-availability distributed state via `RedisStateBackend` cluster driver with Lua script atomicity.
 
-**Conclusion**: Aegis Gateway does NOT require a heavy external database. Instead, the UI must bind directly to the Gateway's live in-memory Control Plane and state engines.
+**Conclusion**: Propylon Gateway does NOT require a heavy external database. Instead, the UI must bind directly to the Gateway's live in-memory Control Plane and state engines.
 
 ---
 
@@ -23,7 +23,7 @@ High-performance API gateways (Envoy, Caddy, Traefik, Kong, Cloudflare Workers) 
 
 | Component | Previous Baseline | Phase 35 Live Enterprise Target |
 | :--- | :--- | :--- |
-| **Admin Server Wiring** | Isolated `EmbeddedAdminServer` instance | Constructor accepts `Arc<AegisGateway>` & `Arc<BackendRegistry>` |
+| **Admin Server Wiring** | Isolated `EmbeddedAdminServer` instance | Constructor accepts `Arc<PropylonGateway>` & `Arc<BackendRegistry>` |
 | **System Telemetry** | Hardcoded JSON constants (1420 rps) | Live `ru_maxrss` OS memory, real active backend count, uptime |
 | **Backends & Tools** | None in UI | Live discovery from `BackendRegistry` with tool descriptions |
 | **HITL Approvals** | Hardcoded Svelte state array | Live queue from `ActionApprovalGate`; real POST decisions |
@@ -38,9 +38,9 @@ High-performance API gateways (Envoy, Caddy, Traefik, Kong, Cloudflare Workers) 
 
 ### Pillar 1: Dependency Injection in `EmbeddedAdminServer`
 `EmbeddedAdminServer` receives:
-- `gateway: Option<Arc<AegisGateway>>`
+- `gateway: Option<Arc<PropylonGateway>>`
 - `registry: Option<Arc<dyn BackendRegistry>>`
-- `config: Option<Arc<RwLock<AegisTopologyConfig>>>`
+- `config: Option<Arc<RwLock<PropylonTopologyConfig>>>`
 
 When bound, `/api/v1/*` endpoints inspect and mutate the actual living instances:
 - `/api/v1/overview`: Real system RSS via `libc::getrusage` / `/proc/self/statm`, backend count, active tools.

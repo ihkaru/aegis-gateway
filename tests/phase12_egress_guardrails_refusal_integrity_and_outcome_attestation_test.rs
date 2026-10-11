@@ -5,13 +5,13 @@
 
 use std::sync::Arc;
 use serde_json::json;
-use aegis_gateway::audit::ToolOutcomeAttestation;
-use aegis_gateway::core::audit::{AuditEvent, AuditSink};
-use aegis_gateway::core::error::AegisResult;
-use aegis_gateway::core::types::{CallerContext, TenantId, ToolCallRequest, ToolDefinition};
-use aegis_gateway::discovery::{NamespacedCatalog, PromptDefinition};
-use aegis_gateway::policy::egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
-use aegis_gateway::AegisGateway;
+use propylon::audit::ToolOutcomeAttestation;
+use propylon::core::audit::{AuditEvent, AuditSink};
+use propylon::core::error::PropylonResult;
+use propylon::core::types::{CallerContext, TenantId, ToolCallRequest, ToolDefinition};
+use propylon::discovery::{NamespacedCatalog, PromptDefinition};
+use propylon::policy::egress::{DefaultEgressGuard, EgressPolicyGuard, EgressRuleConfig};
+use propylon::PropylonGateway;
 use tokio::sync::Mutex;
 
 /// Test Audit Sink capturing all emitted audit events for refusal verification
@@ -22,7 +22,7 @@ struct CapturingAuditSink {
 
 #[async_trait::async_trait]
 impl AuditSink for CapturingAuditSink {
-    async fn emit(&self, event: &AuditEvent) -> AegisResult<()> {
+    async fn emit(&self, event: &AuditEvent) -> PropylonResult<()> {
         self.events.lock().await.push(event.clone());
         Ok(())
     }
@@ -92,12 +92,12 @@ async fn test_docker_issue_594_and_msft_109_egress_ssrf_and_domain_allowlist() {
 #[tokio::test]
 async fn test_docker_issue_591_refusal_audit_integrity() {
     let sink = CapturingAuditSink::default();
-    let gateway = AegisGateway::new(
-        Arc::new(aegis_gateway::state::InMemoryStateBackend::new()),
-        Arc::new(aegis_gateway::policy::AbacPolicyEngine::new()),
-        Arc::new(aegis_gateway::dlp::PiiDlpPipeline::new()),
+    let gateway = PropylonGateway::new(
+        Arc::new(propylon::state::InMemoryStateBackend::new()),
+        Arc::new(propylon::policy::AbacPolicyEngine::new()),
+        Arc::new(propylon::dlp::PiiDlpPipeline::new()),
         Arc::new(sink.clone()),
-        Arc::new(aegis_gateway::skills::LocalSkillRegistry::new()),
+        Arc::new(propylon::skills::LocalSkillRegistry::new()),
     );
 
     let caller = CallerContext {
@@ -129,7 +129,7 @@ async fn test_docker_issue_591_refusal_audit_integrity() {
     assert_eq!(event.caller.subject, "intern-01");
 
     match &event.action {
-        aegis_gateway::core::audit::AuditAction::PolicyEvaluated { allowed, reason } => {
+        propylon::core::audit::AuditAction::PolicyEvaluated { allowed, reason } => {
             assert!(!allowed, "Audit log must explicitly record allowed=false (Refusal)");
             assert!(
                 reason.as_ref().unwrap().contains("requires 'admin' role"),
@@ -142,8 +142,8 @@ async fn test_docker_issue_591_refusal_audit_integrity() {
 
 #[tokio::test]
 async fn test_microsoft_issue_102_and_docker_557_tool_outcome_attestation() {
-    let secret = "aegis-super-secret-hmac-key";
-    let gateway_id = "aegis-gateway-prod-pod-4";
+    let secret = "propylon-super-secret-hmac-key";
+    let gateway_id = "propylon-prod-pod-4";
     let tool = "fetch_financial_record";
     let arguments = json!({ "account_id": "ACC-99812", "period": "2026-Q3" });
     let result = json!({ "revenue": 1500000.0, "status": "audited" });

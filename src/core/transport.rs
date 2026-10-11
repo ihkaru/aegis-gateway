@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Standard JSON-RPC 2.0 error codes
 pub const PARSE_ERROR: i32 = -32700;
@@ -106,11 +106,11 @@ impl JsonRpcResponse {
 /// Client Ingress Transport (Stdio, Streamable HTTP, SSE)
 #[async_trait]
 pub trait IngressTransport: Send + Sync {
-    async fn run(&self) -> AegisResult<()>;
+    async fn run(&self) -> PropylonResult<()>;
 }
 
 /// MCP Wire Protocol Processor
 #[async_trait]
 pub trait WireProtocolHandler: Send + Sync {
-    async fn handle_message(&self, raw_json: &str) -> AegisResult<Option<String>>;
+    async fn handle_message(&self, raw_json: &str) -> PropylonResult<Option<String>>;
 }

@@ -62,16 +62,16 @@ pub struct DynamicControlPlaneStatus {
 
 #[async_trait]
 pub trait DynamicControlPlane: Send + Sync {
-    async fn apply_backend_update(&self, update: &RuntimeBackendUpdate) -> AegisResult<u64>;
-    async fn remove_backend(&self, backend_name: &str) -> AegisResult<bool>;
-    async fn apply_policy_update(&self, update: &RuntimePolicyUpdate) -> AegisResult<u64>;
-    async fn get_status(&self) -> AegisResult<DynamicControlPlaneStatus>;
+    async fn apply_backend_update(&self, update: &RuntimeBackendUpdate) -> PropylonResult<u64>;
+    async fn remove_backend(&self, backend_name: &str) -> PropylonResult<bool>;
+    async fn apply_policy_update(&self, update: &RuntimePolicyUpdate) -> PropylonResult<u64>;
+    async fn get_status(&self) -> PropylonResult<DynamicControlPlaneStatus>;
 }
 
 #[async_trait]
 pub trait ConfigurationWatcher: Send + Sync {
-    async fn trigger_reload(&self) -> AegisResult<u64>;
-    async fn watch_signal(&self) -> AegisResult<()>;
+    async fn trigger_reload(&self) -> PropylonResult<u64>;
+    async fn watch_signal(&self) -> PropylonResult<()>;
 }
 ```
 

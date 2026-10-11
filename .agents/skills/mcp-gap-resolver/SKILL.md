@@ -1,13 +1,13 @@
 ---
 name: mcp-gap-resolver
-description: Autonomous skill to detect functional and operational gaps between legacy MCP gateways (MikkoParkkola/mcp-gateway, docker/mcp-gateway, microsoft/mcp-gateway) and Aegis Gateway via live GitHub research, formulate new phase roadmaps, and implement enterprise-grade solutions with graduated test suites and zero mocks.
+description: Autonomous skill to detect functional and operational gaps between legacy MCP gateways (MikkoParkkola/mcp-gateway, docker/mcp-gateway, microsoft/mcp-gateway) and Propylon Gateway via live GitHub research, formulate new phase roadmaps, and implement enterprise-grade solutions with graduated test suites and zero mocks.
 ---
 
 # MCP Gap Resolver & Autonomous Phase Scaffolder
 
 This skill equips coding agents with an end-to-end autonomous workflow to:
 1. Conduct real-time research into open and closed GitHub issues of legacy/first-generation MCP gateways, primarily [MikkoParkkola/mcp-gateway](https://github.com/MikkoParkkola/mcp-gateway) (the canonical Rust reference gateway under PolyForm Noncommercial license), as well as `docker/mcp-gateway` and `microsoft/mcp-gateway`.
-2. **Deduplication Invariant (Zero Re-evaluation of Resolved Issues)**: Cross-reference detected issues against `docs/ISSUES_PARITY_MATRIX.md` to automatically filter out all previously resolved bugs. Agents MUST NOT waste tokens re-searching or re-evaluating issues already resolved in Aegis Gateway.
+2. **Deduplication Invariant (Zero Re-evaluation of Resolved Issues)**: Cross-reference detected issues against `docs/ISSUES_PARITY_MATRIX.md` to automatically filter out all previously resolved bugs. Agents MUST NOT waste tokens re-searching or re-evaluating issues already resolved in Propylon Gateway.
 3. Formulate and scaffold structured roadmap milestones (`docs/roadmap/NN_PHASE_NN_*.md`).
 4. Implement genuine, enterprise-grade Rust code adhering to SOLID principles, `< 350 lines per file`, `#![deny(unsafe_code)]`, and zero mock closures under a 100% permissive MIT license.
 5. Generate graduated test suites verifying real operational behavior under both golden and adversarial conditions.
@@ -43,7 +43,7 @@ python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
   --state all \
   --limit 30 \
   --exclude-resolved \
-  --local-root /root/projects/aegis-gateway
+  --local-root /root/projects/propylon
 
 # 2. Targeted search for specific keywords excluding resolved issues
 python3 .agents/skills/mcp-gap-resolver/scripts/research_github_gaps.py \
@@ -149,7 +149,7 @@ Once a phase is implemented and verified, agents **MUST** execute the four-tier 
 1. **Update Master Parity Matrix (`docs/ISSUES_PARITY_MATRIX.md`)**:
    Add resolved issues to `## 2. Comprehensive Issue Resolution Ledger`:
    ```markdown
-   | `<UpstreamRepo>` | [#{NUM}](https://github.com/<UpstreamRepo>/issues/{NUM}) | `{CAT}` | {Deficit Summary} | {Aegis Resolution} | `{src_path}` | `{test_path}` |
+   | `<UpstreamRepo>` | [#{NUM}](https://github.com/<UpstreamRepo>/issues/{NUM}) | `{CAT}` | {Deficit Summary} | {Propylon Resolution} | `{src_path}` | `{test_path}` |
    ```
 2. **Synchronize Roadmap**:
    Update `docs/roadmap/00_ROADMAP_OVERVIEW.md` and the phase file to `Completed`.

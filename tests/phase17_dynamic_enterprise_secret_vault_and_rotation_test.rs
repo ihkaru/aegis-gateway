@@ -3,11 +3,11 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use aegis_gateway::core::secrets::SecretStore;
-use aegis_gateway::policy::infisical::{
+use propylon::core::secrets::SecretStore;
+use propylon::policy::infisical::{
     ChainedSecretStore, InfisicalSecretStore, LocalInfisicalTransport,
 };
-use aegis_gateway::policy::secrets::EnvSecretStore;
+use propylon::policy::secrets::EnvSecretStore;
 
 #[tokio::test]
 async fn test_infisical_secret_store_cache_and_fetch() {

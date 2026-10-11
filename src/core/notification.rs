@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use crate::core::approval::ApprovalTicket;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Pluggable notification channel destinations
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -39,7 +39,7 @@ pub struct ApprovalNotificationPayload {
 #[async_trait]
 pub trait ApprovalNotificationDispatcher: Send + Sync {
     /// Dispatch notification across all registered targets
-    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> AegisResult<Vec<String>>;
+    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> PropylonResult<Vec<String>>;
 
     /// List active configured notification targets
     fn registered_channels(&self) -> Vec<ApprovalChannelTarget>;
@@ -55,5 +55,5 @@ pub trait DurableResumeRouter: Send + Sync {
         signature: &str,
         approved: bool,
         approver_id: &str,
-    ) -> AegisResult<bool>;
+    ) -> PropylonResult<bool>;
 }

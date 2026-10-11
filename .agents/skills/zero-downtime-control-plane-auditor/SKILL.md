@@ -5,7 +5,7 @@ description: Continuous architectural governance and static analysis skill verif
 
 # Zero-Downtime & Dynamic Control Plane Auditor Skill
 
-This skill enforces strict cloud-native operational invariants across the Aegis Gateway codebase to ensure that the core value proposition—**100% Zero-Downtime Dynamic Runtime Control Plane**—never suffers architectural regression or accidental degradation into static restart-required configurations.
+This skill enforces strict cloud-native operational invariants across the Propylon Gateway codebase to ensure that the core value proposition—**100% Zero-Downtime Dynamic Runtime Control Plane**—never suffers architectural regression or accidental degradation into static restart-required configurations.
 
 ---
 

@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::policy::{PolicyContext, PolicyDecision, PolicyEngine};
 
 pub mod approval_dispatcher;
@@ -55,7 +55,7 @@ impl AbacPolicyEngine {
 
 #[async_trait]
 impl PolicyEngine for AbacPolicyEngine {
-    async fn evaluate(&self, ctx: &PolicyContext) -> AegisResult<PolicyDecision> {
+    async fn evaluate(&self, ctx: &PolicyContext) -> PropylonResult<PolicyDecision> {
         // 1. Role-based check
         let is_admin = ctx.caller.roles.iter().any(|r| r == "admin");
         let is_developer = ctx.caller.roles.iter().any(|r| r == "developer");
@@ -80,7 +80,7 @@ impl PolicyEngine for AbacPolicyEngine {
         self.eval_payload(&ctx.tool, &ctx.arguments)
     }
 
-    fn eval_payload(&self, tool: &str, arguments: &Value) -> AegisResult<PolicyDecision> {
+    fn eval_payload(&self, tool: &str, arguments: &Value) -> PropylonResult<PolicyDecision> {
         // Example: Payload restriction on transfer/refund tools
         if tool.contains("refund") || tool.contains("transfer") {
             if let Some(amount) = arguments.get("amount").and_then(Value::as_f64) {

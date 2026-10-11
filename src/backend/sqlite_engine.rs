@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 
 use crate::core::database::{SqlEngine, SqlQueryResult};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// Real Local SQLite database engine implementing the SqlEngine abstraction contract (OCP & LSP)
 #[derive(Debug, Clone)]
@@ -29,13 +29,13 @@ impl LocalSqliteEngine {
     }
 
     pub fn with_default_path() -> Self {
-        Self::new("data/aegis_local.db")
+        Self::new("data/propylon_local.db")
     }
 }
 
 #[async_trait]
 impl SqlEngine for LocalSqliteEngine {
-    async fn execute(&self, query: &str) -> AegisResult<SqlQueryResult> {
+    async fn execute(&self, query: &str) -> PropylonResult<SqlQueryResult> {
         let script = r#"
 import sqlite3, json, sys, os
 db_path = sys.argv[1]
@@ -70,8 +70,8 @@ except Exception as e:
                 .output()
         })
         .await
-        .map_err(|e| AegisError::Internal(format!("Failed to join SQLite task: {e}")))?
-        .map_err(|e| AegisError::Internal(format!("Failed to execute SQLite process: {e}")))?;
+        .map_err(|e| PropylonError::Internal(format!("Failed to join SQLite task: {e}")))?
+        .map_err(|e| PropylonError::Internal(format!("Failed to execute SQLite process: {e}")))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -82,7 +82,7 @@ except Exception as e:
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let parsed: Value = serde_json::from_str(stdout.trim()).map_err(|e| {
-            AegisError::Internal(format!("Invalid output from SQLite engine: {e}"))
+            PropylonError::Internal(format!("Invalid output from SQLite engine: {e}"))
         })?;
 
         match parsed.get("type").and_then(|t| t.as_str()) {

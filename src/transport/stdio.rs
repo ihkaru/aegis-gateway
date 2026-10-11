@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncWrite, AsyncWriteExt, BufReader};
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::transport::{IngressTransport, WireProtocolHandler};
 
 /// Stdio client ingress transport with strict zero-contamination stdout channel
@@ -18,7 +18,7 @@ impl StdioTransport {
     }
 
     /// Process a stream from arbitrary reader/writer pair (enables clean unit & integration testing)
-    pub async fn process_stream<R, W>(&self, mut reader: R, mut writer: W) -> AegisResult<()>
+    pub async fn process_stream<R, W>(&self, mut reader: R, mut writer: W) -> PropylonResult<()>
     where
         R: AsyncBufRead + Unpin,
         W: AsyncWrite + Unpin,
@@ -43,13 +43,13 @@ impl StdioTransport {
 
 #[async_trait]
 impl IngressTransport for StdioTransport {
-    async fn run(&self) -> AegisResult<()> {
+    async fn run(&self) -> PropylonResult<()> {
         let stdin = tokio::io::stdin();
         let stdout = tokio::io::stdout();
         let reader = BufReader::new(stdin);
         let writer = stdout;
 
-        eprintln!("[AEGIS] Starting Stdio client ingress (Claude Desktop / Cursor mode)...");
+        eprintln!("[PROPYLON] Starting Stdio client ingress (Claude Desktop / Cursor mode)...");
         self.process_stream(reader, writer).await
     }
 }

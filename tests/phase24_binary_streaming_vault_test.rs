@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::core::error::AegisError;
-use aegis_gateway::core::vault::{BinaryBlobMetadata, BinaryStreamingVault};
-use aegis_gateway::vault::LocalFsStreamingVault;
+use propylon::core::error::PropylonError;
+use propylon::core::vault::{BinaryBlobMetadata, BinaryStreamingVault};
+use propylon::vault::LocalFsStreamingVault;
 
 #[tokio::test]
 async fn test_resumable_chunk_upload_and_sha256_verification() {
-    let vault = LocalFsStreamingVault::new("/tmp/aegis_vault_test", "super_secret_hmac_key");
+    let vault = LocalFsStreamingVault::new("/tmp/propylon_vault_test", "super_secret_hmac_key");
 
     let parquet_data = b"PAR1fake_parquet_table_data_stream_bytes_herePAR1";
     let metadata = BinaryBlobMetadata {
@@ -37,7 +37,7 @@ async fn test_resumable_chunk_upload_and_sha256_verification() {
     // 3. Finalize upload
     let descriptor = vault.finalize_upload(&session.session_id, None).await.expect("finalize failed");
     assert_eq!(descriptor.size_bytes, parquet_data.len() as u64);
-    assert!(descriptor.blob_urn.starts_with("urn:aegis:blob:"));
+    assert!(descriptor.blob_urn.starts_with("urn:propylon:blob:"));
     assert_eq!(descriptor.actual_mime, "application/vnd.apache.parquet");
 
     // 4. Generate ephemeral egress ticket
@@ -51,7 +51,7 @@ async fn test_resumable_chunk_upload_and_sha256_verification() {
 
 #[tokio::test]
 async fn test_magic_byte_inspection_detects_executable_spoofing() {
-    let vault = LocalFsStreamingVault::new("/tmp/aegis_vault_test", "super_secret_hmac_key");
+    let vault = LocalFsStreamingVault::new("/tmp/propylon_vault_test", "super_secret_hmac_key");
 
     // MZ header simulates executable payload disguised as PDF
     let malicious_data = b"MZ\x90\x00\x03\x00\x00\x00\x04\x00\x00\x00\xff\xff";
@@ -72,7 +72,7 @@ async fn test_magic_byte_inspection_detects_executable_spoofing() {
     // Finalize must reject with SecurityRefusal
     let res = vault.finalize_upload(&session.session_id, None).await;
     match res {
-        Err(AegisError::SecurityRefusal(msg)) => {
+        Err(PropylonError::SecurityRefusal(msg)) => {
             assert!(msg.contains("Executable payload disguised as binary blob"));
         }
         other => panic!("Expected SecurityRefusal error, got: {other:?}"),
@@ -81,7 +81,7 @@ async fn test_magic_byte_inspection_detects_executable_spoofing() {
 
 #[tokio::test]
 async fn test_checksum_mismatch_fails_closed() {
-    let vault = LocalFsStreamingVault::new("/tmp/aegis_vault_test", "super_secret_hmac_key");
+    let vault = LocalFsStreamingVault::new("/tmp/propylon_vault_test", "super_secret_hmac_key");
 
     let payload = b"legitimate_data_blob_content";
     let metadata = BinaryBlobMetadata {
@@ -100,7 +100,7 @@ async fn test_checksum_mismatch_fails_closed() {
         .await;
 
     match res {
-        Err(AegisError::SecurityRefusal(msg)) => {
+        Err(PropylonError::SecurityRefusal(msg)) => {
             assert!(msg.contains("SHA256 checksum mismatch"));
         }
         other => panic!("Expected SecurityRefusal due to checksum mismatch, got: {other:?}"),

@@ -3,19 +3,19 @@ use std::time::Instant;
 use rust_embed::RustEmbed;
 
 use crate::core::backend::BackendRegistry;
-use crate::AegisGateway;
+use crate::PropylonGateway;
 
 /// Compile-time embedded static distribution assets of the Svelte 5 admin dashboard.
 #[derive(RustEmbed)]
 #[folder = "ui/dist/"]
 pub struct AdminUiAssets;
 
-/// Single-Binary Embedded Admin Web Server for Aegis Gateway control plane.
+/// Single-Binary Embedded Admin Web Server for Propylon Gateway control plane.
 pub struct EmbeddedAdminServer {
     pub port: u16,
     pub enabled: bool,
     start_time: Instant,
-    gateway: Option<Arc<AegisGateway>>,
+    gateway: Option<Arc<PropylonGateway>>,
     registry: Option<Arc<dyn BackendRegistry>>,
     recent_invocations: Arc<std::sync::RwLock<Vec<serde_json::Value>>>,
     recent_dlp_events: Arc<std::sync::RwLock<Vec<serde_json::Value>>>,
@@ -42,7 +42,7 @@ impl EmbeddedAdminServer {
         }
     }
 
-    pub fn with_gateway(mut self, gateway: Arc<AegisGateway>) -> Self {
+    pub fn with_gateway(mut self, gateway: Arc<PropylonGateway>) -> Self {
         self.gateway = Some(gateway);
         self
     }
@@ -145,16 +145,16 @@ impl EmbeddedAdminServer {
     }
 
     /// Run the embedded admin web server as an independent Axum HTTP service
-    pub async fn run_server(self, host: &str) -> crate::core::error::AegisResult<()> {
+    pub async fn run_server(self, host: &str) -> crate::core::error::PropylonResult<()> {
         let addr_str = format!("{host}:{}", self.port);
         let addr: std::net::SocketAddr = addr_str
             .parse()
-            .map_err(|e| crate::core::error::AegisError::Internal(format!("Invalid UI socket address '{addr_str}': {e}")))?;
+            .map_err(|e| crate::core::error::PropylonError::Internal(format!("Invalid UI socket address '{addr_str}': {e}")))?;
 
         let server_arc = std::sync::Arc::new(self);
         let app = server_arc.into_router();
         let listener = tokio::net::TcpListener::bind(&addr).await?;
-        eprintln!("[AEGIS] Embedded Admin Web UI listening on http://{addr}");
+        eprintln!("[PROPYLON] Embedded Admin Web UI listening on http://{addr}");
         axum::serve(listener, app).await?;
         Ok(())
     }

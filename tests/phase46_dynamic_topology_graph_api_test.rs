@@ -1,8 +1,8 @@
 use std::sync::RwLock;
 use std::time::Instant;
 
-use aegis_gateway::control::web_api::WebApiDispatcher;
-use aegis_gateway::core::topology::TopologyGraphResponse;
+use propylon::control::web_api::WebApiDispatcher;
+use propylon::core::topology::TopologyGraphResponse;
 
 #[tokio::test]
 async fn test_phase46_topology_graph_api_endpoint() {

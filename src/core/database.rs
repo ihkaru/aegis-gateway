@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Typed execution outcome of a relational SQL command
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +40,7 @@ impl SqlQueryResult {
 #[async_trait]
 pub trait SqlEngine: Send + Sync {
     /// Execute arbitrary SQL command asynchronously
-    async fn execute(&self, query: &str) -> AegisResult<SqlQueryResult>;
+    async fn execute(&self, query: &str) -> PropylonResult<SqlQueryResult>;
 
     /// Check if database file/connection is healthy
     async fn is_healthy(&self) -> bool;

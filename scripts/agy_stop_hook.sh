@@ -11,6 +11,6 @@ if OUTPUT=$(bash scripts/governance-check.sh 2>&1); then
 else
   # Escape double quotes and newlines for JSON payload
   ESCAPED_OUTPUT=$(echo "$OUTPUT" | tail -n 15 | tr '\n' ' ' | sed 's/"/\\"/g')
-  echo "{\"decision\": \"continue\", \"reason\": \"Aegis Enterprise Governance check FAILED! Coding agent must remediate violations before stopping: $ESCAPED_OUTPUT\"}"
+  echo "{\"decision\": \"continue\", \"reason\": \"Propylon Enterprise Governance check FAILED! Coding agent must remediate violations before stopping: $ESCAPED_OUTPUT\"}"
   exit 0
 fi

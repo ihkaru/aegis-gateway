@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use aegis_gateway::core::oauth_connect::{AuthProviderConfig, OAuthConnectEngine};
-use aegis_gateway::policy::delegation::UserIdentityDelegationBroker;
-use aegis_gateway::policy::oauth_connect::VendorAgnosticOAuthRouter;
+use propylon::core::oauth_connect::{AuthProviderConfig, OAuthConnectEngine};
+use propylon::policy::delegation::UserIdentityDelegationBroker;
+use propylon::policy::oauth_connect::VendorAgnosticOAuthRouter;
 
 #[tokio::test]
 async fn test_oauth_connect_pkce_initiation_and_callback() {

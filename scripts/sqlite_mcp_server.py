@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """
-Aegis Gateway: Hermetic SQLite MCP Server
+Propylon Gateway: Hermetic SQLite MCP Server
 Provides real, persistent SQLite database tools over standard JSON-RPC 2.0 stdio.
 """
 
@@ -12,7 +12,7 @@ import sys
 
 DB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
 os.makedirs(DB_DIR, exist_ok=True)
-DB_PATH = os.path.join(DB_DIR, "aegis_local.db")
+DB_PATH = os.path.join(DB_DIR, "propylon_local.db")
 
 
 def init_db():

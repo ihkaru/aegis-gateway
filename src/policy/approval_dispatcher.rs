@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::notification::{
     ApprovalChannelTarget, ApprovalNotificationDispatcher, ApprovalNotificationPayload,
 };
@@ -21,7 +21,7 @@ impl MultiChannelApprovalDispatcher {
     pub fn new(channels: Vec<ApprovalChannelTarget>) -> Self {
         Self {
             channels: Arc::new(RwLock::new(channels)),
-            signing_secret: "aegis_default_hitl_hmac_secret_2026".to_string(),
+            signing_secret: "propylon_default_hitl_hmac_secret_2026".to_string(),
         }
     }
 
@@ -52,9 +52,9 @@ impl MultiChannelApprovalDispatcher {
         let sig = self.compute_attestation_signature(now, ticket_id);
         let mut headers = HashMap::new();
         headers.insert("Content-Type".to_string(), "application/json".to_string());
-        headers.insert("X-Aegis-Timestamp".to_string(), now.to_string());
-        headers.insert("X-Aegis-Signature".to_string(), sig);
-        headers.insert("X-Aegis-Ticket-Id".to_string(), ticket_id.to_string());
+        headers.insert("X-Propylon-Timestamp".to_string(), now.to_string());
+        headers.insert("X-Propylon-Signature".to_string(), sig);
+        headers.insert("X-Propylon-Ticket-Id".to_string(), ticket_id.to_string());
         headers
     }
 
@@ -78,7 +78,7 @@ impl MultiChannelApprovalDispatcher {
             "blocks": [
                 {
                     "type": "header",
-                    "text": { "type": "plain_text", "text": "Aegis Security Approval Gate" }
+                    "text": { "type": "plain_text", "text": "Propylon Security Approval Gate" }
                 },
                 {
                     "type": "section",
@@ -135,7 +135,7 @@ impl MultiChannelApprovalDispatcher {
                         "type": "AdaptiveCard",
                         "version": "1.4",
                         "body": [
-                            { "type": "TextBlock", "text": "Aegis Action Approval Gate", "weight": "Bolder", "size": "Medium" },
+                            { "type": "TextBlock", "text": "Propylon Action Approval Gate", "weight": "Bolder", "size": "Medium" },
                             { "type": "TextBlock", "text": payload.description, "wrap": true },
                             { "type": "FactSet", "facts": [
                                 { "title": "Caller", "value": payload.ticket.caller_id },
@@ -156,11 +156,11 @@ impl MultiChannelApprovalDispatcher {
 
 #[async_trait]
 impl ApprovalNotificationDispatcher for MultiChannelApprovalDispatcher {
-    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> AegisResult<Vec<String>> {
+    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> PropylonResult<Vec<String>> {
         let channels = self.channels.read().await;
         let mut dispatch_receipts = Vec::new();
         let headers = self.generate_headers(&payload.ticket.ticket_id);
-        let sig = headers.get("X-Aegis-Signature").cloned().unwrap_or_default();
+        let sig = headers.get("X-Propylon-Signature").cloned().unwrap_or_default();
 
         for channel in channels.iter() {
             match channel {

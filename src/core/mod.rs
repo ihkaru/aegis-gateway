@@ -49,9 +49,9 @@ pub use proxy::{CredentialProxyEngine, ProxyBinding};
 pub use database::{SqlEngine, SqlQueryResult};
 
 pub use audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink, HashChainedEvent, OtelTraceContext};
-pub use backend::{AegisTopologyConfig, BackendConfig, BackendRegistry, BackendTransport};
+pub use backend::{PropylonTopologyConfig, BackendConfig, BackendRegistry, BackendTransport};
 pub use dlp::{ComplianceProfile, DlpFinding, DlpPipeline, FastPatternMatcher, MaskingStrategy, SensitivityLevel};
-pub use error::{AegisError, AegisResult};
+pub use error::{PropylonError, PropylonResult};
 pub use identity::{
     AssertionExchangeRequest, DeviceAuthRequest, DeviceAuthResponse, DeviceCodeStatus,
     FederatedTokenResponse, GatewayServerIdentity, IdentityFederationBroker, TokenValidator,
@@ -91,7 +91,7 @@ pub use vault::{
     MimeInspectionResult, StoredBlobDescriptor, UploadSession,
 };
 pub use k8s::{
-    AdmissionDecision, AegisBackendCrd, AegisCrdReconciler, AegisPolicyCrd, AegisTenantCrd,
+    AdmissionDecision, PropylonBackendCrd, PropylonCrdReconciler, PropylonPolicyCrd, PropylonTenantCrd,
     ReconcileOutcome,
 };
 pub use trust::{

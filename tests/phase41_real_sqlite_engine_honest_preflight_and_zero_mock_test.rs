@@ -2,14 +2,14 @@
 #![deny(unsafe_code)]
 
 use serde_json::json;
-use aegis_gateway::backend::LocalAegisBackend;
-use aegis_gateway::control::web_ui::EmbeddedAdminServer;
-use aegis_gateway::core::backend::BackendTransport;
-use aegis_gateway::core::transport::{JsonRpcId, JsonRpcRequest};
+use propylon::backend::LocalPropylonBackend;
+use propylon::control::web_ui::EmbeddedAdminServer;
+use propylon::core::backend::BackendTransport;
+use propylon::core::transport::{JsonRpcId, JsonRpcRequest};
 
 #[tokio::test]
 async fn test_phase41_local_sqlite_live_query_and_mutation() {
-    let backend = LocalAegisBackend::new();
+    let backend = LocalPropylonBackend::new();
     assert!(backend.is_healthy().await);
 
     // 1. Initialize audit_ledger or customer_accounts via live query
@@ -18,7 +18,7 @@ async fn test_phase41_local_sqlite_live_query_and_mutation() {
         id: Some(JsonRpcId::Number(1)),
         method: "tools/call".to_string(),
         params: Some(json!({
-            "name": "aegis_sqlite_query",
+            "name": "propylon_sqlite_query",
             "arguments": {
                 "query": "CREATE TABLE IF NOT EXISTS test_vault (id INTEGER PRIMARY KEY AUTOINCREMENT, item_key TEXT UNIQUE, val REAL);"
             }
@@ -36,7 +36,7 @@ async fn test_phase41_local_sqlite_live_query_and_mutation() {
         id: Some(JsonRpcId::Number(2)),
         method: "tools/call".to_string(),
         params: Some(json!({
-            "name": "aegis_sqlite_query",
+            "name": "propylon_sqlite_query",
             "arguments": {
                 "query": "INSERT OR REPLACE INTO test_vault (item_key, val) VALUES ('SOC2_ASSET_DELTA', 45000.75);"
             }
@@ -54,7 +54,7 @@ async fn test_phase41_local_sqlite_live_query_and_mutation() {
         id: Some(JsonRpcId::Number(3)),
         method: "tools/call".to_string(),
         params: Some(json!({
-            "name": "aegis_sqlite_query",
+            "name": "propylon_sqlite_query",
             "arguments": {
                 "query": "SELECT item_key, val FROM test_vault WHERE item_key = 'SOC2_ASSET_DELTA';"
             }
@@ -73,7 +73,7 @@ async fn test_phase41_local_sqlite_live_query_and_mutation() {
 
 #[tokio::test]
 async fn test_phase41_honest_unattached_tool_preflight_handling() {
-    let backend = LocalAegisBackend::new();
+    let backend = LocalPropylonBackend::new();
 
     // Call unattached catalog tool (destructive_drop_table or query_postgresql_ledger)
     let unattached_req = JsonRpcRequest {
@@ -106,17 +106,17 @@ async fn test_phase41_embedded_admin_ui_catalog_and_playground_dispatch() {
     let tools: Vec<serde_json::Value> = serde_json::from_slice(&tools_body).unwrap();
     assert!(tools.len() >= 3);
 
-    let has_sqlite = tools.iter().any(|t| t["name"] == "aegis_sqlite_query" && t["is_live"] == true);
-    let has_health = tools.iter().any(|t| t["name"] == "aegis_system_health" && t["is_live"] == true);
+    let has_sqlite = tools.iter().any(|t| t["name"] == "propylon_sqlite_query" && t["is_live"] == true);
+    let has_health = tools.iter().any(|t| t["name"] == "propylon_system_health" && t["is_live"] == true);
     let has_postgres_template = tools.iter().any(|t| t["name"] == "query_postgresql_ledger" && t["is_live"] == false);
 
-    assert!(has_sqlite, "Expected aegis_sqlite_query to be marked live");
-    assert!(has_health, "Expected aegis_system_health to be marked live");
+    assert!(has_sqlite, "Expected propylon_sqlite_query to be marked live");
+    assert!(has_health, "Expected propylon_system_health to be marked live");
     assert!(has_postgres_template, "Expected query_postgresql_ledger template to be unattached");
 
     // 2. Dispatch real SQLite tool from UI API
     let sqlite_dispatch = json!({
-        "tool": "aegis_sqlite_query",
+        "tool": "propylon_sqlite_query",
         "arguments": { "query": "SELECT 1 AS live_check;" }
     });
     let (exec_status, exec_body, _) = server
@@ -160,9 +160,9 @@ async fn test_phase41_embedded_admin_ui_catalog_and_playground_dispatch() {
 #[tokio::test]
 async fn test_phase41_interface_first_sql_engine_contract() {
     use std::sync::Arc;
-    use aegis_gateway::core::backend::BackendRegistry;
-    use aegis_gateway::core::database::{SqlEngine, SqlQueryResult};
-    use aegis_gateway::backend::LocalSqliteEngine;
+    use propylon::core::backend::BackendRegistry;
+    use propylon::core::database::{SqlEngine, SqlQueryResult};
+    use propylon::backend::LocalSqliteEngine;
 
     // 1. Verify SqlEngine abstraction trait with dynamic dispatch (DIP & LSP)
     let engine: Arc<dyn SqlEngine> = Arc::new(LocalSqliteEngine::new("data/contract_test.db"));
@@ -176,14 +176,14 @@ async fn test_phase41_interface_first_sql_engine_contract() {
         _ => panic!("Expected mutation result"),
     }
 
-    // 3. Inject into LocalAegisBackend via Dependency Injection (DI Pattern)
-    let di_backend = LocalAegisBackend::with_sql_engine(engine);
+    // 3. Inject into LocalPropylonBackend via Dependency Injection (DI Pattern)
+    let di_backend = LocalPropylonBackend::with_sql_engine(engine);
     assert!(di_backend.is_healthy().await);
 
     // 4. Test BackendRegistry find_backend_for_tool contract
-    let registry = aegis_gateway::backend::SubprocessBackendRegistry::with_default_local_engine();
-    let found = registry.find_backend_for_tool("aegis_sqlite_query").await.unwrap();
-    assert!(found.is_some(), "Expected to resolve backend for aegis_sqlite_query");
+    let registry = propylon::backend::SubprocessBackendRegistry::with_default_local_engine();
+    let found = registry.find_backend_for_tool("propylon_sqlite_query").await.unwrap();
+    assert!(found.is_some(), "Expected to resolve backend for propylon_sqlite_query");
 
     let not_found = registry.find_backend_for_tool("non_existent_tool").await.unwrap();
     assert!(not_found.is_none(), "Expected None for non-existent tool");

@@ -31,7 +31,7 @@ flowchart LR
         Script["User / LLM Script"] -->|"GET http://127.0.0.1:8089/google/v4/spreadsheets/..."| LocalProxy["Local Loopback Egress"]
     end
     
-    subgraph GatewayControlPlane["Aegis Gateway Control Plane"]
+    subgraph GatewayControlPlane["Propylon Gateway Control Plane"]
         LocalProxy --> CredProxy["LoopbackCredentialProxy"]
         CredProxy --> Vault["SecretStore / Broker"]
         Vault -- Fetches Short-Lived Token --> CredProxy
@@ -50,17 +50,17 @@ flowchart LR
 #[async_trait]
 pub trait CredentialProxyEngine: Send + Sync {
     /// Start an ephemeral loopback proxy bound to an isolated port
-    async fn bind_ephemeral_proxy(&self, session_id: &str) -> AegisResult<ProxyBinding>;
+    async fn bind_ephemeral_proxy(&self, session_id: &str) -> PropylonResult<ProxyBinding>;
 
     /// Inject authentication headers for authorized upstream domains
     async fn inject_upstream_auth(
         &self,
         request: hyper::Request<hyper::body::Incoming>,
         target_service: &str,
-    ) -> AegisResult<hyper::Request<hyper::body::Incoming>>;
+    ) -> PropylonResult<hyper::Request<hyper::body::Incoming>>;
 
     /// Shutdown the ephemeral proxy and flush associated memory buffers
-    async fn teardown_proxy(&self, session_id: &str) -> AegisResult<()>;
+    async fn teardown_proxy(&self, session_id: &str) -> PropylonResult<()>;
 }
 ```
 

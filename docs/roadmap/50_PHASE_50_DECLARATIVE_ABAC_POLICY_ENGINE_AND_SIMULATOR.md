@@ -6,7 +6,7 @@
 > - 4-Dimensional evaluation: Principal (claims/roles), Action (tool names/verbs), Resource (backend/table classification), Environment (time/subnet/MFA).
 > - Declarative YAML/JSON Policy-as-Code contract with atomic zero-restart hot-reloading via RCU in-memory swap.
 > - Embedded Control Plane Dry-Run Simulator endpoint (`POST /api/v1/policy/simulate`).
-> - Cryptographic downstream assertion propagation (`X-Aegis-User-Id`, `X-Aegis-Tenant-Id`, `X-Aegis-Signature`).
+> - Cryptographic downstream assertion propagation (`X-Propylon-User-Id`, `X-Propylon-Tenant-Id`, `X-Propylon-Signature`).
 
 ---
 
@@ -40,13 +40,13 @@ pub enum AbacDecision {
 #[async_trait]
 pub trait AbacPolicyEngine: Send + Sync {
     /// Evaluates a 4-dimensional context against active rules
-    async fn evaluate(&self, ctx: &AbacContext) -> AegisResult<AbacDecision>;
+    async fn evaluate(&self, ctx: &AbacContext) -> PropylonResult<AbacDecision>;
 
     /// Simulates decision for dry-run testing in Embedded UI
-    async fn simulate(&self, ctx: &AbacContext) -> AegisResult<PolicySimulationResult>;
+    async fn simulate(&self, ctx: &AbacContext) -> PropylonResult<PolicySimulationResult>;
 
     /// Atomically replaces policy rules without restart
-    async fn reload_rules(&self, rules: Vec<AbacRule>) -> AegisResult<()>;
+    async fn reload_rules(&self, rules: Vec<AbacRule>) -> PropylonResult<()>;
 }
 ```
 

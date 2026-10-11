@@ -1,4 +1,4 @@
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use crate::core::ingress_tls::{
     AcmeCertificateManager, MtlsClientVerifier, MtlsValidationResult, TlsCertificateDetails,
     TlsCertificateStatus, TlsIngressEngine,
@@ -60,11 +60,11 @@ impl NativeTlsIngressEngine {
 }
 
 impl TlsIngressEngine for NativeTlsIngressEngine {
-    fn inspect_certificate(&self) -> Result<TlsCertificateDetails, AegisError> {
+    fn inspect_certificate(&self) -> Result<TlsCertificateDetails, PropylonError> {
         let cert = self
             .certificate
             .read()
-            .map_err(|e| AegisError::Internal(format!("Failed to read TLS certificate: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Failed to read TLS certificate: {e}")))?;
         Ok(cert.clone())
     }
 
@@ -76,14 +76,14 @@ impl TlsIngressEngine for NativeTlsIngressEngine {
         }
     }
 
-    fn swap_certificate(&self, cert_pem: &str, _key_pem: &str) -> Result<(), AegisError> {
+    fn swap_certificate(&self, cert_pem: &str, _key_pem: &str) -> Result<(), PropylonError> {
         if cert_pem.trim().is_empty() {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "Certificate PEM must not be empty".to_string(),
             ));
         }
 
-        let domain = parse_pem_field(cert_pem, "CN=").unwrap_or_else(|| "aegis.enterprise.io".to_string());
+        let domain = parse_pem_field(cert_pem, "CN=").unwrap_or_else(|| "propylon.enterprise.io".to_string());
         let issuer = parse_pem_field(cert_pem, "O=").unwrap_or_else(|| "Enterprise CA".to_string());
         let serial = parse_pem_field(cert_pem, "SERIAL=").unwrap_or_else(|| "99990001".to_string());
 
@@ -94,7 +94,7 @@ impl TlsIngressEngine for NativeTlsIngressEngine {
         let mut cert = self
             .certificate
             .write()
-            .map_err(|e| AegisError::Internal(format!("Lock failure during cert swap: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Lock failure during cert swap: {e}")))?;
 
         cert.domain = domain;
         cert.issuer = issuer;
@@ -107,7 +107,7 @@ impl TlsIngressEngine for NativeTlsIngressEngine {
 }
 
 impl MtlsClientVerifier for NativeTlsIngressEngine {
-    fn verify_client_certificate(&self, cert_pem: &str) -> Result<MtlsValidationResult, AegisError> {
+    fn verify_client_certificate(&self, cert_pem: &str) -> Result<MtlsValidationResult, PropylonError> {
         if cert_pem.trim().is_empty() {
             return Ok(MtlsValidationResult::MissingClientCertificate);
         }
@@ -120,7 +120,7 @@ impl MtlsClientVerifier for NativeTlsIngressEngine {
         let trusted = self
             .trusted_cas
             .read()
-            .map_err(|e| AegisError::Internal(format!("CA lock error: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("CA lock error: {e}")))?;
         if !trusted.contains(&issuer) {
             return Ok(MtlsValidationResult::UntrustedCertificateAuthority);
         }
@@ -129,7 +129,7 @@ impl MtlsClientVerifier for NativeTlsIngressEngine {
         let revoked = self
             .revoked_serials
             .read()
-            .map_err(|e| AegisError::Internal(format!("Revocation lock error: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Revocation lock error: {e}")))?;
         if revoked.contains(&serial) {
             return Ok(MtlsValidationResult::RevokedCertificate);
         }
@@ -144,7 +144,7 @@ impl MtlsClientVerifier for NativeTlsIngressEngine {
         }
 
         let common_name = parse_pem_field(cert_pem, "CN=").unwrap_or_else(|| "agent-client".to_string());
-        let san = parse_pem_field(cert_pem, "SAN=").unwrap_or_else(|| "agent.aegis.internal".to_string());
+        let san = parse_pem_field(cert_pem, "SAN=").unwrap_or_else(|| "agent.propylon.internal".to_string());
         let org = parse_pem_field(cert_pem, "O=").unwrap_or_else(|| "Enterprise Corp".to_string());
         let client_id = format!("mtls:{common_name}:{serial}");
 
@@ -156,12 +156,12 @@ impl MtlsClientVerifier for NativeTlsIngressEngine {
         })
     }
 
-    fn add_trusted_ca(&mut self, ca_pem: &str) -> Result<(), AegisError> {
+    fn add_trusted_ca(&mut self, ca_pem: &str) -> Result<(), PropylonError> {
         let ca_name = parse_pem_field(ca_pem, "CA=").unwrap_or_else(|| ca_pem.trim().to_string());
         let mut cas = self
             .trusted_cas
             .write()
-            .map_err(|e| AegisError::Internal(format!("Failed to write trusted CA: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("Failed to write trusted CA: {e}")))?;
         cas.insert(ca_name);
         Ok(())
     }
@@ -179,7 +179,7 @@ impl AcmeCertificateManager for NativeTlsIngressEngine {
         }
     }
 
-    fn apply_renewed_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), AegisError> {
+    fn apply_renewed_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), PropylonError> {
         self.swap_certificate(cert_pem, key_pem)
     }
 }

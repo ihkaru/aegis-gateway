@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProbeState {
@@ -46,8 +46,8 @@ impl HealthReport {
 #[async_trait]
 pub trait HealthProbe: Send + Sync {
     /// Liveness check (/healthz): Returns Healthy if gateway process is alive
-    async fn liveness(&self) -> AegisResult<HealthReport>;
+    async fn liveness(&self) -> PropylonResult<HealthReport>;
 
     /// Readiness check (/readyz): Returns Healthy if downstream dependencies (Redis, state) are reachable
-    async fn readiness(&self) -> AegisResult<HealthReport>;
+    async fn readiness(&self) -> PropylonResult<HealthReport>;
 }

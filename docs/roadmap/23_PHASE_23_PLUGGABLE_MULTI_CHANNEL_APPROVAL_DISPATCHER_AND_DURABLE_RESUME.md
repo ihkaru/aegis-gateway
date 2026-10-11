@@ -23,7 +23,7 @@ Phase 23 delivers a modular **Multi-Channel Approval Dispatcher & Durable Resume
 ```mermaid
 sequenceDiagram
     participant Agent as AI Agent (Claude / IDE)
-    participant GW as Aegis Gateway
+    participant GW as Propylon Gateway
     participant Gate as ActionApprovalGate (Phase 19)
     participant Dispatcher as ApprovalDispatcher
     participant Channel as Slack / Teams / Webhook
@@ -68,7 +68,7 @@ pub struct ApprovalNotificationPayload {
 
 #[async_trait]
 pub trait ApprovalNotificationDispatcher: Send + Sync {
-    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> AegisResult<Vec<String>>;
+    async fn dispatch(&self, payload: &ApprovalNotificationPayload) -> PropylonResult<Vec<String>>;
 }
 
 #[async_trait]
@@ -79,7 +79,7 @@ pub trait DurableResumeRouter: Send + Sync {
         signature: &str,
         approved: bool,
         approver_id: &str,
-    ) -> AegisResult<bool>;
+    ) -> PropylonResult<bool>;
 }
 ```
 

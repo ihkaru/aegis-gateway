@@ -20,7 +20,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # Copy application source code and compile binary
 COPY . .
-RUN cargo build --release --bin aegis-gateway
+RUN cargo build --release --bin propylon
 
 # Stage 3: Minimal, Secure Runtime Image
 FROM debian:bookworm-slim AS runtime
@@ -33,29 +33,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root unprivileged user
-RUN groupadd -g 10001 aegis && \
-    useradd -u 10001 -g aegis -s /bin/false -m aegis
+RUN groupadd -g 10001 propylon && \
+    useradd -u 10001 -g propylon -s /bin/false -m propylon
 
 WORKDIR /app
 
 # Copy compiled binary from builder stage
-COPY --from=builder /app/target/release/aegis-gateway /usr/local/bin/aegis-gateway
+COPY --from=builder /app/target/release/propylon /usr/local/bin/propylon
 
 # Create runtime directories with appropriate permissions
-RUN mkdir -p /app/data /tmp/aegis-cache && \
-    chown -R aegis:aegis /app /tmp/aegis-cache
+RUN mkdir -p /app/data /tmp/propylon-cache && \
+    chown -R propylon:propylon /app /tmp/propylon-cache
 
-USER aegis
+USER propylon
 
-ENV AEGIS_HOST=0.0.0.0 \
-    AEGIS_PORT=8080 \
+ENV PROPYLON_HOST=0.0.0.0 \
+    PROPYLON_PORT=8080 \
     PORT=8080 \
-    RUST_LOG=aegis_gateway=info,warn
+    RUST_LOG=propylon=info,warn
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=20s --timeout=5s --retries=3 --start-period=10s \
     CMD curl -f http://localhost:8080/healthz || exit 1
 
-ENTRYPOINT ["/usr/local/bin/aegis-gateway"]
+ENTRYPOINT ["/usr/local/bin/propylon"]
 CMD ["serve"]

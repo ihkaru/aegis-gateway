@@ -8,7 +8,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "============================================================"
-echo "  AEGIS GATEWAY: AST & CALL-GRAPH INTEGRITY AUDITOR (MCP)   "
+echo "  PROPYLON GATEWAY: AST & CALL-GRAPH INTEGRITY AUDITOR (MCP)   "
 echo "============================================================"
 
 CODE_GRAPH_BIN="/usr/local/bin/code-graph-mcp"
@@ -93,7 +93,7 @@ fi
 echo "------------------------------------------------------------"
 if [ "$VIOLATIONS" -gt 0 ]; then
     echo ">>> [AUDIT REJECTED] Found $VIOLATIONS call-graph integrity violation(s)!"
-    echo "    Aegis Gateway strictly forbids dead-end dispatchers and silent mocks."
+    echo "    Propylon Gateway strictly forbids dead-end dispatchers and silent mocks."
     exit 1
 else
     echo ">>> [AUDIT PASSED] 100% AST & Call-Graph Integrity Verified (Zero Silent Mock)."

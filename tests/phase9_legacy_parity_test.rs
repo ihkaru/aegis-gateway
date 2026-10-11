@@ -8,15 +8,15 @@ use std::sync::Arc;
 use tempfile::NamedTempFile;
 use tower::ServiceExt;
 
-use aegis_gateway::backend::HermeticSubprocessBackend;
-use aegis_gateway::cli::args::{AddArgs, ListArgs, RemoveArgs};
-use aegis_gateway::cli::commands::{run_add, run_list, run_remove};
-use aegis_gateway::core::types::{DisclosureTier, ToolDefinition};
-use aegis_gateway::discovery::ProgressiveProjector;
-use aegis_gateway::state::DrainCoordinator;
-use aegis_gateway::transport::command_split::{split_command_unix, split_command_windows};
-use aegis_gateway::transport::{LiveHttpServer, McpProtocolHandler};
-use aegis_gateway::AegisGateway;
+use propylon::backend::HermeticSubprocessBackend;
+use propylon::cli::args::{AddArgs, ListArgs, RemoveArgs};
+use propylon::cli::commands::{run_add, run_list, run_remove};
+use propylon::core::types::{DisclosureTier, ToolDefinition};
+use propylon::discovery::ProgressiveProjector;
+use propylon::state::DrainCoordinator;
+use propylon::transport::command_split::{split_command_unix, split_command_windows};
+use propylon::transport::{LiveHttpServer, McpProtocolHandler};
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_issue_2317_search_tool_by_backend_name() {
@@ -150,7 +150,7 @@ fn test_issue_523_windows_and_unix_command_split() {
 
 #[tokio::test]
 async fn test_issue_540_mcp_protocol_version_header_validation() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = Arc::new(McpProtocolHandler::new(Arc::clone(&gateway)));
     let drain = Arc::new(DrainCoordinator::new());
     let server = LiveHttpServer::new(handler, drain, "127.0.0.1", 39999).unwrap();

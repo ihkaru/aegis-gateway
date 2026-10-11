@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 use std::time::Instant;
-use aegis_gateway::core::dlp::{ComplianceProfile, DlpPipeline, FastPatternMatcher, MaskingStrategy};
+use propylon::core::dlp::{ComplianceProfile, DlpPipeline, FastPatternMatcher, MaskingStrategy};
 
-use aegis_gateway::dlp::{FastMatcher, PresidioDlpPipeline};
+use propylon::dlp::{FastMatcher, PresidioDlpPipeline};
 
 #[tokio::test]
 async fn test_phase3_fast_matcher_luhn_and_sub_millisecond_latency() {

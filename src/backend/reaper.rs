@@ -23,14 +23,14 @@ impl ProcessGroupReaper {
     pub async fn register(&self, pid: u32) {
         let mut pids = self.tracked_pids.lock().await;
         pids.insert(pid);
-        debug!(target: "aegis::reaper", pid = pid, "Subprocess registered with reaper");
+        debug!(target: "propylon::reaper", pid = pid, "Subprocess registered with reaper");
     }
 
     /// Deregister a cleanly exited child PID
     pub async fn deregister(&self, pid: u32) {
         let mut pids = self.tracked_pids.lock().await;
         pids.remove(&pid);
-        debug!(target: "aegis::reaper", pid = pid, "Subprocess cleanly exited and deregistered");
+        debug!(target: "propylon::reaper", pid = pid, "Subprocess cleanly exited and deregistered");
     }
 
     /// Check if a PID is actively tracked
@@ -64,7 +64,7 @@ impl ProcessGroupReaper {
                     .stderr(std::process::Stdio::null())
                     .status();
             }
-            debug!(target: "aegis::reaper", pid = pid, "Subprocess terminated via reaper");
+            debug!(target: "propylon::reaper", pid = pid, "Subprocess terminated via reaper");
             true
         } else {
             false
@@ -86,7 +86,7 @@ impl ProcessGroupReaper {
                     .stderr(std::process::Stdio::null())
                     .status();
             }
-            warn!(target: "aegis::reaper", pid = pid, "Reaped orphaned child subprocess");
+            warn!(target: "propylon::reaper", pid = pid, "Reaped orphaned child subprocess");
         }
 
         pids.clear();

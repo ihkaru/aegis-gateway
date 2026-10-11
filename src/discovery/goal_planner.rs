@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 use serde_json::{json, Value};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::policy::PolicyEngine;
 use crate::core::types::{CallerContext, DisclosureTier, ToolDefinition};
 use crate::discovery::hybrid_search::HybridSearchEngine;
@@ -135,7 +135,7 @@ impl GoalPlanner {
         planner: &ExecutionPlanner,
         policy: &dyn PolicyEngine,
         caller: &CallerContext,
-    ) -> AegisResult<Value> {
+    ) -> PropylonResult<Value> {
         let goal_opt = params.get("goal")
             .or_else(|| params.get("objective"))
             .and_then(|g| g.as_str());
@@ -144,7 +144,7 @@ impl GoalPlanner {
             Self::plan_goal(goal, catalog)
         } else {
             serde_json::from_value(params.clone())
-                .map_err(|e| AegisError::Internal(format!("Invalid plan schema or missing goal: {e}")))?
+                .map_err(|e| PropylonError::Internal(format!("Invalid plan schema or missing goal: {e}")))?
         };
 
         let validation = planner.validate_plan(&plan, catalog, policy, caller).await;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::core::approval::{ApprovalDecision, ApprovalGate, RiskTier};
-use aegis_gateway::policy::ActionApprovalGate;
+use propylon::core::approval::{ApprovalDecision, ApprovalGate, RiskTier};
+use propylon::policy::ActionApprovalGate;
 
 #[tokio::test]
 async fn test_approval_gate_low_risk_auto_approve() {

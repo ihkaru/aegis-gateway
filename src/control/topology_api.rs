@@ -7,14 +7,14 @@ use crate::core::backend::BackendRegistry;
 use crate::core::topology::{
     TopologyGraphEdge, TopologyGraphNode, TopologyGraphResponse, TopologyNodeMetrics,
 };
-use crate::AegisGateway;
+use crate::PropylonGateway;
 
 pub struct TopologyApiDispatcher;
 
 impl TopologyApiDispatcher {
     pub async fn handle_get_graph(
         start_time: std::time::Instant,
-        _gateway: Option<&Arc<AegisGateway>>,
+        _gateway: Option<&Arc<PropylonGateway>>,
         registry: Option<&Arc<dyn BackendRegistry>>,
         current_tier: &std::sync::RwLock<String>,
     ) -> (u16, Vec<u8>, &'static str) {
@@ -49,7 +49,7 @@ impl TopologyApiDispatcher {
         ingress_meta.insert("port".to_string(), "8484".to_string());
         ingress_meta.insert("tls".to_string(), "TLS 1.3 / mTLS".to_string());
         nodes.push(TopologyGraphNode {
-            id: "aegis-ingress".to_string(),
+            id: "propylon-ingress".to_string(),
             node_type: "ingress".to_string(),
             label: "Data Plane Ingress (:8484)".to_string(),
             status: "healthy".to_string(),
@@ -65,7 +65,7 @@ impl TopologyApiDispatcher {
         edges.push(TopologyGraphEdge {
             id: "edge-agents-ingress".to_string(),
             source: "agents-pool".to_string(),
-            target: "aegis-ingress".to_string(),
+            target: "propylon-ingress".to_string(),
             label: Some("MCP Wire".to_string()),
             animated: true,
             status: "active".to_string(),
@@ -91,7 +91,7 @@ impl TopologyApiDispatcher {
 
         edges.push(TopologyGraphEdge {
             id: "edge-ingress-filter".to_string(),
-            source: "aegis-ingress".to_string(),
+            source: "propylon-ingress".to_string(),
             target: "security-filter".to_string(),
             label: Some("Inline Guardrails".to_string()),
             animated: true,
@@ -128,7 +128,7 @@ impl TopologyApiDispatcher {
         let backends = if let Some(reg) = registry {
             reg.list_backends().await.unwrap_or_default()
         } else {
-            vec!["aegis_local_engine".to_string(), "sqlite_ledger".to_string()]
+            vec!["propylon_local_engine".to_string(), "sqlite_ledger".to_string()]
         };
 
         for backend_name in &backends {
@@ -226,7 +226,7 @@ impl TopologyApiDispatcher {
         });
         edges.push(TopologyGraphEdge {
             id: "edge-ingress-sync".to_string(),
-            source: "aegis-ingress".to_string(),
+            source: "propylon-ingress".to_string(),
             target: "channel-sync".to_string(),
             label: Some("Multi-Pod Sync".to_string()),
             animated: true,

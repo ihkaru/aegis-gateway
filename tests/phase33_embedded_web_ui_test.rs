@@ -1,4 +1,4 @@
-use aegis_gateway::control::web_ui::EmbeddedAdminServer;
+use propylon::control::web_ui::EmbeddedAdminServer;
 use serde_json::json;
 
 #[tokio::test]
@@ -10,7 +10,7 @@ async fn test_embedded_admin_server_serves_spa_assets() {
     assert_eq!(status, 200);
     assert_eq!(mime, "text/html; charset=utf-8");
     let html = String::from_utf8(body).expect("Invalid UTF-8");
-    assert!(html.contains("Aegis Gateway | Control Plane Dashboard"));
+    assert!(html.contains("Propylon Gateway | Control Plane Dashboard"));
     assert!(html.contains("id=\"app\""));
 
     // Explicit index.html path

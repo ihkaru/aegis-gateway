@@ -6,11 +6,11 @@ use std::io::Write;
 use std::process::Command;
 use std::sync::Arc;
 
-use aegis_gateway::audit::StructuredAuditLogger;
-use aegis_gateway::core::data_governance::InSituDataEnclave;
-use aegis_gateway::core::types::{CallerContext, TenantId};
-use aegis_gateway::policy::EnvSecretStore;
-use aegis_gateway::sandbox::{EgressFilterEngine, HermeticProcessSandbox, SandboxedInSituEnclave, VaultCredentialBroker};
+use propylon::audit::StructuredAuditLogger;
+use propylon::core::data_governance::InSituDataEnclave;
+use propylon::core::types::{CallerContext, TenantId};
+use propylon::policy::EnvSecretStore;
+use propylon::sandbox::{EgressFilterEngine, HermeticProcessSandbox, SandboxedInSituEnclave, VaultCredentialBroker};
 
 fn make_test_caller() -> CallerContext {
     CallerContext {

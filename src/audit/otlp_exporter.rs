@@ -1,4 +1,4 @@
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use crate::core::otlp::{
     OtlpExportBatch, OtlpExportProtocol, OtlpExportResult, OtlpTelemetryExporter,
 };
@@ -78,7 +78,7 @@ impl NativeOtlpExporter {
                     }]
                 },
                 "scopeSpans": [{
-                    "scope": { "name": "aegis.gateway.data_plane", "version": "1.0.0" },
+                    "scope": { "name": "propylon.gateway.data_plane", "version": "1.0.0" },
                     "spans": spans_json
                 }]
             }]
@@ -89,9 +89,9 @@ impl NativeOtlpExporter {
 }
 
 impl OtlpTelemetryExporter for NativeOtlpExporter {
-    fn export_batch(&self, batch: OtlpExportBatch) -> Result<OtlpExportResult, AegisError> {
+    fn export_batch(&self, batch: OtlpExportBatch) -> Result<OtlpExportResult, PropylonError> {
         if batch.service_name.trim().is_empty() {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "OTLP batch service_name must not be empty".to_string(),
             ));
         }
@@ -113,7 +113,7 @@ impl OtlpTelemetryExporter for NativeOtlpExporter {
         let mut batches = self
             .dispatched_batches
             .write()
-            .map_err(|e| AegisError::Internal(format!("OTLP batch queue lock error: {e}")))?;
+            .map_err(|e| PropylonError::Internal(format!("OTLP batch queue lock error: {e}")))?;
         batches.push(batch);
 
         Ok(OtlpExportResult {

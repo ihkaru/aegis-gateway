@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterSyncMessage {
@@ -26,7 +26,7 @@ pub struct ClusterSyncReceipt {
 /// Interface-First abstraction for Distributed Multi-Node Cluster State Synchronization
 #[async_trait]
 pub trait ClusterSyncEngine: Send + Sync {
-    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> AegisResult<ClusterSyncMessage>;
-    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> AegisResult<ClusterSyncReceipt>;
-    async fn get_cluster_nodes(&self) -> AegisResult<Vec<String>>;
+    async fn broadcast_update(&self, event_type: &str, payload_json: &str) -> PropylonResult<ClusterSyncMessage>;
+    async fn ingest_peer_update(&self, message: &ClusterSyncMessage) -> PropylonResult<ClusterSyncReceipt>;
+    async fn get_cluster_nodes(&self) -> PropylonResult<Vec<String>>;
 }

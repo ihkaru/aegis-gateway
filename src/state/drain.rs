@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// RAII guard releasing an inflight task slot on drop
 pub struct TaskGuard {
@@ -32,9 +32,9 @@ impl DrainCoordinator {
     }
 
     /// Try to acquire a slot for executing a tool call
-    pub fn acquire_slot(&self) -> AegisResult<TaskGuard> {
+    pub fn acquire_slot(&self) -> PropylonResult<TaskGuard> {
         if self.draining.load(Ordering::SeqCst) {
-            return Err(AegisError::DrainTimeout(
+            return Err(PropylonError::DrainTimeout(
                 "Gateway is in graceful shutdown; new tool requests rejected".to_string(),
             ));
         }
@@ -58,14 +58,14 @@ impl DrainCoordinator {
     }
 
     /// Wait for all inflight tasks to drain within the specified timeout
-    pub async fn wait_drain(&self, timeout: Duration) -> AegisResult<()> {
+    pub async fn wait_drain(&self, timeout: Duration) -> PropylonResult<()> {
         self.signal_shutdown();
         let deadline = tokio::time::Instant::now() + timeout;
 
         while self.active_tasks.load(Ordering::SeqCst) > 0 {
             if tokio::time::Instant::now() >= deadline {
                 let remaining = self.active_tasks.load(Ordering::SeqCst);
-                return Err(AegisError::DrainTimeout(format!(
+                return Err(PropylonError::DrainTimeout(format!(
                     "Timed out draining {} inflight tasks after {:?}",
                     remaining, timeout
                 )));

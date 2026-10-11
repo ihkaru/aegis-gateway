@@ -1,7 +1,7 @@
 # Phase 32: Direct OTLP Exporter — CNCF OpenTelemetry Protocol (gRPC/HTTP)
 
 ## Executive Summary
-Phase 32 equips Aegis Gateway with native OpenTelemetry Protocol (OTLP) telemetry export capability directly pushing distributed traces and metrics to any CNCF-compliant collector (Grafana Tempo, Jaeger, Splunk, Datadog, SigNoz, OpenSearch) over gRPC/Protobuf and HTTP. It incorporates a Risk-Adaptive Sampler ensuring 100% capture of security-critical operations (DLP redactions, HITL suspensions, authorization errors) while economically downsampling high-throughput routine tool calls.
+Phase 32 equips Propylon Gateway with native OpenTelemetry Protocol (OTLP) telemetry export capability directly pushing distributed traces and metrics to any CNCF-compliant collector (Grafana Tempo, Jaeger, Splunk, Datadog, SigNoz, OpenSearch) over gRPC/Protobuf and HTTP. It incorporates a Risk-Adaptive Sampler ensuring 100% capture of security-critical operations (DLP redactions, HITL suspensions, authorization errors) while economically downsampling high-throughput routine tool calls.
 
 ---
 

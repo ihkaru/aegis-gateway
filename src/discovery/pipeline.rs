@@ -6,7 +6,7 @@ use std::time::Instant;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::discovery::planner::{ExecutionPlan, PlanRisk};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,7 +41,7 @@ impl DagPipelineEngine {
     }
 
     /// Recursively interpolates `{{step_id.path.to.key}}` expressions in argument JSON
-    pub fn interpolate_value(val: &Value, outputs: &HashMap<String, Value>) -> AegisResult<Value> {
+    pub fn interpolate_value(val: &Value, outputs: &HashMap<String, Value>) -> PropylonResult<Value> {
         match val {
             Value::String(s) => Self::interpolate_string(s, outputs),
             Value::Array(arr) => {
@@ -62,7 +62,7 @@ impl DagPipelineEngine {
         }
     }
 
-    fn interpolate_string(s: &str, outputs: &HashMap<String, Value>) -> AegisResult<Value> {
+    fn interpolate_string(s: &str, outputs: &HashMap<String, Value>) -> PropylonResult<Value> {
         let trimmed = s.trim();
         // Exact single placeholder replacement: e.g. "{{step_1.output.id}}"
         if trimmed.starts_with("{{") && trimmed.ends_with("}}") && trimmed[2..trimmed.len() - 2].find("{{").is_none() {
@@ -93,15 +93,15 @@ impl DagPipelineEngine {
         Ok(Value::String(result))
     }
 
-    fn resolve_expression(expr: &str, outputs: &HashMap<String, Value>) -> AegisResult<Value> {
+    fn resolve_expression(expr: &str, outputs: &HashMap<String, Value>) -> PropylonResult<Value> {
         let parts: Vec<&str> = expr.split('.').collect();
         if parts.is_empty() {
-            return Err(AegisError::Internal("Empty expression in template".to_string()));
+            return Err(PropylonError::Internal("Empty expression in template".to_string()));
         }
 
         let step_id = parts[0];
         let root = outputs.get(step_id).ok_or_else(|| {
-            AegisError::Internal(format!(
+            PropylonError::Internal(format!(
                 "Interpolation failure: step '{}' output not available in pipeline",
                 step_id
             ))
@@ -116,7 +116,7 @@ impl DagPipelineEngine {
                 }
             }
             curr = curr.get(key).ok_or_else(|| {
-                AegisError::Internal(format!(
+                PropylonError::Internal(format!(
                     "Property '{}' not found in output of step '{}'",
                     key, step_id
                 ))
@@ -131,10 +131,10 @@ impl DagPipelineEngine {
         &self,
         plan: &ExecutionPlan,
         step_runner: F,
-    ) -> AegisResult<PipelineExecutionResult>
+    ) -> PropylonResult<PipelineExecutionResult>
     where
         F: Fn(String, String, Value) -> Fut,
-        Fut: Future<Output = AegisResult<Value>>,
+        Fut: Future<Output = PropylonResult<Value>>,
     {
         let start_time = Instant::now();
 
@@ -177,7 +177,7 @@ impl DagPipelineEngine {
         }
 
         if ordered_ids.len() != plan.steps.len() {
-            return Err(AegisError::Internal(
+            return Err(PropylonError::Internal(
                 "Cannot execute pipeline: cyclic dependency detected in plan".to_string(),
             ));
         }

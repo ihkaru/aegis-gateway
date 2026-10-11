@@ -9,7 +9,7 @@ Phase 34 expands the Single-Binary Embedded Admin Web Dashboard (Phase 33) into 
 
 | Capability | Phase 33 Baseline | Phase 34 Target (Enterprise Parity) |
 | :--- | :--- | :--- |
-| **Server Listener** | In-memory router only | Dedicated standalone daemon (`aegis-gateway ui`) + Axum HTTP server on `:8485` |
+| **Server Listener** | In-memory router only | Dedicated standalone daemon (`propylon ui`) + Axum HTTP server on `:8485` |
 | **Backends Management** | None (CLI only) | Interactive `BackendsTab`: list stdio/sse backends, circuit breaker status, add/remove via UI |
 | **Tool Catalog** | None | L0 Purpose (~50 tokens), L1 Signature, and L2 Schema viewer for all registered tools |
 | **Policy Tiers** | Static badge | Interactive `PolicyTab`: hot-swap `dev` / `hybrid` / `strict` in 0ms via atomic RCU swap |
@@ -24,8 +24,8 @@ Phase 34 expands the Single-Binary Embedded Admin Web Dashboard (Phase 33) into 
 ## 2. Architectural Pillars & Implementation Roadmap
 
 ### Pillar 1: Dedicated Standalone & Concurrent UI Daemon
-- **CLI Subcommand**: First-class `aegis-gateway ui --host 0.0.0.0 --port 8485` command.
-- **Concurrent Serve Mode**: `aegis-gateway serve` launches both the MCP Wire Data Plane (`:8484`) and the Admin Control Plane (`:8485`).
+- **CLI Subcommand**: First-class `propylon ui --host 0.0.0.0 --port 8485` command.
+- **Concurrent Serve Mode**: `propylon serve` launches both the MCP Wire Data Plane (`:8484`) and the Admin Control Plane (`:8485`).
 - **Zero-Downtime Hot-Reload**: Control plane actions update the shared `Arc<RwLock<TopologyConfig>>` without dropping active agent streams.
 
 ### Pillar 2: Dynamic Backends & Tool Registry Control (`BackendsTab.svelte`)

@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentCertEnvelope {
@@ -52,13 +52,13 @@ pub struct CorsEvaluationResult {
 /// Interface-First abstraction for Cryptographic Agent Trust Verification
 #[async_trait]
 pub trait AgentTrustVerifier: Send + Sync {
-    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> AegisResult<AgentVerificationOutcome>;
+    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> PropylonResult<AgentVerificationOutcome>;
 }
 
 /// Interface-First abstraction for Dynamic URL Threat Evidence Enrichment
 #[async_trait]
 pub trait ThreatEvidenceEnricher: Send + Sync {
-    async fn inspect_and_enrich_url(&self, target_url: &str) -> AegisResult<ThreatEvidenceReport>;
+    async fn inspect_and_enrich_url(&self, target_url: &str) -> PropylonResult<ThreatEvidenceReport>;
 }
 
 /// Interface-First abstraction for Granular Streamable HTTP CORS Policy

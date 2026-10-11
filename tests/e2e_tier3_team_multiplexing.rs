@@ -10,12 +10,12 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::json;
 
-use aegis_gateway::backend::{
+use propylon::backend::{
     HermeticSubprocessBackend, SubprocessBackendRegistry, TopologyConfigLoader,
 };
-use aegis_gateway::core::backend::{BackendConfig, BackendRegistry, BackendTransport};
-use aegis_gateway::core::error::AegisResult;
-use aegis_gateway::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
+use propylon::core::backend::{BackendConfig, BackendRegistry, BackendTransport};
+use propylon::core::error::PropylonResult;
+use propylon::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
 
 struct MockTeamBackend {
     name: String,
@@ -35,12 +35,12 @@ impl MockTeamBackend {
 
 #[async_trait]
 impl BackendTransport for MockTeamBackend {
-    async fn start(&self) -> AegisResult<()> {
+    async fn start(&self) -> PropylonResult<()> {
         self.healthy.store(true, Ordering::SeqCst);
         Ok(())
     }
 
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         if request.method == "tools/list" {
             Ok(JsonRpcResponse::success(
                 request.id.clone().unwrap_or(JsonRpcId::Null),
@@ -58,7 +58,7 @@ impl BackendTransport for MockTeamBackend {
         self.healthy.load(Ordering::SeqCst)
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         self.healthy.store(false, Ordering::SeqCst);
         Ok(())
     }

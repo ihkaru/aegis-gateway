@@ -1,4 +1,4 @@
-use crate::core::error::AegisError;
+use crate::core::error::PropylonError;
 use serde::{Deserialize, Serialize};
 
 /// Status of a TLS certificate in the ingress pipeline.
@@ -40,22 +40,22 @@ pub enum MtlsValidationResult {
 /// Interface contract for TLS ingress termination and ALPN negotiation.
 pub trait TlsIngressEngine: Send + Sync {
     /// Inspect the currently active server certificate.
-    fn inspect_certificate(&self) -> Result<TlsCertificateDetails, AegisError>;
+    fn inspect_certificate(&self) -> Result<TlsCertificateDetails, PropylonError>;
 
     /// Check if a specific ALPN protocol (e.g. "h2", "http/1.1") is supported.
     fn is_alpn_supported(&self, protocol: &str) -> bool;
 
     /// Swap certificate material at runtime without interrupting active connections.
-    fn swap_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), AegisError>;
+    fn swap_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), PropylonError>;
 }
 
 /// Interface contract for strict Zero-Trust Mutual TLS (mTLS) client verification.
 pub trait MtlsClientVerifier: Send + Sync {
     /// Verify a client-presented X.509 certificate.
-    fn verify_client_certificate(&self, cert_pem: &str) -> Result<MtlsValidationResult, AegisError>;
+    fn verify_client_certificate(&self, cert_pem: &str) -> Result<MtlsValidationResult, PropylonError>;
 
     /// Register an enterprise root or intermediate CA certificate as trusted.
-    fn add_trusted_ca(&mut self, ca_pem: &str) -> Result<(), AegisError>;
+    fn add_trusted_ca(&mut self, ca_pem: &str) -> Result<(), PropylonError>;
 }
 
 /// Interface contract for automated ACME (RFC 8555) HTTP-01 challenge management.
@@ -67,5 +67,5 @@ pub trait AcmeCertificateManager: Send + Sync {
     fn register_challenge(&self, token: String, key_authorization: String);
 
     /// Apply an automated certificate renewal received from the ACME CA.
-    fn apply_renewed_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), AegisError>;
+    fn apply_renewed_certificate(&self, cert_pem: &str, key_pem: &str) -> Result<(), PropylonError>;
 }

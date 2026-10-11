@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::TenantId;
 
 /// Supported sandbox programming languages
@@ -23,14 +23,14 @@ impl Default for ExecutionLanguage {
 }
 
 impl std::str::FromStr for ExecutionLanguage {
-    type Err = crate::core::error::AegisError;
+    type Err = crate::core::error::PropylonError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "python" | "py" | "python3" => Ok(Self::Python),
             "bash" | "sh" | "shell" => Ok(Self::Bash),
             "javascript" | "js" | "node" => Ok(Self::JavaScript),
-            other => Err(crate::core::error::AegisError::Internal(format!(
+            other => Err(crate::core::error::PropylonError::Internal(format!(
                 "Unsupported sandbox execution language: '{other}'"
             ))),
         }
@@ -71,7 +71,7 @@ pub struct SandboxExecutionResult {
 #[async_trait]
 pub trait CodeSandboxEngine: Send + Sync {
     /// Execute code payload within hermetic process isolation
-    async fn execute(&self, req: &SandboxExecutionRequest) -> AegisResult<SandboxExecutionResult>;
+    async fn execute(&self, req: &SandboxExecutionRequest) -> PropylonResult<SandboxExecutionResult>;
 
     /// Health check for underlying runtime availability (python3, bash, etc.)
     async fn is_available(&self) -> bool;
@@ -81,7 +81,7 @@ pub trait CodeSandboxEngine: Send + Sync {
 #[async_trait]
 pub trait CredentialBroker: Send + Sync {
     /// Broker short-lived scoped credentials for requested services
-    async fn broker_credentials(&self, services: &[String]) -> AegisResult<HashMap<String, String>>;
+    async fn broker_credentials(&self, services: &[String]) -> PropylonResult<HashMap<String, String>>;
 
     /// Redact any known brokered credentials from raw text
     async fn redact_secrets(&self, text: &str) -> String;
@@ -91,8 +91,8 @@ pub trait CredentialBroker: Send + Sync {
 #[async_trait]
 pub trait EgressFirewall: Send + Sync {
     /// Inspect code source for forbidden egress patterns or destination targets
-    async fn check_code_egress(&self, code: &str) -> AegisResult<()>;
+    async fn check_code_egress(&self, code: &str) -> PropylonResult<()>;
 
     /// Inspect target host for SSRF or unauthorized egress destination
-    async fn check_destination(&self, host: &str, port: u16) -> AegisResult<()>;
+    async fn check_destination(&self, host: &str, port: u16) -> PropylonResult<()>;
 }

@@ -7,7 +7,7 @@
 
 ## 1. Objectives
 
-Eliminate the single-process in-memory bottleneck present in traditional MCP proxies. Enable `aegis-gateway` to run as stateless horizontal replicas across Kubernetes pods behind cloud load balancers (AWS ALB, GCP Cloud Load Balancing, Envoy Ingress).
+Eliminate the single-process in-memory bottleneck present in traditional MCP proxies. Enable `propylon` to run as stateless horizontal replicas across Kubernetes pods behind cloud load balancers (AWS ALB, GCP Cloud Load Balancing, Envoy Ingress).
 
 ---
 

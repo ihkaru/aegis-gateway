@@ -2,18 +2,18 @@
 
 use clap::{Args, Parser, Subcommand};
 
-/// Aegis Gateway: Enterprise Zero-Trust MCP & Skill Control Plane
+/// Propylon Gateway: Enterprise Zero-Trust MCP & Skill Control Plane
 #[derive(Debug, Parser)]
 #[command(
-    name = "aegis-gateway",
-    author = "Aegis Gateway Contributors",
+    name = "propylon",
+    author = "Propylon Gateway Contributors",
     version = "0.9.0",
     about = "Enterprise Zero-Trust MCP & Skill Gateway with Distributed State, Granular ABAC, Real-Time DLP, and SIEM Audit",
     long_about = None
 )]
 pub struct Cli {
     /// Global path to topology configuration file (YAML or JSON)
-    #[arg(short, long, global = true, env = "AEGIS_CONFIG")]
+    #[arg(short, long, global = true, env = "PROPYLON_CONFIG")]
     pub config: Option<String>,
 
     /// Run directly in Stdio mode for Claude Desktop / Cursor (shorthand for `serve --stdio`)
@@ -30,7 +30,7 @@ pub enum Command {
     /// Start the gateway server daemon (default)
     Serve(ServeArgs),
 
-    /// Initialize a starter aegis.yaml topology configuration file
+    /// Initialize a starter propylon.yaml topology configuration file
     Init(InitArgs),
 
     /// Validate configuration file syntax and backend binary paths
@@ -62,11 +62,11 @@ pub struct ServeArgs {
     pub stdio: bool,
 
     /// Bind host for Streamable HTTP server
-    #[arg(long, default_value = "0.0.0.0", env = "AEGIS_HOST")]
+    #[arg(long, default_value = "0.0.0.0", env = "PROPYLON_HOST")]
     pub host: String,
 
     /// Port for Streamable HTTP server
-    #[arg(short, long, default_value_t = 39400, env = "AEGIS_PORT")]
+    #[arg(short, long, default_value_t = 39400, env = "PROPYLON_PORT")]
     pub port: u16,
 
     /// Path to topology configuration file
@@ -77,7 +77,7 @@ pub struct ServeArgs {
 #[derive(Debug, Args, Clone)]
 pub struct InitArgs {
     /// Target path for generated configuration file
-    #[arg(short, long, default_value = "aegis.yaml")]
+    #[arg(short, long, default_value = "propylon.yaml")]
     pub output: String,
 
     /// Overwrite existing configuration file if present
@@ -88,7 +88,7 @@ pub struct InitArgs {
 #[derive(Debug, Args, Clone)]
 pub struct ValidateArgs {
     /// Path to configuration file to validate
-    #[arg(short, long, default_value = "aegis.yaml")]
+    #[arg(short, long, default_value = "propylon.yaml")]
     pub config: String,
 }
 
@@ -114,7 +114,7 @@ pub struct AddArgs {
     pub env: Vec<String>,
 
     /// Target topology configuration file to update
-    #[arg(short, long, default_value = "aegis.yaml")]
+    #[arg(short, long, default_value = "propylon.yaml")]
     pub config: String,
 }
 
@@ -124,14 +124,14 @@ pub struct RemoveArgs {
     pub name: String,
 
     /// Target topology configuration file to update
-    #[arg(short, long, default_value = "aegis.yaml")]
+    #[arg(short, long, default_value = "propylon.yaml")]
     pub config: String,
 }
 
 #[derive(Debug, Args, Clone, Default)]
 pub struct ListArgs {
     /// Path to configuration file to inspect
-    #[arg(short, long, default_value = "aegis.yaml")]
+    #[arg(short, long, default_value = "propylon.yaml")]
     pub config: String,
 
     /// Format output as JSON
@@ -156,15 +156,15 @@ pub struct AuditArgs {
 #[derive(Debug, Args, Clone)]
 pub struct UiArgs {
     /// Bind host for Admin Web UI server
-    #[arg(long, default_value = "0.0.0.0", env = "AEGIS_UI_HOST")]
+    #[arg(long, default_value = "0.0.0.0", env = "PROPYLON_UI_HOST")]
     pub host: String,
 
     /// Port for Admin Web UI server
-    #[arg(short, long, default_value_t = 8485, env = "AEGIS_UI_PORT")]
+    #[arg(short, long, default_value_t = 8485, env = "PROPYLON_UI_PORT")]
     pub port: u16,
 
     /// Path to topology configuration file (YAML/JSON)
-    #[arg(short, long, env = "AEGIS_CONFIG")]
+    #[arg(short, long, env = "PROPYLON_CONFIG")]
     pub config: Option<String>,
 }
 

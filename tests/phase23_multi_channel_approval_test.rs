@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
-use aegis_gateway::audit::StructuredAuditLogger;
-use aegis_gateway::core::approval::{ApprovalDecision, ApprovalGate, RiskTier};
-use aegis_gateway::core::notification::{
+use propylon::audit::StructuredAuditLogger;
+use propylon::core::approval::{ApprovalDecision, ApprovalGate, RiskTier};
+use propylon::core::notification::{
     ApprovalChannelTarget, ApprovalNotificationDispatcher, ApprovalNotificationPayload,
     DurableResumeRouter,
 };
-use aegis_gateway::policy::{
+use propylon::policy::{
     ActionApprovalGate, DurableTaskResumeRouter, MultiChannelApprovalDispatcher,
 };
 
@@ -41,7 +41,7 @@ async fn test_multi_channel_dispatcher_formatting_and_receipts() {
     // 1. Verify Slack Blocks Format
     let slack_blocks = MultiChannelApprovalDispatcher::format_slack_blocks(&payload);
     let slack_json = serde_json::to_string(&slack_blocks).expect("JSON serialization");
-    assert!(slack_json.contains("Aegis Security Approval Gate"));
+    assert!(slack_json.contains("Propylon Security Approval Gate"));
     assert!(slack_json.contains("decision=approve"));
     assert!(slack_json.contains("decision=deny"));
     assert!(slack_json.contains(&ticket.hmac_signature));

@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct DownstreamIdentitySigner;
 
 impl DownstreamIdentitySigner {
-    /// Produces signed headers: (X-Aegis-User-Id, X-Aegis-Tenant-Id, X-Aegis-Timestamp, X-Aegis-Signature)
+    /// Produces signed headers: (X-Propylon-User-Id, X-Propylon-Tenant-Id, X-Propylon-Timestamp, X-Propylon-Signature)
     pub fn sign_headers(
         user_id: &str,
         tenant_id: &str,

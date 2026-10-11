@@ -17,7 +17,7 @@ First-generation Model Context Protocol (MCP) gateways forced a false dichotomy 
 1. **Granular Declarative Tool Proliferation**: Attempting to expose every single API capability (such as Google Drive/Docs/Sheets, database manipulations, or complex data processing) as dozens of fine-grained MCP tools. This floods client prompt context (30k+ tokens), introduces severe multi-hop latency, and drastically reduces agent reasoning accuracy.
 2. **Unconstrained Local Agent Shell Execution**: Forcing developers to grant autonomous agents unrestricted local shell access (e.g. bash/python on developer laptops or backend servers), leaking master secrets, risking host root privilege escalation, and exposing internal VPC networks to Server-Side Request Forgery (SSRF).
 
-`Aegis Gateway Phase 16` resolves this fundamental architectural divide through a **Universal Context-Agnostic Hermetic Code Sandbox with Centralized Credential Brokerage and Default-Deny Egress Firewall**.
+`Propylon Gateway Phase 16` resolves this fundamental architectural divide through a **Universal Context-Agnostic Hermetic Code Sandbox with Centralized Credential Brokerage and Default-Deny Egress Firewall**.
 
 ---
 
@@ -25,7 +25,7 @@ First-generation Model Context Protocol (MCP) gateways forced a false dichotomy 
 
 ```mermaid
 flowchart TD
-    Client["Client (Claude Desktop / Cursor / SDK)"] -->|execute_code| Wire["Aegis MCP Wire Transport"]
+    Client["Client (Claude Desktop / Cursor / SDK)"] -->|execute_code| Wire["Propylon MCP Wire Transport"]
     Wire --> EgressCheck{"Default-Deny<br/>Egress Firewall"}
     EgressCheck -->|Blocked IP / Domain| Refusal["Refusal Audit & SSRF Error"]
     EgressCheck -->|Permitted| Broker["Vault Credential Broker"]
@@ -53,7 +53,7 @@ flowchart TD
 - **Bidirectional Output Scrubbing**: All brokered credential values are automatically registered with the redaction engine. Any accidental `print(os.environ)` or stack trace is dynamically masked to `[REDACTED_CREDENTIAL]`.
 
 ### Pillar 4: Non-Repudiation & Cryptographic Audit (`SANDBOX-04`)
-- **SHA-256 Script Fingerprint**: Every script executed is hashed prior to launch and immutably recorded in the Aegis audit trail.
+- **SHA-256 Script Fingerprint**: Every script executed is hashed prior to launch and immutably recorded in the Propylon audit trail.
 - **Cryptographic Attestation Receipt**: Audit log includes caller tenant, execution duration, exit code, and cryptographic attestation signature for SOC 2 Type II compliance.
 
 ---

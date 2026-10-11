@@ -1,6 +1,6 @@
 # MCP Gateway Operational Gap & Vulnerability Taxonomy
 
-This reference guide categorizes common functional gaps, edge-case failures, and architectural complaints identified in first-generation MCP gateways (e.g., `docker/mcp-gateway`, `microsoft/mcp-gateway`) to guide automated remediation in Aegis Gateway.
+This reference guide categorizes common functional gaps, edge-case failures, and architectural complaints identified in first-generation MCP gateways (e.g., `docker/mcp-gateway`, `microsoft/mcp-gateway`) to guide automated remediation in Propylon Gateway.
 
 ---
 
@@ -21,7 +21,7 @@ This reference guide categorizes common functional gaps, edge-case failures, and
 | :--- | :--- | :--- | :--- |
 | `PROC-01` | **Zombie Subprocesses** | Node.js or Python child processes left running indefinitely after client disconnect (Issue #593). | Subprocess spawner with `kill_on_drop(true)` and PID tree tracking. |
 | `PROC-02` | **Env Secret Leakage** | Child processes inherit parent environment variables (`AWS_SECRET_ACCESS_KEY`, `DATABASE_URL`) (OWASP LLM08). | `cmd.env_clear()` with explicit, whitelisted env injection. |
-| `PROC-03` | **Package Cache Contention** | Concurrent `npx` or `uv` spawns corrupt shared global caches (Issue #622). | Per-backend isolated cache directory (`$TMPDIR/aegis-cache/{server}/`). |
+| `PROC-03` | **Package Cache Contention** | Concurrent `npx` or `uv` spawns corrupt shared global caches (Issue #622). | Per-backend isolated cache directory (`$TMPDIR/propylon-cache/{server}/`). |
 | `PROC-04` | **Command Line Splitting** | Windows backslash paths torn apart by Unix POSIX shell argument parsers (Issue #523). | OS-aware splitting via `CommandLineToArgvW` on Windows vs POSIX on Unix. |
 
 ---
@@ -65,4 +65,4 @@ This reference guide categorizes common functional gaps, edge-case failures, and
 | `SANDBOX-01` | **Unconstrained RCE** | Arbitrary bash/python execution on host machine leads to root compromise, persistent malware, and resource hijacking. | Hermetic execution sandbox with ephemeral tempfs, `env_clear()`, cap-drop, hard timeouts, and buffer truncation. |
 | `SANDBOX-02` | **SSRF & Data Exfiltration** | Python scripts connect to cloud metadata (`169.254.169.254`), private VPCs (`10.0.0.0/8`), or exfiltrate secrets to evil servers. | Preflight code & network inspection with default-deny egress firewall and strict destination domain whitelisting. |
 | `SANDBOX-03` | **Credential Leakage & Scope Creep** | Long-lived refresh tokens or master secrets exposed in prompt context or printed via `print(os.environ)`. | Zero-knowledge agent model with short-lived scoped RAM injection and automatic bidirectional output secret redaction. |
-| `SANDBOX-04` | **Non-Repudiation Deficit** | Dynamic code runs with zero immutable audit trail, failing SOC 2 Type II, ISO 27001, and PCI-DSS compliance audits. | Pre-execution SHA-256 script hashing, caller attestation, and cryptographic ledger recording in Aegis AuditSink. |
+| `SANDBOX-04` | **Non-Repudiation Deficit** | Dynamic code runs with zero immutable audit trail, failing SOC 2 Type II, ISO 27001, and PCI-DSS compliance audits. | Pre-execution SHA-256 script hashing, caller attestation, and cryptographic ledger recording in Propylon AuditSink. |

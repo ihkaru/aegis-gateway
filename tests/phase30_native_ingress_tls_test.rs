@@ -1,13 +1,13 @@
-use aegis_gateway::core::ingress_tls::{
+use propylon::core::ingress_tls::{
     AcmeCertificateManager, MtlsClientVerifier, MtlsValidationResult, TlsCertificateStatus,
     TlsIngressEngine,
 };
-use aegis_gateway::transport::tls_listener::NativeTlsIngressEngine;
+use propylon::transport::tls_listener::NativeTlsIngressEngine;
 
 #[test]
 fn test_native_tls_inspection_and_alpn_negotiation() {
     let engine = NativeTlsIngressEngine::new(
-        "gateway.aegis.enterprise.io",
+        "gateway.propylon.enterprise.io",
         "DigiCert Enterprise Root CA",
         "1002348571",
         1893456000, // 2030 epoch
@@ -15,7 +15,7 @@ fn test_native_tls_inspection_and_alpn_negotiation() {
     );
 
     let cert = engine.inspect_certificate().expect("inspect cert failed");
-    assert_eq!(cert.domain, "gateway.aegis.enterprise.io");
+    assert_eq!(cert.domain, "gateway.propylon.enterprise.io");
     assert_eq!(cert.issuer, "DigiCert Enterprise Root CA");
     assert_eq!(cert.status, TlsCertificateStatus::Active);
     assert!(engine.is_alpn_supported("h2"));
@@ -23,20 +23,20 @@ fn test_native_tls_inspection_and_alpn_negotiation() {
     assert!(!engine.is_alpn_supported("spdy"));
 
     // Test atomic certificate swap
-    let new_cert_pem = "CN=api.aegis.enterprise.io\nO=Aegis Internal PKI\nSERIAL=88880002\n";
+    let new_cert_pem = "CN=api.propylon.enterprise.io\nO=Propylon Internal PKI\nSERIAL=88880002\n";
     let swap_res = engine.swap_certificate(new_cert_pem, "DUMMY_KEY");
     assert!(swap_res.is_ok());
 
     let updated_cert = engine.inspect_certificate().unwrap();
-    assert_eq!(updated_cert.domain, "api.aegis.enterprise.io");
-    assert_eq!(updated_cert.issuer, "Aegis Internal PKI");
+    assert_eq!(updated_cert.domain, "api.propylon.enterprise.io");
+    assert_eq!(updated_cert.issuer, "Propylon Internal PKI");
     assert_eq!(updated_cert.serial_number, "88880002");
 }
 
 #[test]
 fn test_strict_mtls_client_verification_and_revocation() {
     let mut engine = NativeTlsIngressEngine::new(
-        "gateway.aegis.enterprise.io",
+        "gateway.propylon.enterprise.io",
         "Enterprise Root CA",
         "1001",
         1893456000,
@@ -45,7 +45,7 @@ fn test_strict_mtls_client_verification_and_revocation() {
 
     // Register trusted enterprise CA
     engine
-        .add_trusted_ca("CA=Aegis-Agent-CA-G2\n")
+        .add_trusted_ca("CA=Propylon-Agent-CA-G2\n")
         .expect("add trusted CA failed");
 
     // Case 1: Missing client cert
@@ -58,7 +58,7 @@ fn test_strict_mtls_client_verification_and_revocation() {
     assert_eq!(res_untrusted, MtlsValidationResult::UntrustedCertificateAuthority);
 
     // Case 3: Valid client cert signed by trusted CA
-    let valid_pem = "ISSUER=Aegis-Agent-CA-G2\nCN=claude-worker-node\nSAN=claude.agent.internal\nO=FinTech Corp\nSERIAL=777\nEXPIRY=1893456000\n";
+    let valid_pem = "ISSUER=Propylon-Agent-CA-G2\nCN=claude-worker-node\nSAN=claude.agent.internal\nO=FinTech Corp\nSERIAL=777\nEXPIRY=1893456000\n";
     let res_valid = engine.verify_client_certificate(valid_pem).unwrap();
     match res_valid {
         MtlsValidationResult::Verified {
@@ -84,7 +84,7 @@ fn test_strict_mtls_client_verification_and_revocation() {
 #[test]
 fn test_acme_http01_challenge_lifecycle_and_renewal() {
     let engine = NativeTlsIngressEngine::new(
-        "gateway.aegis.enterprise.io",
+        "gateway.propylon.enterprise.io",
         "Let's Encrypt Staging",
         "5001",
         1893456000,
@@ -105,11 +105,11 @@ fn test_acme_http01_challenge_lifecycle_and_renewal() {
     );
 
     // Automated renewal applies renewed cert
-    let renewed_pem = "CN=renewed.aegis.enterprise.io\nO=Let's Encrypt Authority X3\nSERIAL=99990003\n";
+    let renewed_pem = "CN=renewed.propylon.enterprise.io\nO=Let's Encrypt Authority X3\nSERIAL=99990003\n";
     let renew_res = engine.apply_renewed_certificate(renewed_pem, "NEW_KEY");
     assert!(renew_res.is_ok());
 
     let active_cert = engine.inspect_certificate().unwrap();
-    assert_eq!(active_cert.domain, "renewed.aegis.enterprise.io");
+    assert_eq!(active_cert.domain, "renewed.propylon.enterprise.io");
     assert_eq!(active_cert.issuer, "Let's Encrypt Authority X3");
 }

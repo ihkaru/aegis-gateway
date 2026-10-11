@@ -3,10 +3,10 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AegisBackendCrd {
+pub struct PropylonBackendCrd {
     pub name: String,
     pub namespace: String,
     pub transport: String,
@@ -16,7 +16,7 @@ pub struct AegisBackendCrd {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AegisPolicyCrd {
+pub struct PropylonPolicyCrd {
     pub name: String,
     pub namespace: String,
     pub tier: String,
@@ -26,7 +26,7 @@ pub struct AegisPolicyCrd {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AegisTenantCrd {
+pub struct PropylonTenantCrd {
     pub tenant_id: String,
     pub namespace: String,
     pub monthly_token_budget: u64,
@@ -50,10 +50,10 @@ pub struct ReconcileOutcome {
 
 /// Interface-First abstraction for Kubernetes CRD Reconciliation & Admission Control
 #[async_trait]
-pub trait AegisCrdReconciler: Send + Sync {
-    async fn reconcile_backend(&self, spec: &AegisBackendCrd) -> AegisResult<ReconcileOutcome>;
-    async fn reconcile_policy(&self, spec: &AegisPolicyCrd) -> AegisResult<ReconcileOutcome>;
-    async fn reconcile_tenant(&self, spec: &AegisTenantCrd) -> AegisResult<ReconcileOutcome>;
-    async fn validate_admission(&self, resource_kind: &str, raw_json: &serde_json::Value) -> AegisResult<AdmissionDecision>;
-    async fn mutate_pod_spec(&self, pod_spec: &serde_json::Value) -> AegisResult<serde_json::Value>;
+pub trait PropylonCrdReconciler: Send + Sync {
+    async fn reconcile_backend(&self, spec: &PropylonBackendCrd) -> PropylonResult<ReconcileOutcome>;
+    async fn reconcile_policy(&self, spec: &PropylonPolicyCrd) -> PropylonResult<ReconcileOutcome>;
+    async fn reconcile_tenant(&self, spec: &PropylonTenantCrd) -> PropylonResult<ReconcileOutcome>;
+    async fn validate_admission(&self, resource_kind: &str, raw_json: &serde_json::Value) -> PropylonResult<AdmissionDecision>;
+    async fn mutate_pod_spec(&self, pod_spec: &serde_json::Value) -> PropylonResult<serde_json::Value>;
 }

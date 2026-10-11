@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::skills::{SkillMetadata, SkillVectorRetriever};
 
 /// Semantic Vector / BM25 term retriever for on-demand skill discovery
@@ -68,7 +68,7 @@ impl SemanticSkillRetriever {
 
 #[async_trait]
 impl SkillVectorRetriever for SemanticSkillRetriever {
-    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> AegisResult<Vec<SkillMetadata>> {
+    async fn search_skills(&self, query_prompt: &str, top_k: usize) -> PropylonResult<Vec<SkillMetadata>> {
         let read = self.indexed_skills.read().await;
         let q_tokens = Self::tokenize(query_prompt);
         let q_vec = Self::term_vector(&q_tokens);

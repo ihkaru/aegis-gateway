@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use crate::core::approval::ApprovalTicket;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// Configurable enterprise policy strictness tiers
@@ -63,7 +63,7 @@ pub trait DataEgressPolicyEngine: Send + Sync {
         mime_type: &str,
         classification: DataClassification,
         caller: &CallerContext,
-    ) -> AegisResult<DataEgressDecision>;
+    ) -> PropylonResult<DataEgressDecision>;
 
     /// Return the currently active policy strictness tier
     fn current_tier(&self) -> PolicyTier;
@@ -90,5 +90,5 @@ pub trait InSituDataEnclave: Send + Sync {
         query: &str,
         resource_path: &str,
         caller: &CallerContext,
-    ) -> AegisResult<InSituExecutionResult>;
+    ) -> PropylonResult<InSituExecutionResult>;
 }

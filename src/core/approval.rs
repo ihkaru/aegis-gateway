@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 /// Action risk tier classification
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub trait ApprovalGate: Send + Sync {
         session_id: &str,
         tool_name: &str,
         arguments: &serde_json::Value,
-    ) -> AegisResult<ApprovalDecision>;
+    ) -> PropylonResult<ApprovalDecision>;
 
     /// Validate cryptographic approval and determine if execution may resume
     async fn resolve_ticket(
@@ -52,10 +52,10 @@ pub trait ApprovalGate: Send + Sync {
         ticket_id: &str,
         signature: &str,
         approved: bool,
-    ) -> AegisResult<bool>;
+    ) -> PropylonResult<bool>;
 
     /// List currently suspended pending tickets awaiting authorization
-    async fn list_pending_tickets(&self) -> AegisResult<Vec<ApprovalTicket>> {
+    async fn list_pending_tickets(&self) -> PropylonResult<Vec<ApprovalTicket>> {
         Ok(vec![])
     }
 }

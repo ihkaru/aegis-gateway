@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
-# Aegis Gateway: Master Gauntlet Runner (Evidence-First Development)
+# Propylon Gateway: Master Gauntlet Runner (Evidence-First Development)
 # Inspired by AmazingAng/old-coder & Robert C. Martin (Uncle Bob)
 set -euo pipefail
 
@@ -9,7 +9,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "============================================================"
-echo "    AEGIS GATEWAY: EVIDENCE-FIRST GAUNTLET RUNNER           "
+echo "    PROPYLON GATEWAY: EVIDENCE-FIRST GAUNTLET RUNNER           "
 echo "============================================================"
 echo "Mode: Fail-Closed Strict Verification"
 echo "Root: $PROJECT_ROOT"

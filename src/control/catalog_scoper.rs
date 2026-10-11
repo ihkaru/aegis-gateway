@@ -7,7 +7,7 @@ use crate::core::abac::{
     AbacContext, AbacEffect, AbacPolicyEngine, ActionAttributes, EnvironmentAttributes,
     PrincipalAttributes, ResourceAttributes,
 };
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::scoping::CatalogScopingProvider;
 use crate::core::types::ToolDefinition;
 
@@ -28,7 +28,7 @@ impl CatalogScopingProvider for AbacCatalogScoper {
         &self,
         principal: &PrincipalAttributes,
         raw_tools: &[ToolDefinition],
-    ) -> AegisResult<Vec<ToolDefinition>> {
+    ) -> PropylonResult<Vec<ToolDefinition>> {
         let mut allowed = Vec::with_capacity(raw_tools.len());
 
         for tool in raw_tools {

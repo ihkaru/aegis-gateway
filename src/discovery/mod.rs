@@ -13,7 +13,7 @@ pub mod planner;
 pub mod projector;
 
 pub use bootstrap_catalog::default_enterprise_catalog;
-pub use catalog_sentinel::{AegisCatalogSyncSentinel, CatalogSyncOutcome, CatalogSyncSentinel};
+pub use catalog_sentinel::{PropylonCatalogSyncSentinel, CatalogSyncOutcome, CatalogSyncSentinel};
 pub use goal_planner::GoalPlanner;
 
 pub use catalog_index::{

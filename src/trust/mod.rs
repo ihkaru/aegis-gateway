@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use async_trait::async_trait;
 use sha2::{Digest, Sha256};
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::trust::{
     AgentCertEnvelope, AgentTrustLevel, AgentTrustVerifier, AgentVerificationOutcome,
     CorsEvaluationResult, CorsPolicyEnforcer, ThreatEvidenceEnricher, ThreatEvidenceReport,
@@ -44,7 +44,7 @@ impl Ed25519AgentTrustVerifier {
 
 #[async_trait]
 impl AgentTrustVerifier for Ed25519AgentTrustVerifier {
-    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> AegisResult<AgentVerificationOutcome> {
+    async fn verify_agent_identity(&self, cert: &AgentCertEnvelope) -> PropylonResult<AgentVerificationOutcome> {
         let now = Self::now_unix();
 
         // 1. Replay defense via timestamp & nonce check
@@ -125,9 +125,9 @@ impl HeuristicThreatEvidenceEnricher {
 
 #[async_trait]
 impl ThreatEvidenceEnricher for HeuristicThreatEvidenceEnricher {
-    async fn inspect_and_enrich_url(&self, target_url: &str) -> AegisResult<ThreatEvidenceReport> {
+    async fn inspect_and_enrich_url(&self, target_url: &str) -> PropylonResult<ThreatEvidenceReport> {
         let (scheme, host) = Self::extract_scheme_and_host(target_url)
-            .ok_or_else(|| AegisError::Validation(format!("Invalid URL syntax: missing scheme separator in '{target_url}'")))?;
+            .ok_or_else(|| PropylonError::Validation(format!("Invalid URL syntax: missing scheme separator in '{target_url}'")))?;
 
         let mut categories = Vec::new();
         let mut risk_score = 0.05f32;
@@ -169,7 +169,7 @@ impl ThreatEvidenceEnricher for HeuristicThreatEvidenceEnricher {
             risk_score,
             malicious,
             threat_categories: categories,
-            source: "AegisHeuristicThreatIntelligence".into(),
+            source: "PropylonHeuristicThreatIntelligence".into(),
         })
     }
 }

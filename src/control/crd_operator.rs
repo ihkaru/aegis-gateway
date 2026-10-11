@@ -5,28 +5,28 @@ use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
 use crate::core::control_plane::{DynamicControlPlane, RuntimeBackendUpdate, RuntimePolicyUpdate};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
-pub const EXPECTED_CRD_API_VERSION: &str = "aegis.enterprise.io/v1alpha1";
+pub const EXPECTED_CRD_API_VERSION: &str = "propylon.enterprise.io/v1alpha1";
 
-/// Declarative Kubernetes CRD manifest for Aegis Backend registration
+/// Declarative Kubernetes CRD manifest for Propylon Backend registration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AegisBackendCrd {
+pub struct PropylonBackendCrd {
     #[serde(rename = "apiVersion")]
     pub api_version: String,
     pub kind: String,
     pub metadata: CrdMetadata,
-    pub spec: AegisBackendSpec,
+    pub spec: PropylonBackendSpec,
 }
 
-/// Declarative Kubernetes CRD manifest for Aegis Policy configuration
+/// Declarative Kubernetes CRD manifest for Propylon Policy configuration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AegisPolicyCrd {
+pub struct PropylonPolicyCrd {
     #[serde(rename = "apiVersion")]
     pub api_version: String,
     pub kind: String,
     pub metadata: CrdMetadata,
-    pub spec: AegisPolicySpec,
+    pub spec: PropylonPolicySpec,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -41,7 +41,7 @@ fn default_namespace() -> String {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AegisBackendSpec {
+pub struct PropylonBackendSpec {
     pub transport: String,
     #[serde(alias = "endpointOrCmd")]
     pub endpoint_or_cmd: String,
@@ -61,7 +61,7 @@ fn default_true() -> bool {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AegisPolicySpec {
+pub struct PropylonPolicySpec {
     pub tier: String,
     #[serde(default = "default_rate_limit")]
     pub rate_limit_rps: u32,
@@ -102,7 +102,7 @@ impl CrdOperatorEngine {
     /// Parse and validate multi-document Kubernetes CRD YAML manifests
     pub fn parse_and_validate(
         manifest_yaml: &str,
-    ) -> AegisResult<(Vec<AegisBackendCrd>, Vec<AegisPolicyCrd>)> {
+    ) -> PropylonResult<(Vec<PropylonBackendCrd>, Vec<PropylonPolicyCrd>)> {
         let mut backends = Vec::new();
         let mut policies = Vec::new();
 
@@ -113,15 +113,15 @@ impl CrdOperatorEngine {
             }
 
             let raw_val: serde_yaml::Value = serde_yaml::from_str(doc_trimmed)
-                .map_err(|e| AegisError::Validation(format!("Invalid YAML document: {e}")))?;
+                .map_err(|e| PropylonError::Validation(format!("Invalid YAML document: {e}")))?;
 
             let api_version = raw_val
                 .get("apiVersion")
                 .and_then(|v| v.as_str())
-                .ok_or_else(|| AegisError::Validation("Missing 'apiVersion' in manifest".to_string()))?;
+                .ok_or_else(|| PropylonError::Validation("Missing 'apiVersion' in manifest".to_string()))?;
 
             if api_version != EXPECTED_CRD_API_VERSION {
-                return Err(AegisError::Validation(format!(
+                return Err(PropylonError::Validation(format!(
                     "Unsupported apiVersion '{api_version}', expected '{EXPECTED_CRD_API_VERSION}'"
                 )));
             }
@@ -129,23 +129,23 @@ impl CrdOperatorEngine {
             let kind = raw_val
                 .get("kind")
                 .and_then(|v| v.as_str())
-                .ok_or_else(|| AegisError::Validation("Missing 'kind' in manifest".to_string()))?;
+                .ok_or_else(|| PropylonError::Validation("Missing 'kind' in manifest".to_string()))?;
 
             match kind {
-                "AegisBackend" => {
-                    let crd: AegisBackendCrd = serde_yaml::from_value(raw_val)
-                        .map_err(|e| AegisError::Validation(format!("Invalid AegisBackend schema: {e}")))?;
+                "PropylonBackend" => {
+                    let crd: PropylonBackendCrd = serde_yaml::from_value(raw_val)
+                        .map_err(|e| PropylonError::Validation(format!("Invalid PropylonBackend schema: {e}")))?;
 
                     let transport = crd.spec.transport.to_lowercase();
                     if transport != "stdio" && transport != "sse" && transport != "http" {
-                        return Err(AegisError::Validation(format!(
+                        return Err(PropylonError::Validation(format!(
                             "Invalid transport '{}' in backend '{}': expected stdio, sse, or http",
                             crd.spec.transport, crd.metadata.name
                         )));
                     }
 
                     if crd.spec.endpoint_or_cmd.trim().is_empty() {
-                        return Err(AegisError::Validation(format!(
+                        return Err(PropylonError::Validation(format!(
                             "Backend '{}' specifies empty endpoint_or_cmd",
                             crd.metadata.name
                         )));
@@ -153,20 +153,20 @@ impl CrdOperatorEngine {
 
                     backends.push(crd);
                 }
-                "AegisPolicy" => {
-                    let crd: AegisPolicyCrd = serde_yaml::from_value(raw_val)
-                        .map_err(|e| AegisError::Validation(format!("Invalid AegisPolicy schema: {e}")))?;
+                "PropylonPolicy" => {
+                    let crd: PropylonPolicyCrd = serde_yaml::from_value(raw_val)
+                        .map_err(|e| PropylonError::Validation(format!("Invalid PropylonPolicy schema: {e}")))?;
 
                     let tier = crd.spec.tier.to_lowercase();
                     if tier != "dev" && tier != "hybrid" && tier != "strict" {
-                        return Err(AegisError::Validation(format!(
+                        return Err(PropylonError::Validation(format!(
                             "Invalid policy tier '{}' in policy '{}': expected dev, hybrid, or strict",
                             crd.spec.tier, crd.metadata.name
                         )));
                     }
 
                     if crd.spec.rate_limit_rps == 0 {
-                        return Err(AegisError::Validation(format!(
+                        return Err(PropylonError::Validation(format!(
                             "Policy '{}' specifies rate_limit_rps = 0 (must be > 0)",
                             crd.metadata.name
                         )));
@@ -175,8 +175,8 @@ impl CrdOperatorEngine {
                     policies.push(crd);
                 }
                 other => {
-                    return Err(AegisError::Validation(format!(
-                        "Unsupported CRD kind '{other}': expected AegisBackend or AegisPolicy"
+                    return Err(PropylonError::Validation(format!(
+                        "Unsupported CRD kind '{other}': expected PropylonBackend or PropylonPolicy"
                     )));
                 }
             }
@@ -186,7 +186,7 @@ impl CrdOperatorEngine {
     }
 
     /// Reconcile declarative CRD manifest with live runtime control plane
-    pub async fn reconcile(&self, manifest_yaml: &str) -> AegisResult<ReconciliationReport> {
+    pub async fn reconcile(&self, manifest_yaml: &str) -> PropylonResult<ReconciliationReport> {
         let (backends, policies) = Self::parse_and_validate(manifest_yaml)?;
         let mut applied_backends = Vec::new();
         let mut applied_policies = Vec::new();

@@ -18,18 +18,18 @@ Defined in [`src/core/state.rs`](../../src/core/state.rs):
 ```rust
 #[async_trait]
 pub trait QuotaEngine: Send + Sync {
-    async fn check_budget(&self, tenant: &TenantId) -> AegisResult<bool>;
-    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> AegisResult<()>;
+    async fn check_budget(&self, tenant: &TenantId) -> PropylonResult<bool>;
+    async fn record_spend(&self, tenant: &TenantId, cost_usd: f64) -> PropylonResult<()>;
 }
 
 #[async_trait]
 pub trait BudgetManager: Send + Sync {
-    async fn set_budget(&self, budget: TenantBudget) -> AegisResult<()>;
-    async fn get_budget(&self, tenant: &TenantId) -> AegisResult<Option<TenantBudget>>;
-    async fn record_usage(&self, tenant: &TenantId, tokens: u64, cost_usd: f64) -> AegisResult<()>;
-    async fn evaluate_status(&self, tenant: &TenantId) -> AegisResult<BudgetStatus>;
-    async fn generate_chargeback_report(&self) -> AegisResult<Vec<DepartmentChargeback>>;
-    async fn render_prometheus_metrics(&self) -> AegisResult<String>;
+    async fn set_budget(&self, budget: TenantBudget) -> PropylonResult<()>;
+    async fn get_budget(&self, tenant: &TenantId) -> PropylonResult<Option<TenantBudget>>;
+    async fn record_usage(&self, tenant: &TenantId, tokens: u64, cost_usd: f64) -> PropylonResult<()>;
+    async fn evaluate_status(&self, tenant: &TenantId) -> PropylonResult<BudgetStatus>;
+    async fn generate_chargeback_report(&self) -> PropylonResult<Vec<DepartmentChargeback>>;
+    async fn render_prometheus_metrics(&self) -> PropylonResult<String>;
 }
 ```
 
@@ -37,7 +37,7 @@ pub trait BudgetManager: Send + Sync {
 
 1. **Pre-Invocation Quota Check**:
    - Before executing an expensive tool (e.g., complex SQL queries, third-party data enrichment APIs, image generation), the gateway queries `check_budget`.
-   - If the tenant's allocation is exhausted, the gateway immediately returns `AegisError::BudgetFrozen` without invoking downstream infrastructure.
+   - If the tenant's allocation is exhausted, the gateway immediately returns `PropylonError::BudgetFrozen` without invoking downstream infrastructure.
 2. **Post-Invocation Metering**:
    - Upstream API costs and compute durations are calculated and debited against the tenant's envelope via `record_spend` or `record_usage`.
 3. **Multi-Tenant Partitioning**:
@@ -52,6 +52,6 @@ pub trait BudgetManager: Send + Sync {
 - [x] **5.2 Real-Time Cost Metering Engine**: Track tool execution duration, network egress, and token consumption in atomic counters via `HardFreezeQuota` (Empirically verified in `tests/phase5_finops_quota_test.rs`).
 - [x] **5.3 Automated Hard Budget Freezes**:
   - Soft warning trigger at 80% quota (`BudgetStatus::Warning`, verified in `tests/phase5_finops_quota_test.rs`).
-  - Hard cutoff trigger at 100% quota (`BudgetStatus::Frozen` and `AegisError::BudgetFrozen`, verified in `tests/phase5_finops_quota_test.rs`).
+  - Hard cutoff trigger at 100% quota (`BudgetStatus::Frozen` and `PropylonError::BudgetFrozen`, verified in `tests/phase5_finops_quota_test.rs`).
 - [x] **5.4 Departmental Chargeback Reporting**: Export monthly cost accounting metrics broken down by department, total spend, tokens, and tenant counts (Empirically verified in `tests/phase5_finops_quota_test.rs`).
-- [x] **5.5 Prometheus FinOps Exporter**: Expose formatted metrics with `aegis_tenant_cost_usd_total`, `aegis_tenant_tokens_total`, and `aegis_tenant_budget_frozen` (Empirically verified in `tests/phase5_finops_quota_test.rs`).
+- [x] **5.5 Prometheus FinOps Exporter**: Expose formatted metrics with `propylon_tenant_cost_usd_total`, `propylon_tenant_tokens_total`, and `propylon_tenant_budget_frozen` (Empirically verified in `tests/phase5_finops_quota_test.rs`).

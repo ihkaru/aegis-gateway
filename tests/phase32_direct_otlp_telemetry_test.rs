@@ -1,5 +1,5 @@
-use aegis_gateway::audit::otlp_exporter::NativeOtlpExporter;
-use aegis_gateway::core::otlp::{
+use propylon::audit::otlp_exporter::NativeOtlpExporter;
+use propylon::core::otlp::{
     OtlpExportBatch, OtlpExportProtocol, OtlpSpanData, OtlpTelemetryExporter,
 };
 use std::collections::HashMap;
@@ -9,7 +9,7 @@ fn test_otlp_batch_export_and_json_serialization() {
     let exporter = NativeOtlpExporter::new(
         "http://otel-collector.observability.svc:4318/v1/traces",
         OtlpExportProtocol::HttpJson,
-        "aegis-gateway-prod",
+        "propylon-prod",
         0.1,
     );
 
@@ -31,7 +31,7 @@ fn test_otlp_batch_export_and_json_serialization() {
     };
 
     let batch = OtlpExportBatch {
-        service_name: "aegis-gateway-prod".to_string(),
+        service_name: "propylon-prod".to_string(),
         spans: vec![span],
         batch_id: "batch-789123".to_string(),
     };
@@ -40,7 +40,7 @@ fn test_otlp_batch_export_and_json_serialization() {
     let json_output = NativeOtlpExporter::serialize_to_otlp_json(&batch);
     assert!(json_output.contains("resourceSpans"));
     assert!(json_output.contains("4bf92f3577b34da6a3ce929d0e0e4736"));
-    assert!(json_output.contains("aegis-gateway-prod"));
+    assert!(json_output.contains("propylon-prod"));
 
     // Dispatch batch
     let res = exporter.export_batch(batch).expect("export batch failed");
@@ -55,7 +55,7 @@ fn test_risk_adaptive_sampling_policy() {
     let exporter = NativeOtlpExporter::new(
         "http://tempo.observability.svc:4317",
         OtlpExportProtocol::GrpcProtobuf,
-        "aegis-gateway-strict",
+        "propylon-strict",
         0.0, // 0% standard sampling
     );
 
@@ -77,7 +77,7 @@ fn test_dropped_vs_exported_accounting() {
     let exporter = NativeOtlpExporter::new(
         "http://datadog-agent:4318",
         OtlpExportProtocol::HttpProtobuf,
-        "aegis-gateway",
+        "propylon",
         0.5,
     );
 
@@ -106,7 +106,7 @@ fn test_dropped_vs_exported_accounting() {
     };
 
     let batch = OtlpExportBatch {
-        service_name: "aegis-gateway".to_string(),
+        service_name: "propylon".to_string(),
         spans: vec![sampled_span, unsampled_span],
         batch_id: "batch-mixed".to_string(),
     };

@@ -4,26 +4,26 @@
 
 use std::sync::Arc;
 
-use aegis_gateway::control::{CrdOperatorEngine, HttpAdminControlPlane};
-use aegis_gateway::core::control_plane::DynamicControlPlane;
+use propylon::control::{CrdOperatorEngine, HttpAdminControlPlane};
+use propylon::core::control_plane::DynamicControlPlane;
 
 const SAMPLE_K8S_MANIFEST: &str = r#"
-apiVersion: aegis.enterprise.io/v1alpha1
-kind: AegisBackend
+apiVersion: propylon.enterprise.io/v1alpha1
+kind: PropylonBackend
 metadata:
   name: gdrive-connector
-  namespace: aegis-production
+  namespace: propylon-production
 spec:
   transport: sse
   endpoint_or_cmd: https://mcp-gdrive.internal.svc:8484/sse
   replicas: 3
   enabled: true
 ---
-apiVersion: aegis.enterprise.io/v1alpha1
-kind: AegisPolicy
+apiVersion: propylon.enterprise.io/v1alpha1
+kind: PropylonPolicy
 metadata:
   name: strict-banking-policy
-  namespace: aegis-production
+  namespace: propylon-production
 spec:
   tier: strict
   rateLimitRps: 100
@@ -39,7 +39,7 @@ fn test_phase45_parse_valid_k8s_crd_manifest() {
     assert_eq!(backends.len(), 1);
     let b = &backends[0];
     assert_eq!(b.metadata.name, "gdrive-connector");
-    assert_eq!(b.metadata.namespace, "aegis-production");
+    assert_eq!(b.metadata.namespace, "propylon-production");
     assert_eq!(b.spec.transport, "sse");
     assert_eq!(b.spec.endpoint_or_cmd, "https://mcp-gdrive.internal.svc:8484/sse");
     assert_eq!(b.spec.replicas, 3);
@@ -48,7 +48,7 @@ fn test_phase45_parse_valid_k8s_crd_manifest() {
     assert_eq!(policies.len(), 1);
     let p = &policies[0];
     assert_eq!(p.metadata.name, "strict-banking-policy");
-    assert_eq!(p.metadata.namespace, "aegis-production");
+    assert_eq!(p.metadata.namespace, "propylon-production");
     assert_eq!(p.spec.tier, "strict");
     assert_eq!(p.spec.rate_limit_rps, 100);
     assert_eq!(p.spec.circuit_breaker_threshold, 5);
@@ -58,8 +58,8 @@ fn test_phase45_parse_valid_k8s_crd_manifest() {
 #[test]
 fn test_phase45_reject_invalid_api_version() {
     let invalid_manifest = r#"
-apiVersion: aegis.enterprise.io/v99alpha99
-kind: AegisBackend
+apiVersion: propylon.enterprise.io/v99alpha99
+kind: PropylonBackend
 metadata:
   name: test-backend
 spec:
@@ -74,8 +74,8 @@ spec:
 #[test]
 fn test_phase45_reject_invalid_transport() {
     let invalid_manifest = r#"
-apiVersion: aegis.enterprise.io/v1alpha1
-kind: AegisBackend
+apiVersion: propylon.enterprise.io/v1alpha1
+kind: PropylonBackend
 metadata:
   name: test-backend
 spec:
@@ -90,8 +90,8 @@ spec:
 #[test]
 fn test_phase45_reject_invalid_policy_tier() {
     let invalid_manifest = r#"
-apiVersion: aegis.enterprise.io/v1alpha1
-kind: AegisPolicy
+apiVersion: propylon.enterprise.io/v1alpha1
+kind: PropylonPolicy
 metadata:
   name: test-policy
 spec:

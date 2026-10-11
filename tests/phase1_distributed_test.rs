@@ -2,13 +2,13 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use aegis_gateway::core::health::ProbeState;
+use propylon::core::health::ProbeState;
 
-use aegis_gateway::core::state::{
+use propylon::core::state::{
     DistributedCache, DistributedCircuitBreaker, DistributedRateLimiter, QuotaEngine,
 };
-use aegis_gateway::core::types::TenantId;
-use aegis_gateway::state::{DrainCoordinator, GatewayHealthService, RedisStateBackend};
+use propylon::core::types::TenantId;
+use propylon::state::{DrainCoordinator, GatewayHealthService, RedisStateBackend};
 
 #[tokio::test]
 async fn test_phase1_redis_state_backend_contracts() {

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::identity::{
     AssertionExchangeRequest, DeviceAuthRequest, DeviceAuthResponse, DeviceCodeStatus,
     FederatedTokenResponse, IdentityFederationBroker,
@@ -39,7 +39,7 @@ impl LocalIdentityBroker {
             sessions: Arc::new(RwLock::new(HashMap::new())),
             user_code_map: Arc::new(RwLock::new(HashMap::new())),
             base_verification_uri: base_verification_uri.into(),
-            token_secret: "aegis-enterprise-broker-key".to_string(),
+            token_secret: "propylon-enterprise-broker-key".to_string(),
         }
     }
 
@@ -63,9 +63,9 @@ impl LocalIdentityBroker {
 
 #[async_trait]
 impl IdentityFederationBroker for LocalIdentityBroker {
-    async fn start_device_flow(&self, req: &DeviceAuthRequest) -> AegisResult<DeviceAuthResponse> {
+    async fn start_device_flow(&self, req: &DeviceAuthRequest) -> PropylonResult<DeviceAuthResponse> {
         if req.client_id.trim().is_empty() {
-            return Err(AegisError::Validation(
+            return Err(PropylonError::Validation(
                 "client_id cannot be empty".to_string(),
             ));
         }
@@ -114,11 +114,11 @@ impl IdentityFederationBroker for LocalIdentityBroker {
         })
     }
 
-    async fn poll_device_flow(&self, device_code: &str) -> AegisResult<DeviceCodeStatus> {
+    async fn poll_device_flow(&self, device_code: &str) -> PropylonResult<DeviceCodeStatus> {
         let mut lock = self.sessions.write().await;
         let session = lock
             .get_mut(device_code)
-            .ok_or_else(|| AegisError::ResourceNotFound(format!("Device code '{}' not found", device_code)))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound(format!("Device code '{}' not found", device_code)))?;
 
         use std::time::{SystemTime, UNIX_EPOCH};
         let now = SystemTime::now()
@@ -134,24 +134,24 @@ impl IdentityFederationBroker for LocalIdentityBroker {
         Ok(session.status.clone())
     }
 
-    async fn approve_device_flow(&self, user_code: &str, context: CallerContext) -> AegisResult<()> {
+    async fn approve_device_flow(&self, user_code: &str, context: CallerContext) -> PropylonResult<()> {
         let ulock = self.user_code_map.read().await;
         let device_code = ulock
             .get(user_code)
-            .ok_or_else(|| AegisError::ResourceNotFound(format!("User code '{}' not found or expired", user_code)))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound(format!("User code '{}' not found or expired", user_code)))?;
 
         let mut lock = self.sessions.write().await;
         let session = lock
             .get_mut(device_code)
-            .ok_or_else(|| AegisError::ResourceNotFound("Associated device session missing".to_string()))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound("Associated device session missing".to_string()))?;
 
         session.status = DeviceCodeStatus::Approved { claims: context };
         Ok(())
     }
 
-    async fn exchange_assertion(&self, req: &AssertionExchangeRequest) -> AegisResult<FederatedTokenResponse> {
+    async fn exchange_assertion(&self, req: &AssertionExchangeRequest) -> PropylonResult<FederatedTokenResponse> {
         if req.assertion.trim().is_empty() {
-            return Err(AegisError::AuthenticationFailed("Empty assertion payload".to_string()));
+            return Err(PropylonError::AuthenticationFailed("Empty assertion payload".to_string()));
         }
 
         // Validate supported assertion types
@@ -159,7 +159,7 @@ impl IdentityFederationBroker for LocalIdentityBroker {
         let is_id_token = req.assertion_type == "urn:ietf:params:oauth:token-type:id_token";
 
         if !is_saml && !is_id_token {
-            return Err(AegisError::Validation(format!(
+            return Err(PropylonError::Validation(format!(
                 "Unsupported assertion type: '{}'. Expected SAML 2.0 or OIDC ID Token.",
                 req.assertion_type
             )));
@@ -176,7 +176,7 @@ impl IdentityFederationBroker for LocalIdentityBroker {
         let scope = req.resource.clone().unwrap_or_else(|| "mcp:all".to_string());
 
         Ok(FederatedTokenResponse {
-            access_token: format!("aegis_jwt_{}", token_hash),
+            access_token: format!("propylon_jwt_{}", token_hash),
             token_type: "Bearer".to_string(),
             expires_in: 3600,
             scope,

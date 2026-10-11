@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 
 use async_trait::async_trait;
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 use crate::core::types::CallerContext;
 
 /// Enterprise OIDC / SAML Identity Provider Token Validator
 #[async_trait]
 pub trait TokenValidator: Send + Sync {
     /// Validate bearer token, verify signatures, check expiry, and resolve CallerContext
-    async fn validate_token(&self, token: &str) -> AegisResult<CallerContext>;
+    async fn validate_token(&self, token: &str) -> PropylonResult<CallerContext>;
 }
 
 /// Configurable Server Identity for MCP wire initialize responses (resolves docker/mcp-gateway#583)
@@ -22,7 +22,7 @@ pub struct GatewayServerIdentity {
 impl Default for GatewayServerIdentity {
     fn default() -> Self {
         Self {
-            name: "aegis-gateway".to_string(),
+            name: "propylon".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             protocol_version: "2024-11-05".to_string(),
         }
@@ -92,16 +92,16 @@ pub struct FederatedTokenResponse {
 #[async_trait]
 pub trait IdentityFederationBroker: Send + Sync {
     /// Ingests SAML/OIDC enterprise assertion and issues scoped token
-    async fn exchange_assertion(&self, req: &AssertionExchangeRequest) -> AegisResult<FederatedTokenResponse>;
+    async fn exchange_assertion(&self, req: &AssertionExchangeRequest) -> PropylonResult<FederatedTokenResponse>;
 
     /// Initiates RFC 8628 Device Authorization for CLI / IDE agents
-    async fn start_device_flow(&self, req: &DeviceAuthRequest) -> AegisResult<DeviceAuthResponse>;
+    async fn start_device_flow(&self, req: &DeviceAuthRequest) -> PropylonResult<DeviceAuthResponse>;
 
     /// Polls device authorization state during browser SSO authentication
-    async fn poll_device_flow(&self, device_code: &str) -> AegisResult<DeviceCodeStatus>;
+    async fn poll_device_flow(&self, device_code: &str) -> PropylonResult<DeviceCodeStatus>;
 
     /// Completes device flow approval upon successful IdP SSO login
-    async fn approve_device_flow(&self, user_code: &str, context: CallerContext) -> AegisResult<()>;
+    async fn approve_device_flow(&self, user_code: &str, context: CallerContext) -> PropylonResult<()>;
 }
 
 

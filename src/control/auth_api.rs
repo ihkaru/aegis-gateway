@@ -16,7 +16,7 @@ static ABAC_INSTANCE: OnceCell<Arc<LocalAbacEngine>> = OnceCell::const_new();
 async fn get_broker() -> &'static Arc<LocalIdentityBroker> {
     BROKER_INSTANCE
         .get_or_init(|| async {
-            Arc::new(LocalIdentityBroker::new("https://aegis.corp.internal"))
+            Arc::new(LocalIdentityBroker::new("https://propylon.corp.internal"))
         })
         .await
 }
@@ -82,7 +82,7 @@ impl AuthApiDispatcher {
                     }
                     Ok(crate::core::identity::DeviceCodeStatus::Approved { claims }) => {
                         let token_res = json!({
-                            "access_token": format!("aegis_jwt_{}", claims.subject),
+                            "access_token": format!("propylon_jwt_{}", claims.subject),
                             "token_type": "Bearer",
                             "expires_in": 3600,
                             "scope": "mcp:all",

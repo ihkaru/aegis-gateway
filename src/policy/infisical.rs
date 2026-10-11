@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::secrets::SecretStore;
 
 /// Cache entry with TTL expiration timestamp
@@ -25,7 +25,7 @@ pub trait InfisicalTransport: Send + Sync {
         base_url: &str,
         client_id: &str,
         client_secret: &str,
-    ) -> AegisResult<String>;
+    ) -> PropylonResult<String>;
 
     /// Fetch raw secret value for given key from Infisical workspace
     async fn fetch_raw_secret(
@@ -35,7 +35,7 @@ pub trait InfisicalTransport: Send + Sync {
         project_id: &str,
         environment: &str,
         key: &str,
-    ) -> AegisResult<Option<String>>;
+    ) -> PropylonResult<Option<String>>;
 }
 
 /// In-memory transport for testing and offline environments
@@ -73,9 +73,9 @@ impl InfisicalTransport for LocalInfisicalTransport {
         _base_url: &str,
         client_id: &str,
         client_secret: &str,
-    ) -> AegisResult<String> {
+    ) -> PropylonResult<String> {
         if client_id.is_empty() || client_secret.is_empty() {
-            return Err(AegisError::SecretError("Invalid machine identity credentials".into()));
+            return Err(PropylonError::SecretError("Invalid machine identity credentials".into()));
         }
         Ok(self.token.clone())
     }
@@ -87,7 +87,7 @@ impl InfisicalTransport for LocalInfisicalTransport {
         _project_id: &str,
         _environment: &str,
         key: &str,
-    ) -> AegisResult<Option<String>> {
+    ) -> PropylonResult<Option<String>> {
         let read = self.vault.read().await;
         Ok(read.get(key).cloned())
     }
@@ -133,7 +133,7 @@ impl InfisicalSecretStore {
         self
     }
 
-    async fn get_or_refresh_session_token(&self) -> AegisResult<String> {
+    async fn get_or_refresh_session_token(&self) -> PropylonResult<String> {
         let read = self.cached_session_token.read().await;
         if let Some((tok, expiry)) = read.as_ref() {
             if Instant::now() < *expiry {
@@ -154,7 +154,7 @@ impl InfisicalSecretStore {
 
 #[async_trait]
 impl SecretStore for InfisicalSecretStore {
-    async fn get_secret(&self, key: &str) -> AegisResult<Option<String>> {
+    async fn get_secret(&self, key: &str) -> PropylonResult<Option<String>> {
         let read = self.cache.read().await;
         if let Some(entry) = read.get(key) {
             if Instant::now() < entry.expires_at {
@@ -183,7 +183,7 @@ impl SecretStore for InfisicalSecretStore {
         Ok(secret)
     }
 
-    async fn set_secret(&self, key: &str, value: &str) -> AegisResult<()> {
+    async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()> {
         let mut write = self.cache.write().await;
         write.insert(
             key.to_string(),
@@ -195,13 +195,13 @@ impl SecretStore for InfisicalSecretStore {
         Ok(())
     }
 
-    async fn invalidate(&self, key: &str) -> AegisResult<()> {
+    async fn invalidate(&self, key: &str) -> PropylonResult<()> {
         let mut write = self.cache.write().await;
         write.remove(key);
         Ok(())
     }
 
-    async fn health_check(&self) -> AegisResult<bool> {
+    async fn health_check(&self) -> PropylonResult<bool> {
         Ok(!self.base_url.is_empty() && !self.client_id.is_empty())
     }
 }
@@ -219,7 +219,7 @@ impl ChainedSecretStore {
 
 #[async_trait]
 impl SecretStore for ChainedSecretStore {
-    async fn get_secret(&self, key: &str) -> AegisResult<Option<String>> {
+    async fn get_secret(&self, key: &str) -> PropylonResult<Option<String>> {
         for store in &self.stores {
             if let Ok(Some(secret)) = store.get_secret(key).await {
                 return Ok(Some(secret));
@@ -228,21 +228,21 @@ impl SecretStore for ChainedSecretStore {
         Ok(None)
     }
 
-    async fn set_secret(&self, key: &str, value: &str) -> AegisResult<()> {
+    async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()> {
         for store in &self.stores {
             let _ = store.set_secret(key, value).await;
         }
         Ok(())
     }
 
-    async fn invalidate(&self, key: &str) -> AegisResult<()> {
+    async fn invalidate(&self, key: &str) -> PropylonResult<()> {
         for store in &self.stores {
             let _ = store.invalidate(key).await;
         }
         Ok(())
     }
 
-    async fn health_check(&self) -> AegisResult<bool> {
+    async fn health_check(&self) -> PropylonResult<bool> {
         for store in &self.stores {
             if store.health_check().await? {
                 return Ok(true);

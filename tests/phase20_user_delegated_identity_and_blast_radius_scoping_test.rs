@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-use aegis_gateway::core::delegation::{
+use propylon::core::delegation::{
     DelegatedToken, IdentityDelegationBroker, ResourceScoper,
 };
-use aegis_gateway::core::types::{CallerContext, TenantId};
-use aegis_gateway::policy::delegation::{
+use propylon::core::types::{CallerContext, TenantId};
+use propylon::policy::delegation::{
     UserIdentityDelegationBroker, VirtualResourceScoper,
 };
 

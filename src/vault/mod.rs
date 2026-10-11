@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use async_trait::async_trait;
 use sha2::{Digest, Sha256};
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::vault::{
     BinaryBlobMetadata, BinaryStreamingVault, ChunkAck, EphemeralEgressTicket,
     MimeInspectionResult, StoredBlobDescriptor, UploadSession,
@@ -84,7 +84,7 @@ impl LocalFsStreamingVault {
 
 #[async_trait]
 impl BinaryStreamingVault for LocalFsStreamingVault {
-    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> AegisResult<UploadSession> {
+    async fn initiate_resumable_upload(&self, metadata: &BinaryBlobMetadata) -> PropylonResult<UploadSession> {
         let session_id = format!("upload-{}-{}", metadata.tenant_id, Self::now_unix());
         let expires_at = Self::now_unix() + 3600; // 1 hour TTL
 
@@ -105,21 +105,21 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
         })
     }
 
-    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> AegisResult<ChunkAck> {
+    async fn append_chunk(&self, session_id: &str, offset: u64, chunk: Vec<u8>) -> PropylonResult<ChunkAck> {
         let mut lock = self.sessions.write().await;
         let session = lock
             .get_mut(session_id)
-            .ok_or_else(|| AegisError::ResourceNotFound(format!("Upload session {session_id} not found")))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound(format!("Upload session {session_id} not found")))?;
 
         if Self::now_unix() > session.expires_at_unix {
-            return Err(AegisError::InvalidState("Upload session expired".into()));
+            return Err(PropylonError::InvalidState("Upload session expired".into()));
         }
 
         let chunk_len = chunk.len() as u64;
         let current_len = session.data.len() as u64;
 
         if offset > current_len {
-            return Err(AegisError::Validation(format!(
+            return Err(PropylonError::Validation(format!(
                 "Chunk gap detected: expected offset {current_len}, got {offset}"
             )));
         }
@@ -146,11 +146,11 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
         })
     }
 
-    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> AegisResult<StoredBlobDescriptor> {
+    async fn finalize_upload(&self, session_id: &str, expected_sha256: Option<&str>) -> PropylonResult<StoredBlobDescriptor> {
         let mut sessions_lock = self.sessions.write().await;
         let session = sessions_lock
             .remove(session_id)
-            .ok_or_else(|| AegisError::ResourceNotFound(format!("Upload session {session_id} not found")))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound(format!("Upload session {session_id} not found")))?;
 
         let mut hasher = Sha256::new();
         hasher.update(&session.data);
@@ -158,7 +158,7 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
 
         if let Some(expected) = expected_sha256 {
             if calculated_hash != expected {
-                return Err(AegisError::SecurityRefusal(format!(
+                return Err(PropylonError::SecurityRefusal(format!(
                     "SHA256 checksum mismatch: calculated {calculated_hash}, expected {expected}"
                 )));
             }
@@ -166,10 +166,10 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
 
         let inspection = Self::inspect_magic_bytes(&session.data, &session.metadata.declared_mime);
         if !inspection.safe_for_egress {
-            return Err(AegisError::SecurityRefusal("Executable payload disguised as binary blob".into()));
+            return Err(PropylonError::SecurityRefusal("Executable payload disguised as binary blob".into()));
         }
 
-        let blob_urn = format!("urn:aegis:blob:{}", calculated_hash);
+        let blob_urn = format!("urn:propylon:blob:{}", calculated_hash);
         let path = self.storage_dir.join(&calculated_hash).to_string_lossy().to_string();
 
         let descriptor = StoredBlobDescriptor {
@@ -192,10 +192,10 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
         blob_urn: &str,
         client_id: &str,
         ttl_secs: u64,
-    ) -> AegisResult<EphemeralEgressTicket> {
+    ) -> PropylonResult<EphemeralEgressTicket> {
         let blobs_lock = self.stored_blobs.read().await;
         if !blobs_lock.contains_key(blob_urn) {
-            return Err(AegisError::ResourceNotFound(format!("Blob {blob_urn} not found in vault")));
+            return Err(PropylonError::ResourceNotFound(format!("Blob {blob_urn} not found in vault")));
         }
 
         let expires_at = Self::now_unix() + ttl_secs;
@@ -211,7 +211,7 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
         hasher.update(self.hmac_secret.as_bytes());
         let signature = to_hex(&hasher.finalize());
 
-        let url = format!("https://aegis.gateway/vault/download/{}?ticket={}&sig={}", blob_urn, ticket_id, signature);
+        let url = format!("https://propylon.gateway/vault/download/{}?ticket={}&sig={}", blob_urn, ticket_id, signature);
 
         Ok(EphemeralEgressTicket {
             ticket_id,
@@ -222,11 +222,11 @@ impl BinaryStreamingVault for LocalFsStreamingVault {
         })
     }
 
-    async fn inspect_blob_content(&self, blob_urn: &str) -> AegisResult<MimeInspectionResult> {
+    async fn inspect_blob_content(&self, blob_urn: &str) -> PropylonResult<MimeInspectionResult> {
         let blobs_lock = self.stored_blobs.read().await;
         let descriptor = blobs_lock
             .get(blob_urn)
-            .ok_or_else(|| AegisError::ResourceNotFound(format!("Blob {blob_urn} not found")))?;
+            .ok_or_else(|| PropylonError::ResourceNotFound(format!("Blob {blob_urn} not found")))?;
 
         Ok(MimeInspectionResult {
             detected_mime: descriptor.actual_mime.clone(),

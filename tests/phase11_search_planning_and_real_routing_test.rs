@@ -5,15 +5,15 @@ use serde_json::json;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
-use aegis_gateway::backend::SubprocessBackendRegistry;
-use aegis_gateway::core::backend::{BackendRegistry, BackendTransport};
-use aegis_gateway::core::error::AegisResult;
-use aegis_gateway::core::transport::{JsonRpcRequest, JsonRpcResponse, WireProtocolHandler};
-use aegis_gateway::core::types::ToolDefinition;
-use aegis_gateway::discovery::{ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep};
-use aegis_gateway::policy::AbacPolicyEngine;
-use aegis_gateway::transport::McpProtocolHandler;
-use aegis_gateway::AegisGateway;
+use propylon::backend::SubprocessBackendRegistry;
+use propylon::core::backend::{BackendRegistry, BackendTransport};
+use propylon::core::error::PropylonResult;
+use propylon::core::transport::{JsonRpcRequest, JsonRpcResponse, WireProtocolHandler};
+use propylon::core::types::ToolDefinition;
+use propylon::discovery::{ExecutionPlan, ExecutionPlanner, PlanRisk, PlanStep};
+use propylon::policy::AbacPolicyEngine;
+use propylon::transport::McpProtocolHandler;
+use propylon::PropylonGateway;
 
 /// Concrete test transport to verify real asynchronous request forwarding
 struct RecordingBackendTransport {
@@ -22,11 +22,11 @@ struct RecordingBackendTransport {
 
 #[async_trait]
 impl BackendTransport for RecordingBackendTransport {
-    async fn start(&self) -> AegisResult<()> {
+    async fn start(&self) -> PropylonResult<()> {
         Ok(())
     }
 
-    async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
+    async fn send_request(&self, request: &JsonRpcRequest) -> PropylonResult<JsonRpcResponse> {
         self.call_count.fetch_add(1, Ordering::SeqCst);
         let id = request.id.clone().unwrap_or_default();
         let name = request
@@ -51,14 +51,14 @@ impl BackendTransport for RecordingBackendTransport {
         true
     }
 
-    async fn stop(&self) -> AegisResult<()> {
+    async fn stop(&self) -> PropylonResult<()> {
         Ok(())
     }
 }
 
 #[tokio::test]
 async fn test_real_backend_execution_routing_without_mocks() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let registry = Arc::new(SubprocessBackendRegistry::new());
     let call_count = Arc::new(AtomicUsize::new(0));
 
@@ -111,7 +111,7 @@ async fn test_real_backend_execution_routing_without_mocks() {
 
 #[tokio::test]
 async fn test_gateway_search_tools_progressive_discovery() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = Arc::new(McpProtocolHandler::new(Arc::clone(&gateway)));
 
     handler
@@ -161,8 +161,8 @@ async fn test_gateway_search_tools_progressive_discovery() {
 async fn test_execution_planner_dag_validation_and_risk_scoring() {
     let planner = ExecutionPlanner::new();
     let policy = AbacPolicyEngine::new();
-    let caller = aegis_gateway::core::types::CallerContext {
-        tenant_id: aegis_gateway::core::types::TenantId::new("engineering"),
+    let caller = propylon::core::types::CallerContext {
+        tenant_id: propylon::core::types::TenantId::new("engineering"),
         subject: "agent-1".to_string(),
         roles: vec!["developer".to_string()],
         department: Some("Engineering".to_string()),
@@ -278,7 +278,7 @@ async fn test_execution_planner_dag_validation_and_risk_scoring() {
 
 #[tokio::test]
 async fn test_gateway_plan_tasks_via_wire_protocol() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = Arc::new(McpProtocolHandler::new(Arc::clone(&gateway)));
 
     handler

@@ -3,10 +3,10 @@
 use serde_json::json;
 use std::sync::Arc;
 
-use aegis_gateway::backend::SubprocessBackendRegistry;
-use aegis_gateway::control::ConfigApiDispatcher;
-use aegis_gateway::core::backend::BackendRegistry;
-use aegis_gateway::discovery::default_enterprise_catalog;
+use propylon::backend::SubprocessBackendRegistry;
+use propylon::control::ConfigApiDispatcher;
+use propylon::core::backend::BackendRegistry;
+use propylon::discovery::default_enterprise_catalog;
 
 #[test]
 fn test_catalog_purification_zero_synthetic_workers() {
@@ -53,7 +53,7 @@ async fn test_config_api_raw_and_template() {
     let val: serde_json::Value = serde_json::from_slice(&body).expect("Must parse valid JSON");
     assert_eq!(val["status"], "LOADED");
     assert!(val["content"].is_string());
-    assert!(val["path"].as_str().unwrap().contains("aegis"));
+    assert!(val["path"].as_str().unwrap().contains("propylon"));
 
     // 2. Default starter template fetch
     let (status_t, body_t, mime_t) = ConfigApiDispatcher::dispatch("GET", "/api/v1/config/template", &[], None).await;

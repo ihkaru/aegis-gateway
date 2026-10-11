@@ -4,13 +4,13 @@
 #![deny(unsafe_code)]
 
 use std::sync::Arc;
-use aegis_gateway::control::web_ui::EmbeddedAdminServer;
-use aegis_gateway::AegisGateway;
+use propylon::control::web_ui::EmbeddedAdminServer;
+use propylon::PropylonGateway;
 use serde_json::json;
 
 #[tokio::test]
 async fn test_phase39_full_embedded_control_suite_lifecycle() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let server = EmbeddedAdminServer::new(8485, true).with_gateway(gateway);
 
     // 1. Verify dynamic backends listing and registration
@@ -47,7 +47,7 @@ async fn test_phase39_full_embedded_control_suite_lifecycle() {
 
 #[tokio::test]
 async fn test_phase39_progressive_disclosure_and_playground_dispatch() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let server = EmbeddedAdminServer::new(8485, true).with_gateway(gateway);
 
     // 1. Verify progressive disclosure catalog

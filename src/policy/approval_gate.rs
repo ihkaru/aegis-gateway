@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::core::approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 
 /// Concrete implementation of Human-in-the-Loop policy gate
 pub struct ActionApprovalGate {
@@ -76,7 +76,7 @@ impl ApprovalGate for ActionApprovalGate {
         session_id: &str,
         tool_name: &str,
         arguments: &serde_json::Value,
-    ) -> AegisResult<ApprovalDecision> {
+    ) -> PropylonResult<ApprovalDecision> {
         let (tier, reason) = self.assess_risk_tier(tool_name, arguments);
 
         if tier == RiskTier::Low {
@@ -110,28 +110,28 @@ impl ApprovalGate for ActionApprovalGate {
         ticket_id: &str,
         signature: &str,
         approved: bool,
-    ) -> AegisResult<bool> {
+    ) -> PropylonResult<bool> {
         let mut write = self.tickets.write().await;
         let ticket = write
             .get(ticket_id)
-            .ok_or_else(|| AegisError::PolicyDenied(format!("Approval ticket '{ticket_id}' not found")))?;
+            .ok_or_else(|| PropylonError::PolicyDenied(format!("Approval ticket '{ticket_id}' not found")))?;
 
         let now_epoch = chrono::Utc::now().timestamp() as u64;
         if now_epoch > ticket.expires_at_epoch_secs {
             write.remove(ticket_id);
-            return Err(AegisError::PolicyDenied(format!("Approval ticket '{ticket_id}' has expired")));
+            return Err(PropylonError::PolicyDenied(format!("Approval ticket '{ticket_id}' has expired")));
         }
 
         let expected_sig = self.generate_signature(ticket_id, &ticket.caller_id, &ticket.tool_name, ticket.expires_at_epoch_secs);
         if signature != expected_sig {
-            return Err(AegisError::PolicyDenied("Cryptographic approval signature mismatch".to_string()));
+            return Err(PropylonError::PolicyDenied("Cryptographic approval signature mismatch".to_string()));
         }
 
         write.remove(ticket_id);
         Ok(approved)
     }
 
-    async fn list_pending_tickets(&self) -> AegisResult<Vec<ApprovalTicket>> {
+    async fn list_pending_tickets(&self) -> PropylonResult<Vec<ApprovalTicket>> {
         let read = self.tickets.read().await;
         let now_epoch = chrono::Utc::now().timestamp() as u64;
         let active: Vec<ApprovalTicket> = read

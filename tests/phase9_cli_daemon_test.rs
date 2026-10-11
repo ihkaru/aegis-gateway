@@ -8,19 +8,19 @@
 use std::sync::Arc;
 use serde_json::json;
 
-use aegis_gateway::cli::commands::{run_audit, run_doctor, run_init, run_validate};
-use aegis_gateway::cli::args::{AuditArgs, DoctorArgs, InitArgs, ValidateArgs};
-use aegis_gateway::core::backend::BackendRegistry;
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::daemon::DaemonSupervisor;
-use aegis_gateway::state::DrainCoordinator;
-use aegis_gateway::transport::{LiveHttpServer, McpProtocolHandler};
-use aegis_gateway::AegisGateway;
+use propylon::cli::commands::{run_audit, run_doctor, run_init, run_validate};
+use propylon::cli::args::{AuditArgs, DoctorArgs, InitArgs, ValidateArgs};
+use propylon::core::backend::BackendRegistry;
+use propylon::core::transport::WireProtocolHandler;
+use propylon::daemon::DaemonSupervisor;
+use propylon::state::DrainCoordinator;
+use propylon::transport::{LiveHttpServer, McpProtocolHandler};
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_phase9_init_and_validate_workflow() {
     let tmp_dir = tempfile::tempdir().expect("tempdir");
-    let config_path = tmp_dir.path().join("aegis_test.yaml");
+    let config_path = tmp_dir.path().join("propylon_test.yaml");
     let config_str = config_path.to_str().unwrap().to_string();
 
     // 1. Run init command to scaffold configuration
@@ -106,7 +106,7 @@ mcpServers:
 
 #[tokio::test]
 async fn test_phase9_live_http_server_router_endpoints() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler = Arc::new(McpProtocolHandler::new(gateway));
     let drain = Arc::new(DrainCoordinator::new());
 

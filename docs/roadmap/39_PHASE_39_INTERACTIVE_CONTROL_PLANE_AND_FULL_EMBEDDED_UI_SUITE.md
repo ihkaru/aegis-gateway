@@ -19,7 +19,7 @@ First-generation MCP gateways suffered from significant operational deficits:
 
 ## 2. Technical Architecture & Trait Contracts
 
-Aegis Gateway provides a zero-mock, single-binary embedded Svelte 5 dashboard compiled directly into the Rust binary via compile-time `RustEmbed` (`ui/dist/`):
+Propylon Gateway provides a zero-mock, single-binary embedded Svelte 5 dashboard compiled directly into the Rust binary via compile-time `RustEmbed` (`ui/dist/`):
 
 1. **8 Dedicated Enterprise Control Suite Tabs**:
    - `OverviewTab.svelte`: Live system metrics, RSS memory usage (`/proc/self/status`), P99 wire latency, and request stream traces.

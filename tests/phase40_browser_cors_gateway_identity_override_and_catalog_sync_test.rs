@@ -11,21 +11,21 @@ use axum::http::{Request, StatusCode};
 use serde_json::json;
 use tower::ServiceExt;
 
-use aegis_gateway::core::identity::GatewayServerIdentity;
-use aegis_gateway::core::transport::WireProtocolHandler;
-use aegis_gateway::core::types::ToolDefinition;
-use aegis_gateway::discovery::{
-    AegisCatalogSyncSentinel, CatalogSearchIndex, CatalogSyncOutcome,
+use propylon::core::identity::GatewayServerIdentity;
+use propylon::core::transport::WireProtocolHandler;
+use propylon::core::types::ToolDefinition;
+use propylon::discovery::{
+    PropylonCatalogSyncSentinel, CatalogSearchIndex, CatalogSyncOutcome,
 };
-use aegis_gateway::state::DrainCoordinator;
-use aegis_gateway::transport::{
-    AegisCorsPolicy, LiveHttpServer, McpProtocolHandler,
+use propylon::state::DrainCoordinator;
+use propylon::transport::{
+    PropylonCorsPolicy, LiveHttpServer, McpProtocolHandler,
 };
-use aegis_gateway::AegisGateway;
+use propylon::PropylonGateway;
 
 #[tokio::test]
 async fn test_phase40_browser_cors_preflight_and_origin_whitelist() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
     let handler: Arc<dyn WireProtocolHandler> = Arc::new(McpProtocolHandler::new(gateway));
     let drain = Arc::new(DrainCoordinator::new());
 
@@ -90,7 +90,7 @@ async fn test_phase40_browser_cors_preflight_and_origin_whitelist() {
 
     // 3. Test strict CORS policy with restricted whitelist
     let strict_cors = Arc::new(
-        AegisCorsPolicy::new(vec!["https://trusted-dashboard.internal".to_string()])
+        PropylonCorsPolicy::new(vec!["https://trusted-dashboard.internal".to_string()])
             .with_allow_credentials(true),
     );
     let strict_server = LiveHttpServer::with_cors(
@@ -130,12 +130,12 @@ async fn test_phase40_browser_cors_preflight_and_origin_whitelist() {
         .unwrap();
     let blocked_resp = strict_app.oneshot(blocked_req).await.unwrap();
     assert_eq!(blocked_resp.status(), StatusCode::FORBIDDEN);
-    assert!(blocked_resp.headers().contains_key("x-aegis-cors-rejection"));
+    assert!(blocked_resp.headers().contains_key("x-propylon-cors-rejection"));
 }
 
 #[tokio::test]
 async fn test_phase40_server_info_identity_override() {
-    let gateway = Arc::new(AegisGateway::default());
+    let gateway = Arc::new(PropylonGateway::default());
 
     // 1. Initialize with custom enterprise identity
     let custom_identity = GatewayServerIdentity::new("enterprise-corp-gateway", "2.40.0")
@@ -179,7 +179,7 @@ async fn test_phase40_server_info_identity_override() {
 #[tokio::test]
 async fn test_phase40_catalog_zero_tool_drop_protection() {
     let mut index = CatalogSearchIndex::new();
-    let sentinel = AegisCatalogSyncSentinel::default();
+    let sentinel = PropylonCatalogSyncSentinel::default();
 
     // 1. Initial healthy tool registration (3 tools)
     let initial_tools = vec![

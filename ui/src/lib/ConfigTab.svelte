@@ -36,7 +36,7 @@
   }
 
   let configText = $state('');
-  let configPath = $state('aegis.yaml');
+  let configPath = $state('propylon.yaml');
   let configFormat = $state('yaml');
   let loading = $state(true);
   let validating = $state(false);

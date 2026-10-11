@@ -2,11 +2,11 @@
 
 use std::sync::Arc;
 
-use aegis_gateway::control::{FileSignalConfigurationWatcher, HttpAdminControlPlane};
-use aegis_gateway::core::control_plane::{
+use propylon::control::{FileSignalConfigurationWatcher, HttpAdminControlPlane};
+use propylon::core::control_plane::{
     ConfigurationWatcher, DynamicControlPlane, RuntimeBackendUpdate, RuntimePolicyUpdate,
 };
-use aegis_gateway::core::error::AegisError;
+use propylon::core::error::PropylonError;
 
 #[tokio::test]
 async fn test_dynamic_backend_registration_and_removal_zero_downtime() {
@@ -64,7 +64,7 @@ async fn test_dynamic_policy_tier_hot_reload_and_validation() {
     };
     let res = cp.apply_policy_update(&invalid_pol).await;
     match res {
-        Err(AegisError::Validation(msg)) => {
+        Err(PropylonError::Validation(msg)) => {
             assert!(msg.contains("Invalid policy tier"));
         }
         other => panic!("Expected Validation error, got: {other:?}"),

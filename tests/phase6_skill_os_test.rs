@@ -3,15 +3,15 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use aegis_gateway::core::skills::{
+use propylon::core::skills::{
     SignedSkillBundle, SkillBundle, SkillDependency, SkillMetadata, SkillRegistry,
     SkillVectorRetriever,
 };
-use aegis_gateway::core::types::{
+use propylon::core::types::{
     DisclosureTier, ProgressiveDisclosure, ToolDefinition,
 };
-use aegis_gateway::discovery::ProgressiveProjector;
-use aegis_gateway::skills::{GitOpsSkillSync, LocalSkillRegistry, SemanticSkillRetriever};
+use propylon::discovery::ProgressiveProjector;
+use propylon::skills::{GitOpsSkillSync, LocalSkillRegistry, SemanticSkillRetriever};
 
 #[tokio::test]
 async fn test_phase6_progressive_disclosure_token_savings() {

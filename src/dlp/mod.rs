@@ -5,7 +5,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use crate::core::dlp::{DlpFinding, DlpPipeline, SensitivityLevel};
-use crate::core::error::AegisResult;
+use crate::core::error::PropylonResult;
 
 pub mod matcher;
 pub mod presidio;
@@ -111,13 +111,13 @@ impl PiiDlpPipeline {
 
 #[async_trait]
 impl DlpPipeline for PiiDlpPipeline {
-    async fn sanitize_response(&self, payload: Value) -> AegisResult<(Value, Vec<DlpFinding>)> {
+    async fn sanitize_response(&self, payload: Value) -> PropylonResult<(Value, Vec<DlpFinding>)> {
         let mut findings = Vec::new();
         let masked = self.recursively_mask(payload, &mut findings);
         Ok((masked, findings))
     }
 
-    async fn inspect_request_arguments(&self, arguments: &Value) -> AegisResult<Vec<DlpFinding>> {
+    async fn inspect_request_arguments(&self, arguments: &Value) -> PropylonResult<Vec<DlpFinding>> {
         let mut findings = Vec::new();
         let _ = self.recursively_mask(arguments.clone(), &mut findings);
         Ok(findings)

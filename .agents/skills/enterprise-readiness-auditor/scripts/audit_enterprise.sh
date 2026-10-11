@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================================"
-echo " [AEGIS AUDIT] Pillar 1-6 Enterprise Readiness Audit"
+echo " [PROPYLON AUDIT] Pillar 1-6 Enterprise Readiness Audit"
 echo "============================================================"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"

@@ -22,7 +22,7 @@ Phase 22 implements a declarative, vendor-agnostic **Dual-Path Data Egress & In-
 
 ```mermaid
 flowchart TD
-    Agent["🤖 AI Agent / IDE"] -->|"Request Data Access (e.g. 105MB Parquet)"| GW["🛡️ Aegis Gateway"]
+    Agent["🤖 AI Agent / IDE"] -->|"Request Data Access (e.g. 105MB Parquet)"| GW["🛡️ Propylon Gateway"]
     GW --> Engine["⚖️ TieredDataEgressEngine"]
     
     subgraph Policy Tiers
@@ -85,7 +85,7 @@ pub trait DataEgressPolicyEngine: Send + Sync {
         mime_type: &str,
         classification: DataClassification,
         caller: &CallerContext,
-    ) -> AegisResult<DataEgressDecision>;
+    ) -> PropylonResult<DataEgressDecision>;
 }
 
 #[async_trait]
@@ -95,7 +95,7 @@ pub trait InSituDataEnclave: Send + Sync {
         query: &str,
         resource_path: &str,
         caller: &CallerContext,
-    ) -> AegisResult<InSituExecutionResult>;
+    ) -> PropylonResult<InSituExecutionResult>;
 }
 ```
 

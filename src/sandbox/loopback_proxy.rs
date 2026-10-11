@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::core::error::{AegisError, AegisResult};
+use crate::core::error::{PropylonError, PropylonResult};
 use crate::core::proxy::{CredentialProxyEngine, ProxyBinding};
 use crate::core::secrets::SecretStore;
 
@@ -33,7 +33,7 @@ impl LoopbackCredentialProxy {
 
 #[async_trait]
 impl CredentialProxyEngine for LoopbackCredentialProxy {
-    async fn bind_proxy(&self, session_id: &str) -> AegisResult<ProxyBinding> {
+    async fn bind_proxy(&self, session_id: &str) -> PropylonResult<ProxyBinding> {
         let mut write = self.bindings.write().await;
         let port = self.base_port + (write.len() as u16 % 1000);
         let binding = ProxyBinding {
@@ -49,7 +49,7 @@ impl CredentialProxyEngine for LoopbackCredentialProxy {
         &self,
         service: &str,
         raw_headers: &[(String, String)],
-    ) -> AegisResult<Vec<(String, String)>> {
+    ) -> PropylonResult<Vec<(String, String)>> {
         let mut headers: Vec<(String, String)> = raw_headers
             .iter()
             .filter(|(k, _)| !k.eq_ignore_ascii_case("authorization"))
@@ -68,7 +68,7 @@ impl CredentialProxyEngine for LoopbackCredentialProxy {
         if let Some(token) = self.secret_store.get_secret(token_key).await? {
             headers.push(("Authorization".to_string(), format!("Bearer {token}")));
         } else {
-            return Err(AegisError::SecretError(format!(
+            return Err(PropylonError::SecretError(format!(
                 "No credentials available for brokered service '{service}'"
             )));
         }
@@ -76,7 +76,7 @@ impl CredentialProxyEngine for LoopbackCredentialProxy {
         Ok(headers)
     }
 
-    async fn teardown_proxy(&self, session_id: &str) -> AegisResult<()> {
+    async fn teardown_proxy(&self, session_id: &str) -> PropylonResult<()> {
         let mut write = self.bindings.write().await;
         write.remove(session_id);
         Ok(())
