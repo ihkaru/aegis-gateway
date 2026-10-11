@@ -11,6 +11,7 @@
     Lock,
     Cpu,
     FileText,
+    Sliders,
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
   import BackendsTab from './lib/BackendsTab.svelte';
@@ -20,8 +21,9 @@
   import PolicyTab from './lib/PolicyTab.svelte';
   import FinopsTab from './lib/FinopsTab.svelte';
   import AuditTab from './lib/AuditTab.svelte';
+  import ConfigTab from './lib/ConfigTab.svelte';
 
-  type Tab = 'overview' | 'backends' | 'tools' | 'dlp' | 'hitl' | 'policy' | 'finops' | 'audit';
+  type Tab = 'overview' | 'backends' | 'tools' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
 
   let currentTab = $state<Tab>('overview');
@@ -147,6 +149,13 @@
         Policy Control
       </button>
       <button
+        onclick={() => (currentTab = 'config')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'config' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <Sliders class="h-3.5 w-3.5 shrink-0" />
+        Topology & Config
+      </button>
+      <button
         onclick={() => (currentTab = 'dlp')}
         class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'dlp' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
@@ -187,6 +196,8 @@
       <ToolsTab />
     {:else if currentTab === 'policy'}
       <PolicyTab />
+    {:else if currentTab === 'config'}
+      <ConfigTab />
     {:else if currentTab === 'dlp'}
       <DlpTab />
     {:else if currentTab === 'hitl'}

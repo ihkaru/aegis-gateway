@@ -5,7 +5,7 @@ use crate::core::types::ToolDefinition;
 
 /// Provides foundational enterprise tool definitions for standalone discovery and planning
 pub fn default_enterprise_catalog() -> Vec<ToolDefinition> {
-    let mut tools = vec![
+    let tools = vec![
         // Database & Storage
         ToolDefinition {
             name: "query_postgresql_ledger".to_string(),
@@ -174,25 +174,6 @@ pub fn default_enterprise_catalog() -> Vec<ToolDefinition> {
             tags: vec!["video".to_string(), "transcode".to_string(), "media".to_string(), "hls".to_string()],
         },
     ];
-
-    // Seed up to 50 tools to test high-cardinality indexing out-of-the-box
-    for i in 19..=50 {
-        let cat = match i % 4 {
-            0 => "database",
-            1 => "storage",
-            2 => "notification",
-            _ => "billing",
-        };
-        tools.push(ToolDefinition {
-            name: format!("{}_worker_task_{}", cat, i),
-            server: format!("{}_cluster", cat),
-            description: format!("Automated enterprise background processor on {} node #{}", cat, i),
-            input_schema: json!({ "type": "object" }),
-            required_params: vec![],
-            when_to_use: format!("When dispatching asynchronous operations on {} cluster", cat),
-            tags: vec![cat.to_string(), "worker".to_string(), "task".to_string(), format!("node_{}", i)],
-        });
-    }
 
     tools
 }

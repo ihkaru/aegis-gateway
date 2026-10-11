@@ -151,6 +151,16 @@ if [ -d "ui/src" ]; then
     fi
 fi
 
+# Check 12: Synthetic Dummy Item Generators & Loop-Generated Mock Tools in Production
+SYNTHETIC_GENERATORS=$($GREP_CMD -rnE '(for\s+[a-zA-Z0-9_]+\s+in\s+[0-9]+\.\.=?\s*[0-9]+.*tools\.push|worker_task_[0-9]+|dummy_tool|fake_tool)' src/ || true)
+if [ -n "$SYNTHETIC_GENERATORS" ]; then
+    echo "[FAIL] Detected synthetic loop-generated dummy tools/placeholders in production src/:"
+    echo "$SYNTHETIC_GENERATORS"
+    VIOLATIONS=$((VIOLATIONS + 1))
+else
+    echo "[PASS] Zero synthetic loop-generated dummy tools/placeholders in production src/."
+fi
+
 # --- STRUCTURED MOCK WAIVER AUDIT LEDGER (OCTOBER 2026 STANDARD) ---
 echo ""
 echo "--- Auditing Structured Mock Waivers (RFC 2383 / October 2026 Standard) ---"

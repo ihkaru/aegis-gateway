@@ -296,7 +296,13 @@ impl WebApiDispatcher {
                 }
                 (200, enriched.to_string().into_bytes(), "application/json")
             }
-            _ => (404, json!({ "error": "Endpoint not found" }).to_string().into_bytes(), "application/json"),
+            _ => {
+                if path.starts_with("/api/v1/config/") {
+                    crate::control::ConfigApiDispatcher::dispatch(method, path, body_bytes, registry).await
+                } else {
+                    (404, json!({ "error": "Endpoint not found" }).to_string().into_bytes(), "application/json")
+                }
+            }
         }
     }
 }

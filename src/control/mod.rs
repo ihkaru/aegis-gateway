@@ -136,6 +136,8 @@ impl ConfigurationWatcher for FileSignalConfigurationWatcher {
     }
 }
 
+pub mod config_api;
 pub mod web_api;
 pub mod web_ui;
+pub use config_api::ConfigApiDispatcher;
 pub use web_ui::{AdminUiAssets, EmbeddedAdminServer};
