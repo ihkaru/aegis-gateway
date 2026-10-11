@@ -35,7 +35,7 @@ impl EmbeddedAdminServer {
             enabled,
             start_time: Instant::now(),
             gateway: None,
-            registry: None,
+            registry: Some(Arc::new(crate::backend::SubprocessBackendRegistry::with_default_local_engine())),
             recent_invocations: Arc::new(std::sync::RwLock::new(Vec::new())),
             recent_dlp_events: Arc::new(std::sync::RwLock::new(Vec::new())),
             current_tier: Arc::new(std::sync::RwLock::new("Hybrid".to_string())),

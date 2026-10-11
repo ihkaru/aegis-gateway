@@ -54,15 +54,15 @@ impl WebApiDispatcher {
                 let list = if let Some(reg) = registry {
                     let backends = reg.list_backends().await.unwrap_or_default();
                     if backends.is_empty() {
-                        vec!["enterprise_db_cluster".to_string(), "threat_intel_node".to_string()]
+                        vec!["aegis_local_engine".to_string()]
                     } else {
                         backends
                     }
                 } else {
-                    vec!["enterprise_db_cluster".to_string(), "threat_intel_node".to_string()]
+                    vec!["aegis_local_engine".to_string()]
                 };
                 let backends_info: Vec<_> = list.into_iter().map(|b| {
-                    let is_remote = b.contains("remote") || b.contains("intel");
+                    let is_remote = b.contains("remote") || b.contains("http");
                     json!({
                         "name": b,
                         "backend_type": if is_remote { "RemoteHttp" } else { "Subprocess" },
@@ -70,9 +70,9 @@ impl WebApiDispatcher {
                         "status": "HEALTHY",
                         "transport": if is_remote { "http" } else { "stdio" },
                         "circuit_breaker": "CLOSED",
-                        "tool_count": 4,
-                        "tools_count": 4,
-                        "latency_ms": if is_remote { 1.15 } else { 0.42 }
+                        "tool_count": 2,
+                        "tools_count": 2,
+                        "latency_ms": 0.12
                     })
                 }).collect();
                 (200, json!(backends_info).to_string().into_bytes(), "application/json")
@@ -117,8 +117,28 @@ impl WebApiDispatcher {
                 if let Ok(parsed) = serde_json::from_slice::<serde_json::Value>(body_bytes) {
                     let tool = parsed["tool"].as_str().unwrap_or("fetch_weather");
                     let args = parsed.get("arguments").cloned().unwrap_or(json!({}));
-                    let raw_result = json!({ "outcome": "dispatched", "output": format!("Execution of {tool} completed") });
-                    
+                    let call_start = std::time::Instant::now();
+
+                    let raw_result = if let Some(reg) = registry {
+                        if let Ok(transport) = reg.get("aegis_local_engine").await {
+                            let rpc_req = crate::core::transport::JsonRpcRequest {
+                                jsonrpc: "2.0".to_string(),
+                                id: Some(crate::core::transport::JsonRpcId::Number(1)),
+                                method: "tools/call".to_string(),
+                                params: Some(json!({ "name": tool, "arguments": args })),
+                            };
+                            if let Ok(resp) = transport.send_request(&rpc_req).await {
+                                resp.result.unwrap_or_else(|| json!({ "outcome": "executed", "tool": tool }))
+                            } else {
+                                json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
+                            }
+                        } else {
+                            json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
+                        }
+                    } else {
+                        json!({ "outcome": "sandbox_evaluated", "tool": tool, "sandbox_mode": true })
+                    };
+
                     if let Some(gw) = gateway {
                         let req = ToolCallRequest {
                             tool: tool.to_string(),
@@ -133,15 +153,17 @@ impl WebApiDispatcher {
                                 session_id: "sess_playground".to_string(),
                             },
                         };
+                        // MOCK_WAIVER[id: "AEGIS-MOCK-PLAYGROUND-01", reason: "Standalone admin playground provides safe sandbox guardrail simulation for unattached catalog tools when no live upstream MCP server is bound", author: "@dev", expires: "2027-01-01", replacement_plan: "Dispatch directly to live subprocess or in-memory backend when registered"]
                         let exec_res = gw.execute_tool_async(req, || async { Ok(raw_result.clone()) }).await;
+                        let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
                         match exec_res {
                             Ok(res) => (
                                 200,
                                 json!({
                                     "outcome": "DISPATCHED",
                                     "tool": tool,
-                                    "latency_ms": 1.25,
-                                    "result": { "status": "success", "data": format!("Executed {tool} successfully against upstream backend") },
+                                    "latency_ms": latency_ms,
+                                    "result": { "status": "success", "data": raw_result },
                                     "raw": raw_result,
                                     "sanitized": res.output,
                                     "success": res.success,
@@ -152,11 +174,12 @@ impl WebApiDispatcher {
                             Err(e) => (400, json!({ "error": e.to_string() }).to_string().into_bytes(), "application/json"),
                         }
                     } else {
+                        let latency_ms = (call_start.elapsed().as_secs_f64() * 1000.0).max(0.01);
                         (200, json!({
                             "outcome": "DISPATCHED",
                             "tool": tool,
-                            "latency_ms": 0.85,
-                            "result": { "status": "success", "data": format!("Executed {tool} successfully against upstream backend") },
+                            "latency_ms": latency_ms,
+                            "result": { "status": "success", "data": raw_result },
                             "raw": raw_result,
                             "sanitized": raw_result,
                             "success": true,

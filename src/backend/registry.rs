@@ -21,6 +21,17 @@ impl SubprocessBackendRegistry {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn with_default_local_engine() -> Self {
+        let mut map: HashMap<String, Arc<dyn BackendTransport>> = HashMap::new();
+        map.insert(
+            "aegis_local_engine".to_string(),
+            Arc::new(crate::backend::LocalAegisBackend::new()),
+        );
+        Self {
+            backends: Arc::new(RwLock::new(map)),
+        }
+    }
 }
 
 #[async_trait]

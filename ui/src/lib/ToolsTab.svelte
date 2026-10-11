@@ -250,14 +250,26 @@
                 Execution Response
               </span>
               <div class="flex items-center gap-2 text-[10px] tabular-nums">
-                <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-emerald-500 font-semibold">
-                  {execResult.outcome}
-                </span>
+                {#if execResult.result?.sandbox_mode}
+                  <span class="rounded bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-amber-500 font-semibold">
+                    SANDBOX GUARDRAIL CHECK
+                  </span>
+                {:else}
+                  <span class="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-emerald-500 font-semibold">
+                    {execResult.outcome}
+                  </span>
+                {/if}
                 <span class="text-muted-foreground">{execResult.latency_ms.toFixed(2)} ms</span>
               </div>
             </div>
 
             <pre class="rounded bg-background border border-border p-2 font-mono text-[11px] text-foreground max-h-48 overflow-y-auto">{JSON.stringify(execResult.result, null, 2)}</pre>
+
+            {#if execResult.result?.sandbox_mode}
+              <div class="pt-1 text-[10px] text-muted-foreground italic">
+                <span>Note: Evaluated through live Policy ABAC & DLP pipelines without unattached upstream process.</span>
+              </div>
+            {/if}
 
             {#if execResult.dlp_modified}
               <div class="pt-2 border-t border-border/60 text-[10px] text-amber-500 font-medium flex items-center gap-1">
