@@ -13,6 +13,10 @@ echo "Step 1: Running Full-Stack Zero-Mock & File Limit Auditor..."
 bash scripts/audit_mock_detection.sh
 echo ""
 
+echo "Step 1B: Running Call-Graph & AST Integrity Auditor (code-graph-mcp)..."
+bash scripts/audit_callgraph_integrity.sh
+echo ""
+
 echo "Step 2: Running Rust Type Checks & Target Validation..."
 cargo check --all-targets
 echo ""

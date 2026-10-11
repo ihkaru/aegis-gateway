@@ -1,11 +1,8 @@
+
 mcp_servers:
-  sqlite_ledger:
-    name: sqlite_ledger
-    command: python3
-    args:
-    - scripts/sqlite_mcp_server.py
-    env: {}
-    url: null
-    timeout_secs: 30
+  remote_analytics:
+    name: remote_analytics
+    url: https://analytics.corp.internal/mcp
+    timeout_secs: 20
     enabled: true
-default_tenant: enterprise-corp
+default_tenant: finops-unit
