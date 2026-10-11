@@ -80,7 +80,7 @@ impl SamlApiDispatcher {
             }
 
             // 3. Initiate SAML AuthnRequest (Redirect or JSON)
-            ("GET", "/api/v1/auth/saml/login") => {
+            ("GET", "/api/v1/auth/saml/login") | ("GET", "/saml/login") => {
                 let sp = Self::get_sp_service();
                 let sso_url = Self::get_sso_destination();
 
@@ -88,12 +88,16 @@ impl SamlApiDispatcher {
                     Ok(authn_xml) => {
                         let b64 = BASE64_STANDARD.encode(authn_xml.as_bytes());
                         let redirect_url = format!("{}?SAMLRequest={}", sso_url, Self::url_encode(&b64));
-                        let res = json!({
-                            "sso_url": sso_url,
-                            "redirect_url": redirect_url,
-                            "saml_request": b64
-                        });
-                        (200, res.to_string().into_bytes(), "application/json")
+                        if path == "/saml/login" {
+                            (302, redirect_url.into_bytes(), "text/uri-list")
+                        } else {
+                            let res = json!({
+                                "sso_url": sso_url,
+                                "redirect_url": redirect_url,
+                                "saml_request": b64
+                            });
+                            (200, res.to_string().into_bytes(), "application/json")
+                        }
                     }
                     Err(e) => {
                         let err = json!({ "error": "authn_request_failed", "error_description": e.to_string() });
@@ -103,7 +107,7 @@ impl SamlApiDispatcher {
             }
 
             // 4. Assertion Consumer Service (ACS)
-            ("POST", "/api/v1/auth/saml/acs") => {
+            ("POST", "/api/v1/auth/saml/acs") | ("POST", "/saml/acs") => {
                 let saml_xml = Self::extract_saml_payload(body_bytes);
                 if saml_xml.trim().is_empty() {
                     let err = json!({ "error": "missing_saml_response", "error_description": "Empty SAMLResponse payload" });
@@ -118,20 +122,26 @@ impl SamlApiDispatcher {
                             .cloned()
                             .unwrap_or_else(|| "BPS Mempawah".to_string());
 
-                        let res = json!({
-                            "status": "authenticated",
-                            "access_token": token,
-                            "token_type": "Bearer",
-                            "expires_in": 28800,
-                            "user": {
-                                "subject": ctx.name_id,
-                                "roles": ctx.roles,
-                                "department": department,
-                                "tenant": "bps",
-                                "auth_provider": "rIDM SAML 2.0 (auth.dvlpid.my.id)"
-                            }
-                        });
-                        (200, res.to_string().into_bytes(), "application/json")
+                        let is_form_post = String::from_utf8_lossy(body_bytes).contains("SAMLResponse=");
+                        if is_form_post || path == "/saml/acs" {
+                            let redirect_url = format!("/?token={}", token);
+                            (302, redirect_url.into_bytes(), "text/uri-list")
+                        } else {
+                            let res = json!({
+                                "status": "authenticated",
+                                "access_token": token,
+                                "token_type": "Bearer",
+                                "expires_in": 28800,
+                                "user": {
+                                    "subject": ctx.name_id,
+                                    "roles": ctx.roles,
+                                    "department": department,
+                                    "tenant": "bps",
+                                    "auth_provider": "rIDM SAML 2.0 (auth.dvlpid.my.id)"
+                                }
+                            });
+                            (200, res.to_string().into_bytes(), "application/json")
+                        }
                     }
                     Err(e) => {
                         let err = json!({ "error": "invalid_assertion", "error_description": e.to_string() });
@@ -143,11 +153,24 @@ impl SamlApiDispatcher {
             // 5. Active User Session Introspection
             ("GET", "/api/v1/auth/session") => {
                 let token_str = String::from_utf8_lossy(body_bytes);
-                let subject = if token_str.contains("propylon_jwt_") {
-                    token_str.split("propylon_jwt_").nth(1).unwrap_or("ihzakarunia@bps.go.id").trim().to_string()
-                } else {
-                    "ihzakarunia@bps.go.id".to_string()
-                };
+                if !token_str.contains("propylon_jwt_") {
+                    let err = json!({
+                        "authenticated": false,
+                        "error": "unauthorized",
+                        "message": "No active session. Please authenticate via SAML SSO."
+                    });
+                    return (401, err.to_string().into_bytes(), "application/json");
+                }
+
+                let subject = token_str
+                    .split("propylon_jwt_")
+                    .nth(1)
+                    .unwrap_or("unknown")
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("unknown")
+                    .trim()
+                    .to_string();
 
                 let res = json!({
                     "authenticated": true,
@@ -197,7 +220,8 @@ impl SamlApiDispatcher {
             let encoded = &body_str[pos + 13..];
             let clean = encoded.split('&').next().unwrap_or(encoded);
             let decoded_url = Self::url_decode(clean);
-            if let Ok(bytes) = BASE64_STANDARD.decode(decoded_url.trim()) {
+            let clean_b64 = decoded_url.replace(' ', "+");
+            if let Ok(bytes) = BASE64_STANDARD.decode(clean_b64.trim()) {
                 if let Ok(s) = String::from_utf8(bytes) {
                     return s;
                 }

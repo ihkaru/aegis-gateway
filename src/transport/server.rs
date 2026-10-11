@@ -127,6 +127,31 @@ async fn handle_post_mcp(
     body: String,
 ) -> Response {
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+
+    let is_strict = std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
+        || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
+    if is_strict {
+        let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+        let has_token = auth_hdr.map(|h| h.starts_with("Bearer propylon_jwt_") || h.len() > 15).unwrap_or(false);
+        if !has_token {
+            let err_body = json!({
+                "jsonrpc": "2.0",
+                "id": serde_json::Value::Null,
+                "error": {
+                    "code": -32001,
+                    "message": "Unauthorized: Strict Zero Trust requires SAML Bearer token. Login at https://mcp.dvlpid.my.id/saml/login or configure 'Authorization: Bearer <token>'."
+                }
+            }).to_string();
+            let mut resp = (
+                StatusCode::UNAUTHORIZED,
+                [("content-type", "application/json")],
+                err_body,
+            ).into_response();
+            state.cors.apply_cors_headers(resp.headers_mut(), origin);
+            return resp;
+        }
+    }
+
     if let Some(ver) = headers.get("mcp-protocol-version").and_then(|v| v.to_str().ok()) {
         if !matches!(ver, "2024-11-05" | "2025-11-25" | "2024-10-07") {
             let err_body = json!({
@@ -184,6 +209,18 @@ async fn handle_sse(
     headers: axum::http::HeaderMap,
 ) -> Response {
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());
+
+    let is_strict = std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
+        || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
+    if is_strict {
+        let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+        let has_token = auth_hdr.map(|h| h.starts_with("Bearer propylon_jwt_") || h.len() > 15).unwrap_or(false);
+        if !has_token {
+            let mut resp = (StatusCode::UNAUTHORIZED, "Unauthorized: Strict Zero Trust requires SAML Bearer token").into_response();
+            state.cors.apply_cors_headers(resp.headers_mut(), origin);
+            return resp;
+        }
+    }
     let mut resp = (
         StatusCode::OK,
         [
@@ -246,17 +283,25 @@ async fn handle_oauth_metadata() -> Response {
 async fn handle_fallback_ui_and_control_api(
     uri: axum::http::Uri,
     method: axum::http::Method,
+    headers: axum::http::HeaderMap,
     body: axum::body::Bytes,
 ) -> Response {
     let path = uri.path();
     let method_str = method.as_str();
 
-    if path.starts_with("/api/v1/") || path == "/saml/metadata" {
+    if path.starts_with("/api/v1/") || path.starts_with("/saml/") {
+        let mut dispatch_body = body.to_vec();
+        if path == "/api/v1/auth/session" && dispatch_body.is_empty() {
+            if let Some(auth_hdr) = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok()) {
+                dispatch_body = auth_hdr.as_bytes().to_vec();
+            }
+        }
+
         let (status_code, body_bytes, content_type) =
             crate::control::web_api::WebApiDispatcher::dispatch(
                 method_str,
                 path,
-                &body,
+                &dispatch_body,
                 std::time::Instant::now(),
                 None,
                 None,
@@ -264,6 +309,14 @@ async fn handle_fallback_ui_and_control_api(
                 &std::sync::RwLock::new(Vec::new()),
                 &std::sync::RwLock::new("Hybrid".to_string()),
             ).await;
+
+        if status_code == 302 || status_code == 303 {
+            let mut resp = StatusCode::FOUND.into_response();
+            if let Ok(loc) = axum::http::HeaderValue::from_str(&String::from_utf8_lossy(&body_bytes)) {
+                resp.headers_mut().insert(axum::http::header::LOCATION, loc);
+            }
+            return resp;
+        }
 
         let mut resp = (
             StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK),

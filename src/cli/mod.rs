@@ -3,5 +3,5 @@
 pub mod args;
 pub mod commands;
 
-pub use args::{AuditArgs, Cli, Command, DoctorArgs, InitArgs, ServeArgs, ValidateArgs};
+pub use args::{AuditArgs, BridgeArgs, Cli, Command, DoctorArgs, InitArgs, LoginArgs, ServeArgs, ValidateArgs};
 pub use commands::run;

@@ -53,6 +53,12 @@ pub enum Command {
 
     /// Start the embedded administrative Web UI control plane
     Ui(UiArgs),
+
+    /// Authenticate via SAML SSO and cache enterprise session token
+    Login(LoginArgs),
+
+    /// Run local stdio bridge to remote Propylon Gateway for Claude Code & Antigravity IDE
+    Bridge(BridgeArgs),
 }
 
 #[derive(Debug, Args, Clone)]
@@ -166,5 +172,27 @@ pub struct UiArgs {
     /// Path to topology configuration file (YAML/JSON)
     #[arg(short, long, env = "PROPYLON_CONFIG")]
     pub config: Option<String>,
+}
+
+#[derive(Debug, Args, Clone)]
+pub struct LoginArgs {
+    /// Remote Propylon Gateway endpoint URL (e.g. https://mcp.dvlpid.my.id)
+    #[arg(short, long, default_value = "https://mcp.dvlpid.my.id")]
+    pub remote: String,
+
+    /// Direct manual token input (skips browser SSO redirect)
+    #[arg(short, long)]
+    pub token: Option<String>,
+}
+
+#[derive(Debug, Args, Clone)]
+pub struct BridgeArgs {
+    /// Remote Propylon Gateway endpoint URL (e.g. https://mcp.dvlpid.my.id)
+    #[arg(short, long, default_value = "https://mcp.dvlpid.my.id")]
+    pub remote: String,
+
+    /// Optional explicit Bearer token override
+    #[arg(short, long, env = "PROPYLON_TOKEN")]
+    pub token: Option<String>,
 }
 

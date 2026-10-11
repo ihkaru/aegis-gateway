@@ -27,7 +27,7 @@
   import FinopsTab from './lib/FinopsTab.svelte';
   import AuditTab from './lib/AuditTab.svelte';
   import ConfigTab from './lib/ConfigTab.svelte';
-  import AuthModal from './lib/AuthModal.svelte';
+  import LoginGate from './lib/LoginGate.svelte';
 
   type Tab = 'overview' | 'backends' | 'tools' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
@@ -35,7 +35,6 @@
   let currentTab = $state<Tab>('overview');
   let currentTheme = $state<Theme>('zinc');
   let isDark = $state(true);
-  let isAuthModalOpen = $state(false);
   let authUser = $state<any>(null);
   let authToken = $state('');
 
@@ -100,6 +99,9 @@
   }
 </script>
 
+{#if !authUser}
+  <LoginGate onManualToken={(tok) => { authToken = tok; localStorage.setItem('propylon_saml_token', tok); loadSession(); }} />
+{:else}
 <div class="min-h-screen bg-background text-foreground flex flex-col font-sans">
   <!-- Top Global Navigation Bar -->
   <header class="border-b border-border bg-card/70 backdrop-blur sticky top-0 z-50">
@@ -130,31 +132,20 @@
 
       <!-- Center-Right SAML Identity Widget -->
       <div class="flex items-center gap-2">
-        {#if authUser}
-          <div class="flex items-center gap-2 border border-border bg-muted/40 py-1 px-2.5 rounded-lg text-xs">
-            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <div class="flex flex-col text-left">
-              <span class="font-semibold text-[11px] leading-tight truncate max-w-[120px] sm:max-w-[170px]" title={authUser.subject}>{authUser.subject}</span>
-              <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[120px] sm:max-w-[170px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
-            </div>
-            <button
-              onclick={handleLogout}
-              class="ml-1 text-muted-foreground hover:text-rose-400 text-[10px] flex items-center gap-0.5 transition-colors"
-              title="Logout session"
-            >
-              <LogOut class="h-3 w-3" />
-            </button>
+        <div class="flex items-center gap-2 border border-border bg-muted/40 py-1 px-2.5 rounded-lg text-xs">
+          <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          <div class="flex flex-col text-left">
+            <span class="font-semibold text-[11px] leading-tight truncate max-w-[120px] sm:max-w-[170px]" title={authUser.subject}>{authUser.subject}</span>
+            <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[120px] sm:max-w-[170px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
           </div>
-        {:else}
           <button
-            onclick={() => (isAuthModalOpen = true)}
-            class="flex items-center gap-1.5 py-1 px-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium text-xs transition-colors shadow-sm"
+            onclick={handleLogout}
+            class="ml-1 text-muted-foreground hover:text-rose-400 text-[10px] flex items-center gap-0.5 transition-colors cursor-pointer"
+            title="Logout session"
           >
-            <Shield class="h-3.5 w-3.5" />
-            <span class="hidden sm:inline">rIDM SAML Login</span>
-            <span class="sm:hidden">SSO</span>
+            <LogOut class="h-3 w-3" />
           </button>
-        {/if}
+        </div>
       </div>
 
       <!-- Right Theme Controls -->
@@ -316,10 +307,5 @@
       </div>
     </div>
   </footer>
-
-  <AuthModal
-    isOpen={isAuthModalOpen}
-    onClose={() => (isAuthModalOpen = false)}
-    onSuccess={handleLoginSuccess}
-  />
 </div>
+{/if}

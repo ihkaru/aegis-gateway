@@ -38,7 +38,7 @@ impl AuthApiDispatcher {
         path: &str,
         body_bytes: &[u8],
     ) -> (u16, Vec<u8>, &'static str) {
-        if path.starts_with("/api/v1/auth/saml") || path == "/saml/metadata" || path == "/api/v1/auth/session" || path == "/api/v1/auth/logout" {
+        if path.starts_with("/api/v1/auth/saml") || path.starts_with("/saml/") || path == "/api/v1/auth/session" || path == "/api/v1/auth/logout" {
             return crate::control::saml_api::SamlApiDispatcher::dispatch(method, path, body_bytes).await;
         }
 
