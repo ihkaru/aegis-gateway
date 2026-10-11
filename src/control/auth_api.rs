@@ -38,6 +38,10 @@ impl AuthApiDispatcher {
         path: &str,
         body_bytes: &[u8],
     ) -> (u16, Vec<u8>, &'static str) {
+        if path.starts_with("/api/v1/auth/saml") || path == "/api/v1/auth/session" || path == "/api/v1/auth/logout" {
+            return crate::control::saml_api::SamlApiDispatcher::dispatch(method, path, body_bytes).await;
+        }
+
         match (method, path) {
             // RFC 8628: Initiate Device Authorization Grant
             ("POST", "/api/v1/auth/device/code") => {

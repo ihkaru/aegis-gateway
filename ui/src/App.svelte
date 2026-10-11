@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import {
     Activity,
     Shield,
@@ -13,6 +14,8 @@
     FileText,
     Sliders,
     Network,
+    User,
+    LogOut,
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
   import BackendsTab from './lib/BackendsTab.svelte';
@@ -24,6 +27,7 @@
   import FinopsTab from './lib/FinopsTab.svelte';
   import AuditTab from './lib/AuditTab.svelte';
   import ConfigTab from './lib/ConfigTab.svelte';
+  import AuthModal from './lib/AuthModal.svelte';
 
   type Tab = 'overview' | 'backends' | 'tools' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
@@ -31,6 +35,55 @@
   let currentTab = $state<Tab>('overview');
   let currentTheme = $state<Theme>('zinc');
   let isDark = $state(true);
+  let isAuthModalOpen = $state(false);
+  let authUser = $state<any>(null);
+  let authToken = $state('');
+
+  onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get('token') || (window.location.hash.startsWith('#token=') ? window.location.hash.slice(7) : '');
+    if (tokenParam && tokenParam.startsWith('propylon_jwt_')) {
+      authToken = tokenParam;
+      localStorage.setItem('propylon_saml_token', tokenParam);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      const saved = localStorage.getItem('propylon_saml_token');
+      if (saved) authToken = saved;
+    }
+
+    if (authToken) {
+      loadSession();
+    }
+  });
+
+  async function loadSession() {
+    try {
+      const res = await fetch('/api/v1/auth/session', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated) {
+          authUser = data;
+        }
+      }
+    } catch (e) {
+      // Ignore network error on local dev
+    }
+  }
+
+  function handleLoginSuccess(user: any, token: string) {
+    authUser = user;
+    authToken = token;
+    localStorage.setItem('propylon_saml_token', token);
+  }
+
+  function handleLogout() {
+    authUser = null;
+    authToken = '';
+    localStorage.removeItem('propylon_saml_token');
+    fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+  }
 
   function setTheme(theme: Theme) {
     currentTheme = theme;
@@ -73,6 +126,35 @@
         <span class="tabular-nums">LATENCY: 0.38ms (P99)</span>
         <span class="text-border">|</span>
         <span>ZERO-TRUST mTLS</span>
+      </div>
+
+      <!-- Center-Right SAML Identity Widget -->
+      <div class="flex items-center gap-2">
+        {#if authUser}
+          <div class="flex items-center gap-2 border border-border bg-muted/40 py-1 px-2.5 rounded-lg text-xs">
+            <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div class="flex flex-col text-left">
+              <span class="font-semibold text-[11px] leading-tight truncate max-w-[120px] sm:max-w-[170px]" title={authUser.subject}>{authUser.subject}</span>
+              <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[120px] sm:max-w-[170px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
+            </div>
+            <button
+              onclick={handleLogout}
+              class="ml-1 text-muted-foreground hover:text-rose-400 text-[10px] flex items-center gap-0.5 transition-colors"
+              title="Logout session"
+            >
+              <LogOut class="h-3 w-3" />
+            </button>
+          </div>
+        {:else}
+          <button
+            onclick={() => (isAuthModalOpen = true)}
+            class="flex items-center gap-1.5 py-1 px-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium text-xs transition-colors shadow-sm"
+          >
+            <Shield class="h-3.5 w-3.5" />
+            <span class="hidden sm:inline">rIDM SAML Login</span>
+            <span class="sm:hidden">SSO</span>
+          </button>
+        {/if}
       </div>
 
       <!-- Right Theme Controls -->
@@ -234,4 +316,10 @@
       </div>
     </div>
   </footer>
+
+  <AuthModal
+    isOpen={isAuthModalOpen}
+    onClose={() => (isAuthModalOpen = false)}
+    onSuccess={handleLoginSuccess}
+  />
 </div>

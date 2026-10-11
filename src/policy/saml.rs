@@ -117,15 +117,27 @@ impl SamlServiceProvider for NativeSamlServiceProvider {
 }
 
 fn extract_xml_tag(xml: &str, tag_name: &str) -> Option<String> {
-    let open_variants = [format!("<saml:{tag_name}>"), format!("<saml2:{tag_name}>"), format!("<{tag_name}>")];
-    let close_variants = [format!("</saml:{tag_name}>"), format!("</saml2:{tag_name}>"), format!("</{tag_name}>")];
+    let prefixes = ["saml:", "saml2:", ""];
+    for prefix in prefixes {
+        let full_tag = format!("<{prefix}{tag_name}");
+        let close_tag = format!("</{prefix}{tag_name}>");
 
-    for (open, close) in open_variants.iter().zip(close_variants.iter()) {
-        if let Some(start) = xml.find(open) {
-            let content_start = start + open.len();
-            if let Some(end) = xml[content_start..].find(close) {
-                return Some(xml[content_start..content_start + end].trim().to_string());
+        let mut search_idx = 0;
+        while let Some(start) = xml[search_idx..].find(&full_tag) {
+            let tag_start = search_idx + start;
+            let after_tag = tag_start + full_tag.len();
+            if after_tag < xml.len() {
+                let next_char = xml.as_bytes()[after_tag];
+                if next_char == b'>' || next_char.is_ascii_whitespace() {
+                    if let Some(gt_pos) = xml[after_tag..].find('>') {
+                        let content_start = after_tag + gt_pos + 1;
+                        if let Some(end) = xml[content_start..].find(&close_tag) {
+                            return Some(xml[content_start..content_start + end].trim().to_string());
+                        }
+                    }
+                }
             }
+            search_idx = after_tag;
         }
     }
     None
@@ -146,15 +158,15 @@ fn extract_xml_attribute_value(xml: &str, attribute_name: &str) -> Option<String
     let pattern = format!("Name=\"{attribute_name}\"");
     if let Some(pos) = xml.find(&pattern) {
         let slice = &xml[pos..];
-        if let Some(val_tag) = slice.find("<saml2:AttributeValue>") {
-            let start = val_tag + "<saml2:AttributeValue>".len();
-            if let Some(end) = slice[start..].find("</saml2:AttributeValue>") {
-                return Some(slice[start..start + end].trim().to_string());
-            }
-        } else if let Some(val_tag) = slice.find("<AttributeValue>") {
-            let start = val_tag + "<AttributeValue>".len();
-            if let Some(end) = slice[start..].find("</AttributeValue>") {
-                return Some(slice[start..start + end].trim().to_string());
+        let val_variants = ["<saml:AttributeValue>", "<saml2:AttributeValue>", "<AttributeValue>"];
+        let close_variants = ["</saml:AttributeValue>", "</saml2:AttributeValue>", "</AttributeValue>"];
+
+        for (val_tag, close_tag) in val_variants.iter().zip(close_variants.iter()) {
+            if let Some(start) = slice.find(val_tag) {
+                let c_start = start + val_tag.len();
+                if let Some(end) = slice[c_start..].find(close_tag) {
+                    return Some(slice[c_start..c_start + end].trim().to_string());
+                }
             }
         }
     }
