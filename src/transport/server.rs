@@ -251,7 +251,7 @@ async fn handle_fallback_ui_and_control_api(
     let path = uri.path();
     let method_str = method.as_str();
 
-    if path.starts_with("/api/v1/") {
+    if path.starts_with("/api/v1/") || path == "/saml/metadata" {
         let (status_code, body_bytes, content_type) =
             crate::control::web_api::WebApiDispatcher::dispatch(
                 method_str,

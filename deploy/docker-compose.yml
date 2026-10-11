@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: MIT
+# Propylon Gateway - Zero-Friction Enterprise Container Deployment
+# Single-port, rootless, production-grade MCP & Skill Gateway
+
+services:
+  propylon:
+    image: ghcr.io/ihkaru/propylon-gateway:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: propylon-gateway
+    restart: unless-stopped
+    user: "10001:10001"
+    ports:
+      - "8080:8080"
+    environment:
+      PROPYLON_HOST: "0.0.0.0"
+      PROPYLON_PORT: "8080"
+      PORT: "8080"
+      PROPYLON_POLICY_TIER: "hybrid"
+      PROPYLON_STATE_BACKEND: "memory"
+      RUST_LOG: "propylon=info,warn"
+      # Vendor-Agnostic SAML 2.0 Web SSO Configuration
+      SAML_IDP_PROVIDER_NAME: "rIDM"
+      SAML_IDP_TENANT: "bps"
+      SAML_IDP_ISSUER: "https://auth.dvlpid.my.id/t/bps"
+      SAML_IDP_SSO_URL: "https://auth.dvlpid.my.id/t/bps/saml/sso"
+      SAML_IDP_METADATA_URL: "https://auth.dvlpid.my.id/t/bps/saml/metadata"
+      SAML_SP_ENTITY_ID: "https://mcp.dvlpid.my.id/saml/metadata"
+      SAML_SP_ACS_URL: "https://mcp.dvlpid.my.id/api/v1/auth/saml/acs"
+    volumes:
+      - propylon-data:/app/data
+      - propylon-cache:/tmp/propylon-cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+
+volumes:
+  propylon-data:
+    driver: local
+  propylon-cache:
+    driver: local

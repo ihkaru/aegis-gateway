@@ -1,0 +1,110 @@
+# Default values for propylon.
+# This is a YAML-formatted file.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/ihkaru/propylon-gateway
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: mcp.dvlpid.my.id
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mcp-dvlpid-tls
+      hosts:
+        - mcp.dvlpid.my.id
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 2
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+env:
+  PROPYLON_HOST: "0.0.0.0"
+  PROPYLON_PORT: "8080"
+  PORT: "8080"
+  PROPYLON_POLICY_TIER: "hybrid"
+  PROPYLON_STATE_BACKEND: "memory"
+  RUST_LOG: "propylon=info,warn"
+  SAML_IDP_PROVIDER_NAME: "rIDM"
+  SAML_IDP_TENANT: "bps"
+  SAML_IDP_ISSUER: "https://auth.dvlpid.my.id/t/bps"
+  SAML_IDP_SSO_URL: "https://auth.dvlpid.my.id/t/bps/saml/sso"
+  SAML_IDP_METADATA_URL: "https://auth.dvlpid.my.id/t/bps/saml/metadata"
+  SAML_SP_ENTITY_ID: "https://mcp.dvlpid.my.id/saml/metadata"
+  SAML_SP_ACS_URL: "https://mcp.dvlpid.my.id/api/v1/auth/saml/acs"
+
+persistence:
+  enabled: true
+  size: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: ""

@@ -64,7 +64,7 @@ impl SamlApiDispatcher {
             }
 
             // 2. SAML SP Metadata for IdP ingestion
-            ("GET", "/api/v1/auth/saml/metadata") => {
+            ("GET", "/api/v1/auth/saml/metadata") | ("GET", "/saml/metadata") => {
                 let sp = Self::get_sp_service();
                 let xml = format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
