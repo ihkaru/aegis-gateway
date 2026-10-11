@@ -64,7 +64,7 @@ impl SamlApiDispatcher {
             }
 
             // 2. SAML SP Metadata for IdP ingestion
-            ("GET", "/api/v1/auth/saml/metadata") | ("GET", "/saml/metadata") => {
+            ("GET", "/api/v1/auth/saml/metadata") | ("GET", "/saml/metadata") | ("HEAD", "/saml/metadata") => {
                 let sp = Self::get_sp_service();
                 let xml = format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
@@ -80,7 +80,7 @@ impl SamlApiDispatcher {
             }
 
             // 3. Initiate SAML AuthnRequest (Redirect or JSON)
-            ("GET", "/api/v1/auth/saml/login") | ("GET", "/saml/login") => {
+            ("GET", "/api/v1/auth/saml/login") | ("GET", "/saml/login") | ("HEAD", "/saml/login") => {
                 let sp = Self::get_sp_service();
                 let sso_url = Self::get_sso_destination();
 
