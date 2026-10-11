@@ -61,4 +61,5 @@ pub trait BackendRegistry: Send + Sync {
     async fn get(&self, name: &str) -> AegisResult<Arc<dyn BackendTransport>>;
     async fn list_backends(&self) -> AegisResult<Vec<String>>;
     async fn discover_all_tools(&self) -> AegisResult<Vec<ToolDefinition>>;
+    async fn find_backend_for_tool(&self, tool_name: &str) -> AegisResult<Option<Arc<dyn BackendTransport>>>;
 }

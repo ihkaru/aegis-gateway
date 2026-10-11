@@ -6,6 +6,7 @@ pub mod backend;
 pub mod cluster_sync;
 pub mod control_plane;
 pub mod data_governance;
+pub mod database;
 pub mod delegation;
 pub mod dlp;
 pub mod error;
@@ -42,6 +43,7 @@ pub use notification::{
 };
 pub use oauth_connect::{AuthProviderConfig, AuthRequiredResponse, ConnectSession, OAuthConnectEngine};
 pub use proxy::{CredentialProxyEngine, ProxyBinding};
+pub use database::{SqlEngine, SqlQueryResult};
 
 pub use audit::{AuditAction, AuditChainVerifier, AuditEvent, AuditSink, HashChainedEvent, OtelTraceContext};
 pub use backend::{AegisTopologyConfig, BackendConfig, BackendRegistry, BackendTransport};

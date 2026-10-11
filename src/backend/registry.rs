@@ -98,4 +98,31 @@ impl BackendRegistry for SubprocessBackendRegistry {
 
         Ok(all_tools)
     }
+
+    async fn find_backend_for_tool(&self, tool_name: &str) -> AegisResult<Option<Arc<dyn BackendTransport>>> {
+        let read = self.backends.read().await;
+        for (_name, transport) in read.iter() {
+            if !transport.is_healthy().await {
+                continue;
+            }
+            let req = JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                id: Some(JsonRpcId::Number(200)),
+                method: "tools/list".to_string(),
+                params: Some(json!({})),
+            };
+            if let Ok(resp) = transport.send_request(&req).await {
+                if let Some(result) = resp.result {
+                    if let Some(tools_arr) = result.get("tools").and_then(|t| t.as_array()) {
+                        for t in tools_arr {
+                            if t.get("name").and_then(|n| n.as_str()) == Some(tool_name) {
+                                return Ok(Some(Arc::clone(transport)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(None)
+    }
 }

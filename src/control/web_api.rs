@@ -123,13 +123,11 @@ impl WebApiDispatcher {
                     let call_start = std::time::Instant::now();
 
                     let raw_result = if let Some(reg) = registry {
-                        let discovered = reg.discover_all_tools().await.unwrap_or_default();
-                        let target_backend = discovered.iter().find(|t| t.name == tool).map(|t| t.server.as_str()).unwrap_or("aegis_local_engine");
-                        let transport_res = match reg.get(target_backend).await {
-                            Ok(t) => Ok(t),
-                            Err(_) => reg.get("aegis_local_engine").await,
+                        let transport_opt = match reg.find_backend_for_tool(tool).await {
+                            Ok(Some(t)) => Some(t),
+                            _ => reg.get("aegis_local_engine").await.ok(),
                         };
-                        if let Ok(transport) = transport_res {
+                        if let Some(transport) = transport_opt {
                             let rpc_req = crate::core::transport::JsonRpcRequest {
                                 jsonrpc: "2.0".to_string(),
                                 id: Some(crate::core::transport::JsonRpcId::Number(1)),

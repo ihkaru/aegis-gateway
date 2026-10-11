@@ -2,18 +2,34 @@
 
 use async_trait::async_trait;
 use serde_json::json;
+use std::sync::Arc;
 
 use crate::core::backend::BackendTransport;
+use crate::core::database::SqlEngine;
 use crate::core::error::AegisResult;
 use crate::core::transport::{JsonRpcId, JsonRpcRequest, JsonRpcResponse};
 
-/// Real In-Memory Local Loopback Backend for Aegis Gateway control plane
-#[derive(Debug, Clone, Default)]
-pub struct LocalAegisBackend;
+/// Real In-Memory Local Loopback Backend with Dependency Injection (DIP & ISP)
+#[derive(Clone)]
+pub struct LocalAegisBackend {
+    sql_engine: Arc<dyn SqlEngine>,
+}
+
+impl Default for LocalAegisBackend {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl LocalAegisBackend {
     pub fn new() -> Self {
-        Self
+        Self {
+            sql_engine: Arc::new(crate::backend::LocalSqliteEngine::with_default_path()),
+        }
+    }
+
+    pub fn with_sql_engine(sql_engine: Arc<dyn SqlEngine>) -> Self {
+        Self { sql_engine }
     }
 }
 
@@ -24,7 +40,7 @@ impl BackendTransport for LocalAegisBackend {
     }
 
     async fn is_healthy(&self) -> bool {
-        true
+        self.sql_engine.is_healthy().await
     }
 
     async fn send_request(&self, request: &JsonRpcRequest) -> AegisResult<JsonRpcResponse> {
@@ -74,11 +90,17 @@ impl BackendTransport for LocalAegisBackend {
                     }),
                     "aegis_sqlite_query" | "sqlite_query" => {
                         let query = args.get("query").and_then(|q| q.as_str()).unwrap_or("SELECT * FROM customer_accounts LIMIT 5");
-                        execute_local_sqlite(query)
+                        match self.sql_engine.execute(query).await {
+                            Ok(res) => res.to_json_value(),
+                            Err(e) => json!({ "status": "ERROR", "error": e.to_string() }),
+                        }
                     }
                     "sqlite_schema" => {
                         let table = args.get("table").and_then(|t| t.as_str()).unwrap_or("customer_accounts");
-                        execute_local_sqlite(&format!("PRAGMA table_info({table})"))
+                        match self.sql_engine.execute(&format!("PRAGMA table_info({table})")).await {
+                            Ok(res) => res.to_json_value(),
+                            Err(e) => json!({ "status": "ERROR", "error": e.to_string() }),
+                        }
                     }
                     _ => json!({
                         "status": "unattached",
@@ -95,7 +117,7 @@ impl BackendTransport for LocalAegisBackend {
                     id: req_id,
                     result: Some(json!({
                         "content": [{ "type": "text", "text": data.to_string() }],
-                        "isError": false,
+                        "isError": data.get("status") == Some(&json!("ERROR")),
                         "data": data
                     })),
                     error: None,
@@ -112,48 +134,6 @@ impl BackendTransport for LocalAegisBackend {
 
     async fn stop(&self) -> AegisResult<()> {
         Ok(())
-    }
-}
-
-fn execute_local_sqlite(query: &str) -> serde_json::Value {
-    let script = r#"
-import sqlite3, json, sys, os
-db_dir = "/root/projects/aegis-gateway/data"
-os.makedirs(db_dir, exist_ok=True)
-db_path = os.path.join(db_dir, "aegis_local.db")
-conn = sqlite3.connect(db_path)
-cur = conn.cursor()
-try:
-    cur.execute(sys.argv[1])
-    q_upper = sys.argv[1].strip().upper()
-    if q_upper.startswith(("SELECT", "PRAGMA", "EXPLAIN")):
-        cols = [d[0] for d in cur.description] if cur.description else []
-        rows = [dict(zip(cols, r)) for r in cur.fetchall()]
-        print(json.dumps({"status": "SUCCESS", "type": "SELECT", "row_count": len(rows), "rows": rows}))
-    else:
-        conn.commit()
-        print(json.dumps({"status": "SUCCESS", "type": "MUTATION", "rows_affected": cur.rowcount}))
-except Exception as e:
-    print(json.dumps({"status": "ERROR", "error": str(e)}))
-"#;
-    let output = std::process::Command::new("python3")
-        .arg("-c")
-        .arg(script)
-        .arg(query)
-        .output();
-
-    match output {
-        Ok(out) if out.status.success() => {
-            let stdout = String::from_utf8_lossy(&out.stdout);
-            serde_json::from_str(&stdout).unwrap_or_else(|_| {
-                json!({ "status": "ERROR", "error": "Invalid output from SQLite engine" })
-            })
-        }
-        Ok(out) => {
-            let stderr = String::from_utf8_lossy(&out.stderr);
-            json!({ "status": "ERROR", "error": stderr.to_string() })
-        }
-        Err(e) => json!({ "status": "ERROR", "error": e.to_string() }),
     }
 }
 

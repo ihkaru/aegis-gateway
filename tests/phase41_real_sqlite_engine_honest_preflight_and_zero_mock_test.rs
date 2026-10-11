@@ -156,3 +156,36 @@ async fn test_phase41_embedded_admin_ui_catalog_and_playground_dispatch() {
     assert_eq!(alias_json["result"]["execution_mode"], "LIVE_EXECUTED");
     assert_eq!(alias_json["raw"]["data"]["status"], "SUCCESS");
 }
+
+#[tokio::test]
+async fn test_phase41_interface_first_sql_engine_contract() {
+    use std::sync::Arc;
+    use aegis_gateway::core::backend::BackendRegistry;
+    use aegis_gateway::core::database::{SqlEngine, SqlQueryResult};
+    use aegis_gateway::backend::LocalSqliteEngine;
+
+    // 1. Verify SqlEngine abstraction trait with dynamic dispatch (DIP & LSP)
+    let engine: Arc<dyn SqlEngine> = Arc::new(LocalSqliteEngine::new("data/contract_test.db"));
+    assert!(engine.is_healthy().await);
+    assert_eq!(engine.engine_name(), "sqlite-hermetic-local");
+
+    // 2. Execute mutation through abstraction
+    let res = engine.execute("CREATE TABLE IF NOT EXISTS contract_nodes (id INTEGER PRIMARY KEY, label TEXT);").await.unwrap();
+    match res {
+        SqlQueryResult::Mutation { .. } => {}
+        _ => panic!("Expected mutation result"),
+    }
+
+    // 3. Inject into LocalAegisBackend via Dependency Injection (DI Pattern)
+    let di_backend = LocalAegisBackend::with_sql_engine(engine);
+    assert!(di_backend.is_healthy().await);
+
+    // 4. Test BackendRegistry find_backend_for_tool contract
+    let registry = aegis_gateway::backend::SubprocessBackendRegistry::with_default_local_engine();
+    let found = registry.find_backend_for_tool("aegis_sqlite_query").await.unwrap();
+    assert!(found.is_some(), "Expected to resolve backend for aegis_sqlite_query");
+
+    let not_found = registry.find_backend_for_tool("non_existent_tool").await.unwrap();
+    assert!(not_found.is_none(), "Expected None for non-existent tool");
+}
+
