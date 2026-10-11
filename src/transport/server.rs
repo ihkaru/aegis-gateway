@@ -80,6 +80,7 @@ impl LiveHttpServer {
                 "/.well-known/oauth-protected-resource",
                 get(handle_oauth_metadata),
             )
+            .fallback(handle_fallback_ui_and_control_api)
             .with_state(self.state.clone())
     }
 
@@ -240,4 +241,51 @@ async fn handle_oauth_metadata() -> Response {
         metadata.to_json().to_string(),
     )
         .into_response()
+}
+
+async fn handle_fallback_ui_and_control_api(
+    uri: axum::http::Uri,
+    method: axum::http::Method,
+    body: axum::body::Bytes,
+) -> Response {
+    let path = uri.path();
+    let method_str = method.as_str();
+
+    if path.starts_with("/api/v1/") {
+        let (status_code, body_bytes, content_type) =
+            crate::control::web_api::WebApiDispatcher::dispatch(
+                method_str,
+                path,
+                &body,
+                std::time::Instant::now(),
+                None,
+                None,
+                &std::sync::RwLock::new(Vec::new()),
+                &std::sync::RwLock::new(Vec::new()),
+                &std::sync::RwLock::new("Hybrid".to_string()),
+            ).await;
+
+        let mut resp = (
+            StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK),
+            body_bytes,
+        ).into_response();
+        resp.headers_mut().insert(
+            axum::http::header::CONTENT_TYPE,
+            axum::http::HeaderValue::from_static(content_type),
+        );
+        return resp;
+    }
+
+    let admin_server = crate::control::web_ui::EmbeddedAdminServer::new(8080, true);
+    let (status_code, body_bytes, content_type) = admin_server.handle_request(method_str, path).await;
+
+    let mut resp = (
+        StatusCode::from_u16(status_code).unwrap_or(StatusCode::OK),
+        body_bytes,
+    ).into_response();
+    resp.headers_mut().insert(
+        axum::http::header::CONTENT_TYPE,
+        axum::http::HeaderValue::from_static(content_type),
+    );
+    resp
 }
