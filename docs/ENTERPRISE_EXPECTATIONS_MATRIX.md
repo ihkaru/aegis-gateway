@@ -72,6 +72,7 @@
 | F8 | **Tab 8: Tenant FinOps**<br/>Visualisasi konsumsi token, alokasi biaya, dan status hard freeze | **VERIFIED** | `ui/src/lib/FinopsTab.svelte` terhubung ke `GET /api/v1/finops` |
 | F9 | **Tab 9: SOC 2 Audit**<br/>Root hash SHA-256 dan ekspor proof pack JSON satu klik | **VERIFIED** | `ui/src/lib/AuditTab.svelte` terhubung ke `GET /api/v1/audit/soc2` |
 | F10 | **UI Themes & Invariants**<br/>Zinc, Slate, Neutral, OLED, dark/light mode, zero emoticons | **VERIFIED** | `ui/src/App.svelte` & Tailwind tokens |
+| F11 | **Interactive Topology Flow Canvas (@xyflow/svelte)**<br/>Visualisasi graf interaktif DAG alur request, pulse circuit breaker, dan inspector drawer | **ROADMAP (Phase 46-48)** | Direncanakan di `docs/roadmap/46_...` - `48_...` |
 
 ---
 

@@ -57,14 +57,14 @@
     - `LIVE EXECUTED` (hijau): Eksekusi riil pada backend lokal/upstream.
     - `PREFLIGHT VERIFIED` (kuning): Evaluasi guardrail ABAC/DLP untuk tool unattached.
 
-### Tab 4: Topology & Config (`ConfigTab.svelte`)
-- **Tujuan**: Editor deklaratif in-browser untuk `aegis.yaml` dengan zero-downtime hot-reload.
-- **REST Binding**: `GET /api/v1/config/raw`, `POST /api/v1/config/validate`, `POST /api/v1/config/apply`, `GET /api/v1/config/template`.
+### Tab 4: Topology & Config (`TopologyTab.svelte` & `ConfigTab.svelte`)
+- **Tujuan**: Visualisasi DAG topologi interaktif berbasis Svelte Flow (`@xyflow/svelte`) dan editor deklaratif in-browser untuk `aegis.yaml`.
+- **REST Binding**: `GET /api/v1/topology/graph`, `GET /api/v1/config/raw`, `POST /api/v1/config/apply`.
 - **Ekspektasi Data & Aksi**:
-  - Monospace text editor untuk konfigurasi topologi YAML/JSON.
-  - Preflight Check: Validasi struktur dan skema sebelum diterapkan.
-  - Apply & Hot-Reload: Menyimpan ke disk dengan backup otomatis (`aegis.yaml.bak`) dan melakukan atomic state swapping pada registry backend tanpa memutus koneksi streaming.
-  - Starter Template & Reload: Reset ke konfigurasi awal atau baca ulang dari disk.
+  - **Svelte Flow Canvas**: Graf DAG interaktif (pan, zoom, minimap) memetakan alur request: `Clients -> Ingress (:8484) -> Security Filters -> Tool Router -> MCP Backends & Integration Channels`.
+  - **Live Circuit Breaker Pulse**: Indikator status reaktif real-time pada simpul backend (Hijau = Normal/Closed, Merah = Tripped/Open).
+  - **Interactive Node Drawer**: Klik simpul untuk inspeksi diagnostik, latensi P99, dan tombol reset circuit breaker.
+  - **Declarative YAML Editor**: Monospace code editor dengan preflight syntax validation dan atomic zero-downtime hot-reload.
 
 ### Tab 5: Policy Control (`PolicyTab.svelte`)
 - **Tujuan**: Manajemen otorisasi ABAC dan pembatasan argumen destruktif.
