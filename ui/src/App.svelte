@@ -1,21 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import {
-    Activity,
-    Shield,
-    Clock,
-    Layers,
-    Server,
-    Sun,
-    Moon,
-    Terminal,
-    Lock,
-    Cpu,
-    FileText,
-    Sliders,
-    Network,
-    User,
-    LogOut,
+    Activity, Shield, Clock, Layers, Server, Sun, Moon,
+    Terminal, Lock, Cpu, FileText, Sliders, Network, User, LogOut, Copy, Check, Key
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
   import BackendsTab from './lib/BackendsTab.svelte';
@@ -37,6 +24,15 @@
   let isDark = $state(true);
   let authUser = $state<any>(null);
   let authToken = $state('');
+  let copiedToken = $state(false);
+
+  function copyToken() {
+    if (!authToken) return;
+    navigator.clipboard.writeText(authToken).then(() => {
+      copiedToken = true;
+      setTimeout(() => { copiedToken = false; }, 2500);
+    });
+  }
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
@@ -130,17 +126,30 @@
         <span>ZERO-TRUST mTLS</span>
       </div>
 
-      <!-- Center-Right SAML Identity Widget -->
+      <!-- Center-Right SAML Identity Widget & Token Copy -->
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 border border-border bg-muted/40 py-1 px-2.5 rounded-lg text-xs">
           <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
           <div class="flex flex-col text-left">
-            <span class="font-semibold text-[11px] leading-tight truncate max-w-[120px] sm:max-w-[170px]" title={authUser.subject}>{authUser.subject}</span>
-            <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[120px] sm:max-w-[170px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
+            <span class="font-semibold text-[11px] leading-tight truncate max-w-[110px] sm:max-w-[150px]" title={authUser.subject}>{authUser.subject}</span>
+            <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[110px] sm:max-w-[150px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
           </div>
           <button
+            onclick={copyToken}
+            class="ml-1 text-[10px] font-mono flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted text-foreground transition-all cursor-pointer shadow-xs"
+            title="Salin token sesi untuk CLI ('propylon login --token <TOKEN>') atau Coding Agent"
+          >
+            {#if copiedToken}
+              <Check class="h-3 w-3 text-emerald-400" />
+              <span class="text-emerald-400 font-semibold">Tersalin!</span>
+            {:else}
+              <Copy class="h-3 w-3 text-muted-foreground" />
+              <span>Token</span>
+            {/if}
+          </button>
+          <button
             onclick={handleLogout}
-            class="ml-1 text-muted-foreground hover:text-rose-400 text-[10px] flex items-center gap-0.5 transition-colors cursor-pointer"
+            class="ml-0.5 text-muted-foreground hover:text-rose-400 text-[10px] flex items-center gap-0.5 transition-colors cursor-pointer"
             title="Logout session"
           >
             <LogOut class="h-3 w-3" />
@@ -270,6 +279,31 @@
 
   <!-- Main Content Viewport -->
   <main class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 flex-1 w-full max-w-full">
+    {#if authToken}
+      <div class="mb-4 sm:mb-6 p-3 rounded-lg border border-primary/30 bg-primary/5 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <Key class="h-4 w-4 text-primary shrink-0" />
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+            <span class="font-semibold text-foreground shrink-0">Kunci Sesi CLI / MCP:</span>
+            <code class="px-2 py-0.5 rounded bg-muted/80 font-mono text-[11px] text-primary truncate max-w-[240px] sm:max-w-[400px]">{authToken}</code>
+          </div>
+        </div>
+        <button
+          onclick={copyToken}
+          class="px-2.5 py-1 rounded bg-primary text-primary-foreground font-medium text-[11px] flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+          title="Salin token sesi untuk CLI ('propylon login --token <TOKEN>')"
+        >
+          {#if copiedToken}
+            <Check class="h-3.5 w-3.5" />
+            <span>Tersalin ke Clipboard!</span>
+          {:else}
+            <Copy class="h-3.5 w-3.5" />
+            <span>Salin Token CLI</span>
+          {/if}
+        </button>
+      </div>
+    {/if}
+
     {#if currentTab === 'overview'}
       <OverviewTab />
     {:else if currentTab === 'backends'}
