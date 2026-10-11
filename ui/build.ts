@@ -7,6 +7,9 @@ async function run() {
     configFile: false,
     plugins: [svelte()],
     base: './',
+    resolve: {
+      preserveSymlinks: true,
+    },
     build: {
       outDir: 'dist',
       emptyOutDir: true,

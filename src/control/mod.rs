@@ -138,8 +138,10 @@ impl ConfigurationWatcher for FileSignalConfigurationWatcher {
 
 pub mod config_api;
 pub mod crd_operator;
+pub mod topology_api;
 pub mod web_api;
 pub mod web_ui;
 pub use config_api::ConfigApiDispatcher;
 pub use crd_operator::{AegisBackendCrd, AegisPolicyCrd, CrdOperatorEngine, ReconciliationReport};
+pub use topology_api::TopologyApiDispatcher;
 pub use web_ui::{AdminUiAssets, EmbeddedAdminServer};

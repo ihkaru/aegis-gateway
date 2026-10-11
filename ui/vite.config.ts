@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [svelte()],
   base: './',
   resolve: {
+    preserveSymlinks: true,
     alias: {
       $lib: path.resolve(__dirname, './src/lib'),
     },

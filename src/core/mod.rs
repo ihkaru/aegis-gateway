@@ -29,6 +29,7 @@ pub mod state;
 pub mod transport;
 pub mod trust;
 pub mod types;
+pub mod topology;
 pub mod vault;
 
 pub use approval::{ApprovalDecision, ApprovalGate, ApprovalTicket, RiskTier};
@@ -106,6 +107,10 @@ pub use federation::{
 };
 pub use otlp::{
     OtlpExportBatch, OtlpExportProtocol, OtlpExportResult, OtlpSpanData, OtlpTelemetryExporter,
+};
+pub use topology::{
+    TopologyGraphEdge, TopologyGraphNode, TopologyGraphProvider, TopologyGraphResponse,
+    TopologyNodeMetrics,
 };
 
 

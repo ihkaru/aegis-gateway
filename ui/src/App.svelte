@@ -12,10 +12,12 @@
     Cpu,
     FileText,
     Sliders,
+    Network,
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
   import BackendsTab from './lib/BackendsTab.svelte';
   import ToolsTab from './lib/ToolsTab.svelte';
+  import TopologyTab from './lib/TopologyTab.svelte';
   import DlpTab from './lib/DlpTab.svelte';
   import HitlTab from './lib/HitlTab.svelte';
   import PolicyTab from './lib/PolicyTab.svelte';
@@ -23,7 +25,7 @@
   import AuditTab from './lib/AuditTab.svelte';
   import ConfigTab from './lib/ConfigTab.svelte';
 
-  type Tab = 'overview' | 'backends' | 'tools' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
+  type Tab = 'overview' | 'backends' | 'tools' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
 
   let currentTab = $state<Tab>('overview');
@@ -142,6 +144,13 @@
         Tools & Playground
       </button>
       <button
+        onclick={() => (currentTab = 'topology')}
+        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'topology' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+      >
+        <Network class="h-3.5 w-3.5 shrink-0" />
+        Topology Flow
+      </button>
+      <button
         onclick={() => (currentTab = 'policy')}
         class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'policy' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
       >
@@ -194,6 +203,8 @@
       <BackendsTab />
     {:else if currentTab === 'tools'}
       <ToolsTab />
+    {:else if currentTab === 'topology'}
+      <TopologyTab />
     {:else if currentTab === 'policy'}
       <PolicyTab />
     {:else if currentTab === 'config'}

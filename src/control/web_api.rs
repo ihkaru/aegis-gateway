@@ -50,6 +50,11 @@ impl WebApiDispatcher {
                 });
                 (200, payload.to_string().into_bytes(), "application/json")
             }
+            ("GET", "/api/v1/topology/graph") => {
+                crate::control::topology_api::TopologyApiDispatcher::handle_get_graph(
+                    start_time, gateway, registry, current_tier,
+                ).await
+            }
             ("GET", "/api/v1/backends") => {
                 let list = if let Some(reg) = registry {
                     let backends = reg.list_backends().await.unwrap_or_default();
