@@ -33,6 +33,7 @@
   let tools = $state<ToolItem[]>([]);
   let loading = $state(true);
   let searchQuery = $state('');
+  let filterScope = $state<'all' | 'live' | 'templates'>('all');
   let disclosureLevel = $state<'L0' | 'L1' | 'L2'>('L0');
   let selectedTool = $state<ToolItem | null>(null);
   let inputArgs = $state('{\n  "query": "SELECT * FROM customer_accounts LIMIT 5"\n}');
@@ -56,11 +57,7 @@
   }
 
   function isLiveTool(tool: ToolItem): boolean {
-    return (
-      tool.is_live === true ||
-      tool.backend === 'aegis_local_engine' ||
-      tool.backend === 'sqlite_ledger'
-    );
+    return tool.is_live === true || tool.backend === 'aegis_local_engine' || tool.backend === 'sqlite_ledger';
   }
 
   function selectTool(tool: ToolItem) {
@@ -73,11 +70,7 @@
     } else if (tool.name.includes('search') || tool.name.includes('lookup')) {
       inputArgs = '{\n  "query": "NIST AI RMF compliance standard",\n  "limit": 5\n}';
     } else {
-      inputArgs = JSON.stringify(
-        tool.schema?.properties ? { ...tool.schema.properties } : { param: 'sample_value' },
-        null,
-        2
-      );
+      inputArgs = JSON.stringify(tool.schema?.properties ? { ...tool.schema.properties } : { param: 'sample_value' }, null, 2);
     }
   }
 
@@ -98,44 +91,35 @@
       const res = await fetch('/api/v1/tools/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tool: selectedTool.name,
-          arguments: parsed,
-        }),
+        body: JSON.stringify({ tool: selectedTool.name, arguments: parsed }),
       });
 
       if (res.ok) {
         execResult = await res.json();
       } else {
         const err = await res.json();
-        execResult = {
-          outcome: 'ERROR',
-          tool: selectedTool.name,
-          latency_ms: 0,
-          result: { error: err.error || 'Execution failed' },
-          dlp_modified: false,
-        };
+        execResult = { outcome: 'ERROR', tool: selectedTool.name, latency_ms: 0, result: { error: err.error || 'Execution failed' }, dlp_modified: false };
       }
     } catch (e: any) {
-      execResult = {
-        outcome: 'NETWORK_ERROR',
-        tool: selectedTool.name,
-        latency_ms: 0,
-        result: { error: e.message },
-        dlp_modified: false,
-      };
+      execResult = { outcome: 'NETWORK_ERROR', tool: selectedTool.name, latency_ms: 0, result: { error: e.message }, dlp_modified: false };
     } finally {
       executing = false;
     }
   }
 
   let filteredTools = $derived(
-    tools.filter(
-      (t) =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.backend.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.purpose.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    tools
+      .filter((t) => {
+        if (filterScope === 'live') return isLiveTool(t);
+        if (filterScope === 'templates') return !isLiveTool(t);
+        return true;
+      })
+      .filter(
+        (t) =>
+          t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.backend.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
   onMount(() => {
@@ -186,14 +170,30 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
     <!-- Left Tools List -->
     <div class="lg:col-span-5 rounded-lg border border-border bg-card p-3 space-y-3 shadow-xs">
-      <div class="relative">
-        <Search class="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
-        <input
-          type="text"
-          bind:value={searchQuery}
-          placeholder="Filter tools by name or backend..."
-          class="w-full rounded border border-border bg-background pl-8 pr-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+      <div class="space-y-2">
+        <div class="relative">
+          <Search class="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+          <input
+            type="text"
+            bind:value={searchQuery}
+            placeholder="Filter tools by name or backend..."
+            class="w-full rounded border border-border bg-background pl-8 pr-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px]">
+          <button
+            onclick={() => (filterScope = 'all')}
+            class="px-2 py-0.5 rounded border transition-colors {filterScope === 'all' ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border text-muted-foreground hover:text-foreground'}"
+          >All ({tools.length})</button>
+          <button
+            onclick={() => (filterScope = 'live')}
+            class="px-2 py-0.5 rounded border transition-colors {filterScope === 'live' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500 font-semibold' : 'border-border text-muted-foreground hover:text-foreground'}"
+          >Live Active ({tools.filter(isLiveTool).length})</button>
+          <button
+            onclick={() => (filterScope = 'templates')}
+            class="px-2 py-0.5 rounded border transition-colors {filterScope === 'templates' ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border text-muted-foreground hover:text-foreground'}"
+          >Templates ({tools.filter((t) => !isLiveTool(t)).length})</button>
+        </div>
       </div>
 
       {#if filteredTools.length === 0}

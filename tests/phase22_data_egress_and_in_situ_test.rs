@@ -127,6 +127,7 @@ async fn test_policy_tier_strict_airgapped_forces_in_situ_compute() {
 
 #[tokio::test]
 async fn test_in_situ_analytical_enclave_execution_zero_egress() {
+    use std::io::Write;
     let audit = Arc::new(StructuredAuditLogger::new());
     let egress = Arc::new(EgressFilterEngine::new());
     let secrets = Arc::new(EnvSecretStore::new());
@@ -135,15 +136,33 @@ async fn test_in_situ_analytical_enclave_execution_zero_egress() {
     let enclave = SandboxedInSituEnclave::new(sandbox);
     let caller = make_test_caller();
 
+    let tmp = tempfile::Builder::new()
+        .suffix(".csv")
+        .tempfile()
+        .expect("temp dataset file");
+    let mut file = tmp.as_file();
+    writeln!(file, "region,amount,status").unwrap();
+    for i in 0..2000 {
+        writeln!(file, "APAC,{},CONFIRMED", 100 + (i % 25)).unwrap();
+    }
+    file.flush().unwrap();
+    let path_str = tmp.path().to_str().unwrap();
+
     let query = "SELECT region, count(*), sum(amount) FROM export_parquet GROUP BY region";
     let res = enclave
-        .execute_query(query, "/virtual/path/export_parquet.zip", &caller)
+        .execute_query(query, path_str, &caller)
         .await
-        .expect("In-situ query should execute successfully");
+        .expect("In-situ query should execute successfully on real dataset");
 
     assert!(res.success);
-    assert_eq!(res.columns.len(), 3);
-    assert!(res.summary_table.contains("query_executed"));
-    assert!(res.raw_bytes_read >= 105 * 1024 * 1024);
-    assert!(res.egress_bytes_returned < 2048); // Only ~300 bytes returned instead of 105MB!
+    assert_eq!(res.columns, vec!["region", "amount", "status"]);
+    assert_eq!(res.row_count, 2000);
+    assert!(res.raw_bytes_read > 20_000);
+    assert!(res.egress_bytes_returned < 2048);
+
+    // Negative control: Non-existent dataset must fail honestly
+    let missing = enclave
+        .execute_query("SELECT 1", "/tmp/non_existent_dataset_12345.parquet", &caller)
+        .await;
+    assert!(missing.is_err());
 }

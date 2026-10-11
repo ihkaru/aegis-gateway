@@ -9,4 +9,4 @@ node_modules/
 !ui/dist/
 !ui/dist/**
 data/*.db
-
+*.bak

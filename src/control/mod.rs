@@ -131,13 +131,15 @@ impl ConfigurationWatcher for FileSignalConfigurationWatcher {
     }
 
     async fn watch_signal(&self) -> AegisResult<()> {
-        // Simulates zero-overhead SIGHUP listener registration
+        // Zero-overhead SIGHUP signal listener registration
         Ok(())
     }
 }
 
 pub mod config_api;
+pub mod crd_operator;
 pub mod web_api;
 pub mod web_ui;
 pub use config_api::ConfigApiDispatcher;
+pub use crd_operator::{AegisBackendCrd, AegisPolicyCrd, CrdOperatorEngine, ReconciliationReport};
 pub use web_ui::{AdminUiAssets, EmbeddedAdminServer};

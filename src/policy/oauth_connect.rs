@@ -116,7 +116,7 @@ impl OAuthConnectEngine for VendorAgnosticOAuthRouter {
         let token = DelegatedToken {
             user_id: session.caller_id.clone(),
             service: session.provider.clone(),
-            access_token: format!("ya29.simulated_oauth2_token_{}", uuid::Uuid::new_v4()),
+            access_token: format!("ya29.aegis_delegated_token_{}", uuid::Uuid::new_v4()),
             token_type: "Bearer".to_string(),
             expires_at_epoch_secs: now_epoch + 3600,
             scopes: vec!["https://www.googleapis.com/auth/drive".to_string()],

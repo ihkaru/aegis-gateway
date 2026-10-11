@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 use async_trait::async_trait;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -30,35 +31,87 @@ impl InSituDataEnclave for SandboxedInSituEnclave {
     ) -> AegisResult<InSituExecutionResult> {
         let start = Instant::now();
 
-        // Construct hermetic in-situ analytics runner script
-        // Runs query against dataset and formats derived summary without returning raw file content
+        // Enforce honest filesystem pre-check: reject non-existent paths immediately
+        if !Path::new(resource_path).exists() {
+            return Err(AegisError::ResourceNotFound(format!(
+                "In-situ dataset not found on server filesystem: '{}'",
+                resource_path
+            )));
+        }
+
         let script = format!(
             r#"
-import sys, os, json
+import sys, os, json, sqlite3, csv
 
 resource_path = "{resource_path}"
 query = """{query}"""
 
-# Check resource existence
-raw_bytes = 0
-if os.path.exists(resource_path):
-    raw_bytes = os.path.getsize(resource_path)
-else:
-    # Virtual simulated test path size if testing in-memory
-    raw_bytes = 105 * 1024 * 1024
+if not os.path.exists(resource_path):
+    print(json.dumps({{"error": f"Resource not found: {{resource_path}}"}}))
+    sys.exit(2)
 
-# Execute analytical query simulation / processing
-columns = ["metric", "value", "status"]
-summary = f"| metric | value | status |\n| --- | --- | --- |\n| query_executed | {{query.strip()}} | SUCCESS |\n| raw_dataset | {{os.path.basename(resource_path)}} | PROCESSED |\n| bytes_read | {{raw_bytes}} | CONFINED |"
+raw_bytes = os.path.getsize(resource_path)
+columns = []
+rows = []
+row_count = 0
 
-output_payload = {{
-    "columns": columns,
-    "row_count": 3,
-    "summary_table": summary,
-    "raw_bytes_read": raw_bytes
-}}
+try:
+    is_sqlite = resource_path.endswith(('.db', '.sqlite', '.sqlite3'))
+    is_csv = resource_path.endswith(('.csv', '.tsv'))
+    if not is_sqlite and not is_csv:
+        try:
+            with open(resource_path, 'r', encoding='utf-8', errors='ignore') as f_sniff:
+                first = f_sniff.readline()
+                if ',' in first or '\t' in first:
+                    is_csv = True
+        except Exception:
+            pass
 
-print(json.dumps(output_payload))
+    if is_sqlite:
+        conn = sqlite3.connect(resource_path)
+        cur = conn.cursor()
+        cur.execute(query)
+        columns = [desc[0] for desc in cur.description] if cur.description else ["result"]
+        fetched = cur.fetchmany(25)
+        rows = [[str(c) for c in r] for r in fetched]
+        row_count = len(rows)
+        conn.close()
+    elif is_csv:
+        delimiter = '\t' if resource_path.endswith('.tsv') else ','
+        with open(resource_path, 'r', encoding='utf-8', errors='ignore') as f:
+            reader = csv.reader(f, delimiter=delimiter)
+            header = next(reader, None)
+            columns = header if header else ["col_0"]
+            samples = []
+            count = 0
+            for r in reader:
+                count += 1
+                if len(samples) < 15:
+                    samples.append(r)
+            row_count = count
+            rows = samples
+    else:
+        with open(resource_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = [l.strip() for l in f if l.strip()]
+            row_count = len(lines)
+            columns = ["record_id", "preview"]
+            rows = [[str(idx + 1), l[:80]] for idx, l in enumerate(lines[:15])]
+
+    header_line = "| " + " | ".join(columns) + " |"
+    divider_line = "| " + " | ".join(["---"] * len(columns)) + " |"
+    row_lines = ["| " + " | ".join(r) + " |" for r in rows[:15]]
+    summary = "\n".join([header_line, divider_line] + row_lines)
+
+    output = {{
+        "columns": columns,
+        "row_count": row_count,
+        "summary_table": summary,
+        "raw_bytes_read": raw_bytes
+    }}
+    print(json.dumps(output))
+except Exception as e:
+    print(json.dumps({{"error": str(e)}}))
+    sys.exit(1)
 "#,
             resource_path = resource_path,
             query = query.replace('"', "\\\"")
@@ -84,14 +137,12 @@ print(json.dumps(output_payload))
             )));
         }
 
-        let parsed: serde_json::Value = serde_json::from_str(result.stdout.trim()).unwrap_or_else(|_| {
-            serde_json::json!({
-                "columns": ["raw_output"],
-                "row_count": 1,
-                "summary_table": result.stdout.trim(),
-                "raw_bytes_read": 105 * 1024 * 1024
-            })
-        });
+        let parsed: serde_json::Value = serde_json::from_str(result.stdout.trim())
+            .map_err(|e| AegisError::Internal(format!("Failed to parse in-situ JSON: {e}")))?;
+
+        if let Some(err_msg) = parsed.get("error").and_then(|e| e.as_str()) {
+            return Err(AegisError::Internal(format!("In-situ engine error: {err_msg}")));
+        }
 
         let columns: Vec<String> = parsed
             .get("columns")
@@ -103,7 +154,7 @@ print(json.dumps(output_payload))
         let summary_table = parsed
             .get("summary_table")
             .and_then(|s| s.as_str())
-            .unwrap_or(&result.stdout)
+            .unwrap_or("")
             .to_string();
         let raw_bytes_read = parsed.get("raw_bytes_read").and_then(|b| b.as_u64()).unwrap_or(0);
         let egress_bytes_returned = summary_table.len() as u64;

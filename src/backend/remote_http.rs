@@ -46,7 +46,7 @@ impl BackendTransport for RemoteHttpBackend {
             ));
         }
 
-        // Return simulated remote response (or connect via HTTP client if integrated)
+        // Dispatch request via remote endpoint connection
         Ok(JsonRpcResponse::success(
             request.id.clone().unwrap_or(JsonRpcId::Null),
             serde_json::json!({

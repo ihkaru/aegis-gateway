@@ -1,4 +1,4 @@
-# Aegis Gateway (🛡️)
+# Aegis Gateway
 
 > **Enterprise-Grade Zero-Trust MCP Control Plane & Resilient Data Gateway**  
 > *Cloud-Native, High-Availability Reverse Proxy for Model Context Protocol (MCP) and Autonomous AI Agents.*
@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust: 2024](https://img.shields.io/badge/Rust-2024%20Edition-blue.svg)](https://www.rust-lang.org)
 [![Security: Zero Unsafe](https://img.shields.io/badge/Unsafe-Denied%20(%23![deny(unsafe_code)])-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Tests: 151 Passed](https://img.shields.io/badge/Tests-151%20Passed%20(100%25)-brightgreen.svg)](#-verification--auditing)
+[![Tests: 189 Passed](https://img.shields.io/badge/Tests-189%20Passed%20(100%25)-brightgreen.svg)](#-verification--auditing)
 [![Compliance: SOC2 / HIPAA / ISO27001](https://img.shields.io/badge/Compliance-SOC2%20%7C%20HIPAA%20%7C%20ISO27001-green.svg)](#-ciso-security--compliance-mapping)
 [![Control Plane: Zero--Downtime Hot--Reload](https://img.shields.io/badge/Control%20Plane-Zero--Downtime%20Hot--Reload-orange.svg)](#-enterprise-architect-day-2-operations)
 
@@ -61,51 +61,67 @@ flowchart TD
         Admin["Platform Admin / GitOps<br/>(ArgoCD, Admin Web UI :8485)"]
     end
 
-    subgraph ControlPlane["Control Plane (Governance & Dynamic Reconciler)"]
+    subgraph ControlPlane["Control Plane (:8485 - Governance & Reconciler)"]
         direction TB
-        AdminUI["Embedded Admin Web UI<br/>(Svelte 5 / Bun / Multi-Theme)"]
-        Reconciler["Zero-Downtime Reconciler<br/>(Atomic In-Memory Swap)"]
-        ClusterSync["Multi-Pod Cluster Sync<br/>(Redis Pub/Sub & Checksum Bus)"]
+        AdminUI["Embedded Web UI & CRD Operator<br/>(Svelte 5 / Declarative YAML)"]
+        Reconciler["Zero-Downtime Reconciler<br/>(Atomic In-Memory State Swap)"]
         FinOps["FinOps Multi-Tenant Quotas<br/>(Hard Freeze Cutoffs)"]
-        HITL["HITL Approval Gate<br/>(Slack/Teams/Webhook HMAC)"]
-        Secrets["Secret Broker (Infisical)<br/>(Dynamic Hot Rotation)"]
+        HITLGate["HITL Approval Gate<br/>(Cryptographic Task Suspension)"]
     end
 
-    subgraph DataPlane["Data Plane (Stateless Wire & Security Boundary :8484)"]
+    subgraph DataPlane["Data Plane (:8484 - Stateless Wire & Zero-Trust)"]
         direction TB
-        Ingress["Native Ingress Hardening<br/>(Pure-Rust TLS 1.3, mTLS & Auto-ACME)"]
-        Auth["IAM: OIDC JWT & SAML 2.0<br/>(SCIM 2.0 Inbound Sync)"]
-        ABAC["Dynamic Payload ABAC<br/>(OPA Bounds & DDL Refusal)"]
+        Ingress["Native TLS 1.3 / mTLS Ingress<br/>(Auto-ACME & Dual-Stack Negotiation)"]
+        AuthABAC["IAM Authentication & Dynamic ABAC<br/>(OIDC JWT, RBAC & DDL Guardrails)"]
         DLP["Bidirectional Real-Time DLP<br/>(Sub-ms PCI-DSS & HIPAA Masking)"]
-        Router["Stateless Tool Router<br/>(MCP 2026-07-28 Header Routing)"]
-        InSitu["In-Situ Analytical Enclave<br/>(DuckDB Server-Side Zero Egress)"]
-        Proxy["Zero-Knowledge Credential Proxy<br/>(Ephemeral Loopback Sidecar)"]
+        Enclave["In-Situ Analytical Enclave<br/>(DuckDB Server-Side Zero Egress)"]
+        Router["Stateless MCP Tool Router<br/>(MCP 2026-07-28 Header Routing)"]
+        CredProxy["Zero-Knowledge Credential Proxy<br/>(In-Memory Ephemeral Loopback)"]
     end
 
-    subgraph UpstreamTools["Upstream Execution Plane (Tools & Sandboxes)"]
+    subgraph McpExecutionPlane["MCP Tool Execution Plane (Callable by Agents via JSON-RPC)"]
         direction TB
-        Subprocess["Hermetic Stdio Subprocess<br/>(env_clear & Process Reaping)"]
-        RemoteMCP["Remote MCP Servers<br/>(HTTP & SSE Transports)"]
-        Sandbox["Context-Agnostic Sandbox<br/>(Hermetic Code Execution)"]
-        ExternalAPI["Protected SaaS & Databases<br/>(Keys injected via Loopback)"]
+        StdioSubprocess["Hermetic Stdio Subprocesses<br/>(env_clear & Child Process Reaping)"]
+        RemoteMcp["Remote MCP Tool Servers<br/>(Streamable HTTP & SSE)"]
+        Sandboxes["Hermetic Code Sandboxes<br/>(Wasm / Isolated Environment)"]
     end
 
-    Agent -->|"MCP Calls :8484"| Ingress
-    Admin -->|"GitOps CRD / :8485"| AdminUI --> Reconciler
-    Reconciler <-->|"Sync Bus"| ClusterSync
-    Reconciler -->|"Hot Rules"| ABAC & Ingress
-    Secrets -.->|"Loopback Ephemeral"| Proxy
+    subgraph ChannelsPlane["Enterprise Integration Channels (Non-MCP Outbound/Inbound EIP Adapters)"]
+        direction TB
+        HITLChan["Approval Channels (EIP Endpoint)<br/>(Slack BlockKit, MS Teams, Webhooks)"]
+        SyncChan["Cluster Sync Channel (Control Bus)<br/>(Redis Pub/Sub, NATS Distributed Bus)"]
+        AuditChan["SIEM Audit Channels (Sink Pipeline)<br/>(Splunk HEC, Datadog Logs, OTel OTLP)"]
+        SecretChan["Secret Broker Channel (In-Memory Key Inject)<br/>(Infisical, HashiCorp Vault)"]
+    end
 
-    Ingress --> Auth --> ABAC --> DLP --> Router
-    Router --> InSitu
-    Router --> Proxy
-    Proxy --> Subprocess & RemoteMCP & Sandbox
-    Proxy --> ExternalAPI
+    Agent -->|"MCP Wire :8484"| Ingress
+    Admin -->|"GitOps / REST :8485"| AdminUI --> Reconciler
+
+    Ingress --> AuthABAC --> DLP --> Router
+    Router --> Enclave
+    Router --> CredProxy
+    CredProxy -->|"tools/call"| StdioSubprocess & RemoteMcp & Sandboxes
+
+    Reconciler -->|"Hot Rules"| AuthABAC & DLP & Router
+    HITLGate -->|"Dispatch Approval Cards"| HITLChan
+    Reconciler <-->|"Multi-Pod Sync"| SyncChan
+    DataPlane -.->|"Cryptographic Audit Logs"| AuditChan
+    SecretChan -.->|"Ephemeral Secret Hydration"| CredProxy
 
     style ControlPlane fill:#fefce8,stroke:#ca8a04,stroke-width:2px
     style DataPlane fill:#eff6ff,stroke:#1d4ed8,stroke-width:2px
-    style UpstreamTools fill:#ecfdf5,stroke:#059669,stroke-width:2px
+    style McpExecutionPlane fill:#ecfdf5,stroke:#059669,stroke-width:2px
+    style ChannelsPlane fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px
 ```
+
+### Plane Separation: MCP Tools vs. Enterprise Channels
+
+A critical architectural distinction in Aegis Gateway is the strict boundary between **MCP Execution Targets** and **Integration Channels**:
+
+* **MCP Tool Execution Plane (JSON-RPC Wire Protocol)**:
+  First-class MCP servers invoked by LLM agent tool calls (`tools/call`, `tools/list`). Managed through hermetic Stdio subprocesses, remote Streamable HTTP / SSE endpoints, or in-situ analytical enclaves.
+* **Enterprise Integration Channels (Interface-First Core Contracts)**:
+  Non-MCP egress and ingress pathways used by the Gateway itself for operational governance, security, and state synchronization. Defined as strict traits in `src/core/` (`ApprovalNotificationDispatcher`, `AuditSink`, `ClusterSyncEngine`, `SecretStore`), decoupling the core engine from third-party vendor SDKs via Gregor Hohpe's Channel Adapter pattern.
 
 ---
 
@@ -267,7 +283,7 @@ spec:
 Aegis Gateway enforces software craftsmanship through continuous automated governance gates:
 
 ```bash
-# 1. Ultra-fast parallel test & governance battery via cargo-nextest (~7 seconds across all 151 tests)
+# 1. Ultra-fast parallel test & governance battery via cargo-nextest (~7 seconds across all 189 tests)
 cargo nextest run
 
 # Or standard Cargo runner

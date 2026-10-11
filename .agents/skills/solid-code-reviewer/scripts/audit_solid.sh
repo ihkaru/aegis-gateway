@@ -31,7 +31,7 @@ else
 fi
 
 echo "--> 3. Verifying Interface-First Principle (Core traits in src/core)..."
-CORE_TRAITS=("DistributedState" "PolicyEngine" "DlpPipeline" "AuditSink" "SkillRegistry" "QuotaEngine" "CodeSandboxEngine")
+CORE_TRAITS=("DistributedState" "PolicyEngine" "DlpPipeline" "AuditSink" "SkillRegistry" "QuotaEngine" "CodeSandboxEngine" "ApprovalNotificationDispatcher" "ClusterSyncEngine" "SecretStore")
 for trait_name in "${CORE_TRAITS[@]}"; do
   if grep -rq "pub trait $trait_name" src/core/; then
     echo "  [PASS] Trait contract '$trait_name' defined in src/core"

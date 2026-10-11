@@ -61,8 +61,33 @@ for critical_symbol in "LocalSqliteEngine" "ConfigApiDispatcher" "WebApiDispatch
     fi
 done
 
+# Check 4: Enterprise Integration Pattern (EIP) Channel Trait Implementations
+echo "Checking EIP Channel trait implementations in AST..."
+CHANNEL_TRAITS=("ApprovalNotificationDispatcher" "AuditSink" "ClusterSyncEngine" "SecretStore")
+for ch_trait in "${CHANNEL_TRAITS[@]}"; do
+    TRAIT_REFS=$("$CODE_GRAPH_BIN" refs "$ch_trait" --relation implements --json 2>/dev/null || true)
+    if [[ "$TRAIT_REFS" != *"implements"* ]]; then
+        echo "[FAIL] EIP Channel trait '$ch_trait' has no implemented Channel Adapter in code graph!"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    else
+        echo "[PASS] EIP Channel trait '$ch_trait' has verified live Channel Adapter(s)."
+    fi
+done
+
+# Check 5: Anti-Bypass & Direct Vendor Coupling Scanner
+echo "Auditing direct vendor coupling and Channel bypasses..."
+CORE_FILES=("src/lib.rs" "src/main.rs" "src/policy/action_gate.rs")
+for core_f in "${CORE_FILES[@]}"; do
+    if [ -f "$core_f" ]; then
+        if grep -qE "https://hooks\.slack\.com|https://.*\.webhook\.office\.com|api\.infisical\.com" "$core_f"; then
+            echo "[FAIL] Direct vendor endpoint detected in core file '$core_f'! Must use Channel Adapter."
+            VIOLATIONS=$((VIOLATIONS + 1))
+        fi
+    fi
+done
+
 if [ "$VIOLATIONS" -eq 0 ]; then
-    echo "[PASS] Zero core services orphaned or disconnected from the runtime call graph."
+    echo "[PASS] Zero direct vendor couplings detected. All integrations use Channel Adapters."
 fi
 
 echo "------------------------------------------------------------"

@@ -85,3 +85,17 @@ fn test_governance_zero_downtime_invariants() {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+#[test]
+fn test_governance_eip_channel_and_callgraph_integrity() {
+    let output = Command::new("bash")
+        .arg("scripts/audit_callgraph_integrity.sh")
+        .output()
+        .expect("Failed to execute callgraph and EIP channel integrity audit");
+
+    assert!(
+        output.status.success(),
+        "Callgraph and EIP channel integrity audit failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}

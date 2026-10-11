@@ -21,6 +21,12 @@ This skill enforces strict software craftsmanship principles across the Rust cod
    - High-level orchestrators (`AegisGateway`) and pipeline services must receive trait objects (`Arc<dyn Trait>`) or bounded generics via constructor injection.
    - Concrete structs must NEVER be instantiated directly inside business services.
 
+4. **Enterprise Integration Patterns (EIP) & Channel Invariant**:
+   - **MCP Execution Plane vs Enterprise Channels**: Target servers implementing JSON-RPC MCP are MCP tools. All external non-MCP systems (Slack, Teams, Redis, NATS, Splunk, Datadog, Infisical) MUST be structured as **Channels**.
+   - **Message Endpoint & Channel Adapter**: Core services interact only with Message Endpoints (trait contracts in `src/core/`). Vendor SDKs and network calls are strictly encapsulated in Channel Adapters.
+   - **Zero Direct Vendor Coupling**: Direct HTTP/TCP coupling to third-party APIs in core files is strictly forbidden and blocked by AST static analysis (`scripts/audit_callgraph_integrity.sh`).
+   - **Control Bus Isolation**: Management operations (CRDs, hot-reloads, quota limits) travel over isolated control planes (:8485) and never block data plane wire requests (:8484).
+
 ## SOLID Principles in Rust Implementation
 
 1. **S - Single Responsibility Principle (SRP)**
