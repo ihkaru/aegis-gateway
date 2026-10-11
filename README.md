@@ -198,6 +198,11 @@ spec:
 ### 3. Distributed Cluster Sync & Pub/Sub Bus
 When scaling across dozens of pods in Kubernetes, configuration updates on any single pod are instantly published over the Redis/NATS Pub/Sub bus. Peer pods validate message signatures and apply atomic in-memory updates, ensuring **zero configuration drift**.
 
+### 4. High-Concurrency Scale & Failure Modes (20k+ Users)
+For large-scale enterprise deployments (20,000+ employees), see the [Failure Modes & Concurrency Scale Matrix](docs/FAILURE_MODES_AND_SCALE_MATRIX.md), delineating:
+* **The Failure Hierarchy**: What collapses first (Stdio child processes), what strains next (Redis sync bus), and what never fails (Tokio Ingress Fast-Fail & Control Bus).
+* **Responsibility Boundary**: In-scope Aegis architectural mitigations vs. out-of-scope enterprise platform/SRE requirements (`ulimit`, `somaxconn`, PgBouncer pooling).
+
 ---
 
 ## ⚡ Production CLI & Quickstart
