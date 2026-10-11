@@ -141,4 +141,18 @@ async fn test_phase41_embedded_admin_ui_catalog_and_playground_dispatch() {
     assert_eq!(unatt_json["outcome"], "DISPATCHED");
     assert_eq!(unatt_json["result"]["execution_mode"], "PREFLIGHT_GUARDRAIL_ONLY");
     assert_eq!(unatt_json["raw"]["data"]["status"], "unattached");
+
+    // 4. Dispatch sqlite_query (live tool) from UI API -> Must be LIVE_EXECUTED
+    let alias_dispatch = json!({
+        "tool": "sqlite_query",
+        "arguments": { "query": "SELECT 42 AS num;" }
+    });
+    let (alias_status, alias_body, _) = server
+        .handle_request_with_body("POST", "/api/v1/tools/call", &serde_json::to_vec(&alias_dispatch).unwrap())
+        .await;
+    assert_eq!(alias_status, 200);
+    let alias_json: serde_json::Value = serde_json::from_slice(&alias_body).unwrap();
+    assert_eq!(alias_json["outcome"], "DISPATCHED");
+    assert_eq!(alias_json["result"]["execution_mode"], "LIVE_EXECUTED");
+    assert_eq!(alias_json["raw"]["data"]["status"], "SUCCESS");
 }

@@ -72,9 +72,13 @@ impl BackendTransport for LocalAegisBackend {
                         "status": "pong",
                         "echo": args.get("echo").and_then(|e| e.as_str()).unwrap_or("hello")
                     }),
-                    "aegis_sqlite_query" => {
+                    "aegis_sqlite_query" | "sqlite_query" => {
                         let query = args.get("query").and_then(|q| q.as_str()).unwrap_or("SELECT * FROM customer_accounts LIMIT 5");
                         execute_local_sqlite(query)
+                    }
+                    "sqlite_schema" => {
+                        let table = args.get("table").and_then(|t| t.as_str()).unwrap_or("customer_accounts");
+                        execute_local_sqlite(&format!("PRAGMA table_info({table})"))
                     }
                     _ => json!({
                         "status": "unattached",
