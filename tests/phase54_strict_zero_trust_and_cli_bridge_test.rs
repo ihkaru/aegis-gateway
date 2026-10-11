@@ -180,3 +180,43 @@ fn test_cli_login_token_persistence() {
     let read_tok = std::fs::read_to_string(token_path).unwrap();
     assert_eq!(read_tok.trim(), temp_token);
 }
+
+#[tokio::test]
+async fn test_dynamic_shared_tier_hot_swap_enforces_strict_mcp() {
+    let app = setup_test_server();
+
+    // 1. Post to update policy tier to Strict
+    let tier_payload = serde_json::json!({ "tier": "Strict" });
+    let tier_req = Request::builder()
+        .method("POST")
+        .uri("/api/v1/policy/tier")
+        .header("content-type", "application/json")
+        .body(Body::from(tier_payload.to_string()))
+        .unwrap();
+
+    let resp = app.clone().oneshot(tier_req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    // 2. Unauthenticated request to /mcp without any headers now fails with 401
+    let ping_req = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
+    let mcp_req = Request::builder()
+        .method("POST")
+        .uri("/mcp")
+        .header("content-type", "application/json")
+        .header("mcp-protocol-version", "2024-11-05")
+        .body(Body::from(ping_req.to_string()))
+        .unwrap();
+
+    let mcp_resp = app.clone().oneshot(mcp_req).await.unwrap();
+    assert_eq!(mcp_resp.status(), StatusCode::UNAUTHORIZED);
+
+    // Reset back to Hybrid
+    let reset_payload = serde_json::json!({ "tier": "Hybrid" });
+    let reset_req = Request::builder()
+        .method("POST")
+        .uri("/api/v1/policy/tier")
+        .header("content-type", "application/json")
+        .body(Body::from(reset_payload.to_string()))
+        .unwrap();
+    let _ = app.oneshot(reset_req).await.unwrap();
+}

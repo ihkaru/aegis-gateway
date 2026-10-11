@@ -34,9 +34,9 @@ pub async fn handle_fallback_ui_and_control_api(
                 std::time::Instant::now(),
                 None,
                 None,
-                &std::sync::RwLock::new(Vec::new()),
-                &std::sync::RwLock::new(Vec::new()),
-                &std::sync::RwLock::new("Hybrid".to_string()),
+                crate::transport::server::get_shared_invocations(),
+                crate::transport::server::get_shared_dlp_events(),
+                crate::transport::server::get_shared_policy_tier(),
             ).await;
 
         if status_code == 302 || status_code == 303 {

@@ -128,7 +128,9 @@ async fn handle_post_mcp(
 ) -> Response {
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());
 
-    let is_strict = std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
+    let tier_val = get_shared_policy_tier().read().map(|t| t.to_lowercase()).unwrap_or_default();
+    let is_strict = tier_val == "strict"
+        || std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
         || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
     if is_strict {
         let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
@@ -210,7 +212,9 @@ async fn handle_sse(
 ) -> Response {
     let origin = headers.get("origin").and_then(|v| v.to_str().ok());
 
-    let is_strict = std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
+    let tier_val = get_shared_policy_tier().read().map(|t| t.to_lowercase()).unwrap_or_default();
+    let is_strict = tier_val == "strict"
+        || std::env::var("PROPYLON_POLICY_TIER").map(|v| v.to_lowercase() == "strict").unwrap_or(false)
         || headers.get("x-propylon-policy-tier").and_then(|v| v.to_str().ok()) == Some("strict");
     if is_strict {
         let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
@@ -287,4 +291,23 @@ async fn handle_fallback_ui_and_control_api(
     body: axum::body::Bytes,
 ) -> Response {
     crate::transport::fallback::handle_fallback_ui_and_control_api(uri, method, headers, body).await
+}
+
+pub fn get_shared_policy_tier() -> &'static std::sync::RwLock<String> {
+    static TIER: std::sync::OnceLock<std::sync::RwLock<String>> = std::sync::OnceLock::new();
+    TIER.get_or_init(|| {
+        let initial = std::env::var("PROPYLON_POLICY_TIER")
+            .unwrap_or_else(|_| "Hybrid".to_string());
+        std::sync::RwLock::new(initial)
+    })
+}
+
+pub fn get_shared_invocations() -> &'static std::sync::RwLock<Vec<serde_json::Value>> {
+    static INVOCATIONS: std::sync::OnceLock<std::sync::RwLock<Vec<serde_json::Value>>> = std::sync::OnceLock::new();
+    INVOCATIONS.get_or_init(|| std::sync::RwLock::new(Vec::new()))
+}
+
+pub fn get_shared_dlp_events() -> &'static std::sync::RwLock<Vec<serde_json::Value>> {
+    static DLP: std::sync::OnceLock<std::sync::RwLock<Vec<serde_json::Value>>> = std::sync::OnceLock::new();
+    DLP.get_or_init(|| std::sync::RwLock::new(Vec::new()))
 }
