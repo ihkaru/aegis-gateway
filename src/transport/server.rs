@@ -129,6 +129,9 @@ fn is_token_valid(auth_hdr: Option<&str>) -> bool {
     if jwt_service.is_revoked(clean) {
         return false;
     }
+    if clean.starts_with("prp_pat_") {
+        return crate::policy::pat_service::get_shared_pat_service().validate_pat(clean, None).is_ok();
+    }
     let candidate_jwt = if clean.starts_with("eyJ") {
         clean
     } else if let Some(idx) = clean.find(".eyJ") {
@@ -209,6 +212,13 @@ async fn handle_post_mcp(
             return resp;
         }
     };
+
+    let auth_hdr = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+    if let Some(err_json) = crate::policy::pat_service::check_pat_tool_call_permission(auth_hdr, &body) {
+        let mut resp = (StatusCode::OK, [("content-type", "application/json")], err_json).into_response();
+        state.cors.apply_cors_headers(resp.headers_mut(), origin);
+        return resp;
+    }
 
     let mut response = match state.handler.handle_message(&body).await {
         Ok(Some(resp_json)) => (

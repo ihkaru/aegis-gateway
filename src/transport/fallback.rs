@@ -20,7 +20,7 @@ pub async fn handle_fallback_ui_and_control_api(
     // 1. Control plane REST API & SAML endpoints
     if path.starts_with("/api/v1/") || path.starts_with("/saml/") {
         let mut dispatch_body = body.to_vec();
-        if path == "/api/v1/auth/session" && dispatch_body.is_empty() {
+        if (path.starts_with("/api/v1/auth/") || path.starts_with("/saml/")) && dispatch_body.is_empty() {
             if let Some(auth_hdr) = headers.get(axum::http::header::AUTHORIZATION).and_then(|v| v.to_str().ok()) {
                 dispatch_body = auth_hdr.as_bytes().to_vec();
             }

@@ -42,6 +42,10 @@ impl AuthApiDispatcher {
             return crate::control::saml_api::SamlApiDispatcher::dispatch(method, path, body_bytes).await;
         }
 
+        if path.starts_with("/api/v1/auth/pat") {
+            return crate::control::pat_api::PatApiDispatcher::dispatch(method, path, body_bytes).await;
+        }
+
         match (method, path) {
             // RFC 8628: Initiate Device Authorization Grant
             ("POST", "/api/v1/auth/device/code") => {

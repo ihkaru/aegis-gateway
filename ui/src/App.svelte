@@ -1,12 +1,14 @@
+<!-- SPDX-License-Identifier: MIT -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import {
     Activity, Shield, Clock, Layers, Server, Sun, Moon,
-    Terminal, Lock, Cpu, FileText, Sliders, Network, User, LogOut, Copy, Check, Key
+    Terminal, Lock, FileText, Sliders, Network, LogOut, Copy, Check, Key
   } from 'lucide-svelte';
   import OverviewTab from './lib/OverviewTab.svelte';
   import BackendsTab from './lib/BackendsTab.svelte';
   import ToolsTab from './lib/ToolsTab.svelte';
+  import PatTokensTab from './lib/PatTokensTab.svelte';
   import TopologyTab from './lib/TopologyTab.svelte';
   import DlpTab from './lib/DlpTab.svelte';
   import HitlTab from './lib/HitlTab.svelte';
@@ -16,7 +18,7 @@
   import ConfigTab from './lib/ConfigTab.svelte';
   import LoginGate from './lib/LoginGate.svelte';
 
-  type Tab = 'overview' | 'backends' | 'tools' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
+  type Tab = 'overview' | 'backends' | 'tools' | 'tokens' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
 
   let currentTab = $state<Tab>('overview');
@@ -45,10 +47,7 @@
       const saved = localStorage.getItem('propylon_saml_token');
       if (saved) authToken = saved;
     }
-
-    if (authToken) {
-      loadSession();
-    }
+    if (authToken) loadSession();
   });
 
   async function loadSession() {
@@ -58,19 +57,9 @@
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.authenticated) {
-          authUser = data;
-        }
+        if (data.authenticated) authUser = data;
       }
-    } catch (e) {
-      // Ignore network error on local dev
-    }
-  }
-
-  function handleLoginSuccess(user: any, token: string) {
-    authUser = user;
-    authToken = token;
-    localStorage.setItem('propylon_saml_token', token);
+    } catch (e) {}
   }
 
   function handleLogout() {
@@ -135,17 +124,12 @@
             <span class="text-[9px] text-muted-foreground leading-tight truncate max-w-[110px] sm:max-w-[150px]">{authUser.department || 'BPS Mempawah'} • rIDM SAML</span>
           </div>
           <button
-            onclick={copyToken}
-            class="ml-1 text-[10px] font-mono flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted text-foreground transition-all cursor-pointer shadow-xs"
-            title="Salin token sesi untuk CLI ('propylon login --token <TOKEN>') atau Coding Agent"
+            onclick={() => (currentTab = 'tokens')}
+            class="ml-1 text-[10px] font-mono flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background hover:bg-muted text-primary transition-all cursor-pointer shadow-xs font-semibold"
+            title="Kelola & Buat Personal Access Token (PAT)"
           >
-            {#if copiedToken}
-              <Check class="h-3 w-3 text-emerald-400" />
-              <span class="text-emerald-400 font-semibold">Tersalin!</span>
-            {:else}
-              <Copy class="h-3 w-3 text-muted-foreground" />
-              <span>Token</span>
-            {/if}
+            <Key class="h-3 w-3" />
+            <span>PAT</span>
           </button>
           <button
             onclick={handleLogout}
@@ -160,30 +144,14 @@
       <!-- Right Theme Controls -->
       <div class="flex items-center gap-1.5 shrink-0">
         <div class="flex items-center rounded border border-border bg-muted/40 p-0.5 text-xs font-medium">
-          <button
-            onclick={() => setTheme('zinc')}
-            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'zinc' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-          >
-            Zinc
-          </button>
-          <button
-            onclick={() => setTheme('slate')}
-            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'slate' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-          >
-            Slate
-          </button>
-          <button
-            onclick={() => setTheme('neutral')}
-            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'neutral' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-          >
-            Neutral
-          </button>
-          <button
-            onclick={() => setTheme('oled')}
-            class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium transition-colors {currentTheme === 'oled' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-          >
-            OLED
-          </button>
+          {#each (['zinc', 'slate', 'neutral', 'oled'] as const) as th}
+            <button
+              onclick={() => setTheme(th)}
+              class="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium capitalize transition-colors {currentTheme === th ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+            >
+              {th}
+            </button>
+          {/each}
         </div>
 
         <button
@@ -191,11 +159,7 @@
           class="h-7 w-7 sm:h-8 sm:w-8 rounded border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
           title="Toggle Dark/Light Mode"
         >
-          {#if isDark}
-            <Sun class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          {:else}
-            <Moon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          {/if}
+          {#if isDark}<Sun class="h-3.5 w-3.5 sm:h-4 sm:w-4" />{:else}<Moon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />{/if}
         </button>
       </div>
     </div>
@@ -204,75 +168,38 @@
   <!-- Secondary Tab Bar -->
   <nav class="border-b border-border bg-muted/20">
     <div class="container mx-auto px-2 sm:px-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap text-xs font-medium scrollbar-none">
-      <button
-        onclick={() => (currentTab = 'overview')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'overview' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Activity class="h-3.5 w-3.5 shrink-0" />
-        Overview & Metrics
+      <button onclick={() => (currentTab = 'overview')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'overview' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Activity class="h-3.5 w-3.5" /> Overview
       </button>
-      <button
-        onclick={() => (currentTab = 'backends')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'backends' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Server class="h-3.5 w-3.5 shrink-0" />
-        Backends
+      <button onclick={() => (currentTab = 'tokens')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'tokens' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Key class="h-3.5 w-3.5 text-emerald-400" /> Access Tokens (PAT)
       </button>
-      <button
-        onclick={() => (currentTab = 'tools')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'tools' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Terminal class="h-3.5 w-3.5 shrink-0" />
-        Tools & Playground
+      <button onclick={() => (currentTab = 'backends')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'backends' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Server class="h-3.5 w-3.5" /> Backends
       </button>
-      <button
-        onclick={() => (currentTab = 'topology')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'topology' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Network class="h-3.5 w-3.5 shrink-0" />
-        Topology Flow
+      <button onclick={() => (currentTab = 'tools')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'tools' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Terminal class="h-3.5 w-3.5" /> Tools
       </button>
-      <button
-        onclick={() => (currentTab = 'policy')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'policy' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Lock class="h-3.5 w-3.5 shrink-0" />
-        Policy Control
+      <button onclick={() => (currentTab = 'topology')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'topology' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Network class="h-3.5 w-3.5" /> Topology Flow
       </button>
-      <button
-        onclick={() => (currentTab = 'config')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'config' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Sliders class="h-3.5 w-3.5 shrink-0" />
-        Topology & Config
+      <button onclick={() => (currentTab = 'policy')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'policy' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Lock class="h-3.5 w-3.5" /> Policy Control
       </button>
-      <button
-        onclick={() => (currentTab = 'dlp')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'dlp' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Shield class="h-3.5 w-3.5 shrink-0" />
-        DLP Security Stream
+      <button onclick={() => (currentTab = 'config')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'config' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Sliders class="h-3.5 w-3.5" /> Config
       </button>
-      <button
-        onclick={() => (currentTab = 'hitl')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'hitl' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Clock class="h-3.5 w-3.5 shrink-0" />
-        Suspended HITL
+      <button onclick={() => (currentTab = 'dlp')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'dlp' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Shield class="h-3.5 w-3.5" /> DLP Stream
       </button>
-      <button
-        onclick={() => (currentTab = 'finops')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'finops' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <Layers class="h-3.5 w-3.5 shrink-0" />
-        Tenant FinOps
+      <button onclick={() => (currentTab = 'hitl')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'hitl' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Clock class="h-3.5 w-3.5" /> Suspended HITL
       </button>
-      <button
-        onclick={() => (currentTab = 'audit')}
-        class="flex items-center gap-2 py-2.5 sm:py-3 px-3 sm:px-3.5 border-b-2 font-medium tracking-tight transition-colors {currentTab === 'audit' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-      >
-        <FileText class="h-3.5 w-3.5 shrink-0" />
-        SOC 2 Audit
+      <button onclick={() => (currentTab = 'finops')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'finops' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Layers class="h-3.5 w-3.5" /> FinOps
+      </button>
+      <button onclick={() => (currentTab = 'audit')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'audit' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <FileText class="h-3.5 w-3.5" /> SOC 2 Audit
       </button>
     </div>
   </nav>
@@ -288,24 +215,30 @@
             <code class="px-2 py-0.5 rounded bg-muted/80 font-mono text-[11px] text-primary truncate max-w-[240px] sm:max-w-[400px]">{authToken}</code>
           </div>
         </div>
-        <button
-          onclick={copyToken}
-          class="px-2.5 py-1 rounded bg-primary text-primary-foreground font-medium text-[11px] flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-          title="Salin token sesi untuk CLI ('propylon login --token <TOKEN>')"
-        >
-          {#if copiedToken}
-            <Check class="h-3.5 w-3.5" />
-            <span>Tersalin ke Clipboard!</span>
-          {:else}
-            <Copy class="h-3.5 w-3.5" />
-            <span>Salin Token CLI</span>
-          {/if}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            onclick={copyToken}
+            class="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-foreground font-medium text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Salin token sesi SAML sementara"
+          >
+            {#if copiedToken}<Check class="h-3.5 w-3.5 text-emerald-400" /><span class="text-emerald-400">Tersalin!</span>{:else}<Copy class="h-3.5 w-3.5" /><span>Salin Token Sesi</span>{/if}
+          </button>
+          <button
+            onclick={() => (currentTab = 'tokens')}
+            class="px-2.5 py-1 rounded bg-primary text-primary-foreground font-medium text-[11px] flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            title="Buat Personal Access Token tahan 30-90 hari untuk Claude Code / Cursor tanpa install apapun"
+          >
+            <Key class="h-3.5 w-3.5" />
+            <span>Buat PAT (30–90 Hari)</span>
+          </button>
+        </div>
       </div>
     {/if}
 
     {#if currentTab === 'overview'}
       <OverviewTab />
+    {:else if currentTab === 'tokens'}
+      <PatTokensTab />
     {:else if currentTab === 'backends'}
       <BackendsTab />
     {:else if currentTab === 'tools'}
