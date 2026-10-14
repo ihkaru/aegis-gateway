@@ -74,6 +74,7 @@ impl VaultCredentialBroker {
     async fn broker_github(&self, envs: &mut HashMap<String, String>) -> PropylonResult<()> {
         if let Some(val) = self.secret_store.get_secret("GITHUB_TOKEN").await? {
             envs.insert("GITHUB_TOKEN".to_string(), val.clone());
+            envs.insert("GH_TOKEN".to_string(), val.clone());
             self.register_secret(&val).await;
         }
         Ok(())

@@ -25,16 +25,22 @@ RUN cargo build --release --bin propylon
 # Stage 3: Minimal, Secure Runtime Image
 FROM debian:bookworm-slim AS runtime
 
-# Install CA certificates, curl, and python3 for code sandbox execution
+# Install runtime dependencies for sandbox execution and mise toolchain management
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    git \
     python3 \
-    && rm -rf /var/lib/apt/lists/*
+    tar \
+    unzip \
+    xz-utils \
+    zstd \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
 
 # Create non-root unprivileged user
 RUN groupadd -g 10001 propylon && \
-    useradd -u 10001 -g propylon -s /bin/false -m propylon
+    useradd -u 10001 -g propylon -s /bin/bash -m -d /home/propylon propylon
 
 WORKDIR /app
 
@@ -42,15 +48,22 @@ WORKDIR /app
 COPY --from=builder /app/target/release/propylon /usr/local/bin/propylon
 
 # Create runtime directories with appropriate permissions
-RUN mkdir -p /app/data /tmp/propylon-cache && \
-    chown -R propylon:propylon /app /tmp/propylon-cache
+RUN mkdir -p /app/data/mise /app/data/bin /tmp/propylon-cache /home/propylon && \
+    chown -R propylon:propylon /app /tmp/propylon-cache /home/propylon
 
 USER propylon
 
 ENV PROPYLON_HOST=0.0.0.0 \
     PROPYLON_PORT=8080 \
     PORT=8080 \
-    RUST_LOG=propylon=info,warn
+    HOME=/home/propylon \
+    RUST_LOG=propylon=info,warn \
+    MISE_DATA_DIR=/app/data/mise \
+    MISE_CACHE_DIR=/app/data/mise/cache \
+    MISE_CONFIG_DIR=/app/data/mise/config \
+    MISE_STATE_DIR=/app/data/mise/state \
+    MISE_YES=1 \
+    PATH="/app/data/mise/shims:/app/data/mise/bin:/app/data/bin:/home/propylon/.local/bin:${PATH}"
 
 EXPOSE 8080
 

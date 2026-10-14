@@ -55,18 +55,29 @@ pub fn get_built_in_meta_tools() -> Vec<Value> {
         }),
         json!({
             "name": "execute_code",
-            "description": "Hermetic Code Sandbox: Execute context-agnostic Python/Bash/Node code in an isolated sandbox with zero-knowledge credential broker and egress firewall.",
+            "description": "Hermetic Code Sandbox: Execute context-agnostic Python/Bash/Node code. Equipped with 'mise' to install on-demand persistent tools (e.g. 'mise use -g gh') stored in /app/data/mise. Integrated with Zero-Knowledge Credential Broker: DO NOT ask user for PAT/tokens; specify services: ['github', 'infisical'] to automatically broker authenticated sessions.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "code": { "type": "string", "description": "The script source code to execute" },
                     "language": { "type": "string", "description": "Execution language: python (default), bash, javascript" },
-                    "services": { "type": "array", "items": { "type": "string" }, "description": "Services requiring brokered credentials (e.g. ['google', 'github', 'aws'])" },
+                    "services": { "type": "array", "items": { "type": "string" }, "description": "Services requiring brokered credentials (e.g. ['github', 'infisical', 'google', 'aws'])" },
                     "timeout_secs": { "type": "integer", "description": "Maximum execution time in seconds (default 30)" },
                     "env_vars": { "type": "object", "description": "Optional environment variables" },
                     "plan_id": { "type": "string", "description": "Optional plan ID from gateway_plan_tasks for correlation" }
                 },
                 "required": ["code"]
+            }
+        }),
+        json!({
+            "name": "gateway_install_tool",
+            "description": "On-Demand Persistent Tool Installer: Installs CLI tools and runtimes (e.g. 'gh', 'infisical', 'jq', 'node') on-demand into persistent storage (/app/data/mise). Once installed, tools persist permanently across container restarts and sessions, immediately accessible in PATH.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "tool": { "type": "string", "description": "Name of the CLI tool or runtime to install via mise (e.g. 'gh', 'infisical', 'jq', 'node')" }
+                },
+                "required": ["tool"]
             }
         }),
         json!({

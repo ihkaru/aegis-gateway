@@ -270,6 +270,9 @@ impl McpProtocolHandler {
                     id, &self.gateway, self.tools.clone(), self.registry.clone(), args,
                 ).await)
             }
+            "gateway_install_tool" => {
+                Some(MetaToolDispatcher::handle_install_tool(id, &self.gateway, args).await)
+            }
             "gateway_list_servers" => {
                 Some(MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await)
             }
