@@ -125,8 +125,46 @@ def run_tests():
     print(f"  -> Executed {len(step_results)} steps:")
     for s in step_results:
         print(f"     Step {s.get('step_id')}: {s.get('tool')} success={s.get('success')} (latency: {s.get('latency_ms', 0)}ms)")
-    print("  [PASS] Autonomous DAG execution and variable interpolation verified")
-    
+    # 4B. Test multi-step autonomous plan execution with variable piping
+    print("\n[TEST 4B] Testing multi-step DAG execution with dynamic variable interpolation...")
+    custom_plan = {
+        "plan_id": f"plan_prod_multistep_{int(time.time())}",
+        "title": "Multi-step Pipeline with Dynamic Variable Piping",
+        "steps": [
+            {
+                "id": "step_extract",
+                "tool": "execute_in_situ_query",
+                "description": "Query server metrics",
+                "arguments": {"query": "SELECT * FROM metrics LIMIT 5;"},
+                "depends_on": []
+            },
+            {
+                "id": "step_process",
+                "tool": "execute_code",
+                "description": "Compute analytics on extracted metrics",
+                "arguments": {
+                    "language": "python",
+                    "code": "print('Processing input: {{step_extract.row_count}} rows successfully')"
+                },
+                "depends_on": ["step_extract"]
+            }
+        ]
+    }
+    body, elapsed, status = call_mcp("tools/call", {
+        "name": "gateway_execute_plan",
+        "arguments": {"plan": custom_plan}
+    }, req_id=1042)
+    assert status == 200, f"Inline plan execution failed: {body}"
+    exec_result2 = body.get("result", {})
+    structured2 = exec_result2.get("structured", {})
+    assert structured2.get("success") is True, f"Inline execution failed: {exec_result2}"
+    step_results2 = structured2.get("step_results", [])
+    assert len(step_results2) == 2, f"Expected 2 steps executed, got {len(step_results2)}"
+    print(f"  -> Executed multi-step DAG plan in {elapsed:.1f}ms:")
+    for s in step_results2:
+        print(f"     Step {s.get('step_id')}: {s.get('tool')} (success={s.get('success')}, latency={s.get('latency_ms')}ms)")
+    print("  [PASS] Multi-step DAG execution and variable interpolation verified")
+
     # 5. Test gateway_call_tool (Universal Dynamic Tool Invocation)
     print("\n[TEST 5] Invoking tool directly via gateway_call_tool...")
     call_args = {
@@ -142,8 +180,9 @@ def run_tests():
     }, req_id=105)
     assert status == 200, f"Dynamic call failed: {body}"
     call_result = body.get("result", {})
-    assert call_result.get("success") is True or call_result.get("output") or call_result.get("status"), f"Failed dynamic call: {call_result}"
-    print(f"  -> Dynamic tool call response ({elapsed:.1f}ms): {call_result}")
+    assert call_result.get("isError") is False and "content" in call_result, f"Failed dynamic call: {call_result}"
+    content_text = call_result["content"][0]["text"]
+    print(f"  -> Dynamic tool call response ({elapsed:.1f}ms): {content_text.strip()[:100]}...")
     print("  [PASS] Universal dynamic tool dispatcher verified")
     
     print("\n" + "="*50)
