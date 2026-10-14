@@ -20,6 +20,29 @@ pub fn get_built_in_meta_tools() -> Vec<Value> {
             }
         }),
         json!({
+            "name": "gateway_execute_plan",
+            "description": "High-Accuracy Plan Execution Engine: Autonomously execute a multi-step DAG plan produced by gateway_plan_tasks with zero parameter hallucination. Handles dynamic data-piping across steps, concurrent execution, and security verification.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "plan_id": { "type": "string", "description": "The plan ID returned by gateway_plan_tasks" },
+                    "plan": { "type": "object", "description": "Optional explicit plan definition to execute directly" }
+                }
+            }
+        }),
+        json!({
+            "name": "gateway_call_tool",
+            "description": "Universal Tool Invoker: Dynamically execute any backend tool discovered via gateway_search_tools or gateway_plan_tasks without needing it pre-advertised in tools/list.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "description": "The target tool name (e.g. 'bps_census_query', 'slack_post_message')" },
+                    "arguments": { "type": "object", "description": "Arguments required by the target tool" }
+                },
+                "required": ["name"]
+            }
+        }),
+        json!({
             "name": "gateway_search_tools",
             "description": "Progressive Tool Discovery: Search and find specific tools on-demand across connected backend services using BM25 and semantic matching. Reduces context bloat by looking up tools only when needed.",
             "inputSchema": {
@@ -138,6 +161,24 @@ pub fn get_native_meta_tool_definitions() -> Vec<ToolDefinition> {
             required_params: vec!["query".to_string()],
             when_to_use: "When looking for capabilities or tools".to_string(),
             tags: vec!["search".to_string(), "cari".to_string(), "tool".to_string()],
+        },
+        ToolDefinition {
+            name: "gateway_execute_plan".to_string(),
+            server: "gateway".to_string(),
+            description: "Autonomously execute a multi-step DAG plan with zero parameter hallucination".to_string(),
+            input_schema: json!({ "type": "object", "properties": { "plan_id": { "type": "string" } } }),
+            required_params: vec!["plan_id".to_string()],
+            when_to_use: "When running a formulated multi-step plan autonomously".to_string(),
+            tags: vec!["plan".to_string(), "execute".to_string(), "jalan".to_string(), "eksekusi".to_string()],
+        },
+        ToolDefinition {
+            name: "gateway_call_tool".to_string(),
+            server: "gateway".to_string(),
+            description: "Universal tool invoker for executing any unadvertised backend tool dynamically".to_string(),
+            input_schema: json!({ "type": "object", "properties": { "name": { "type": "string" }, "arguments": { "type": "object" } }, "required": ["name"] }),
+            required_params: vec!["name".to_string()],
+            when_to_use: "When calling a specific backend tool on demand".to_string(),
+            tags: vec!["call".to_string(), "tool".to_string(), "invoke".to_string()],
         },
     ]
 }

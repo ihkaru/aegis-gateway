@@ -8,12 +8,15 @@ pub mod http;
 pub mod meta_handlers;
 pub mod meta_schemas;
 pub mod modern_mcp;
+pub mod plan_executor;
 pub mod protocol;
 pub mod server;
 pub mod signer;
 pub mod stdio;
 pub mod tls_listener;
 pub mod fallback;
+
+pub use plan_executor::PlanExecutorDispatcher;
 
 pub use buffer::ReusableStreamBuffer;
 pub use command_split::{split_command, split_command_unix, split_command_windows};

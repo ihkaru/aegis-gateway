@@ -149,6 +149,8 @@ impl GoalPlanner {
 
         let validation = planner.validate_plan(&plan, catalog, policy, caller).await;
 
+        crate::discovery::plan_registry::get_shared_plan_registry().store_plan(plan.clone());
+
         Ok(json!({
             "valid": validation.valid,
             "plan_id": plan.plan_id,

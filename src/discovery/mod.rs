@@ -9,12 +9,14 @@ pub mod goal_planner;
 pub mod hybrid_search;
 pub mod namespace;
 pub mod pipeline;
+pub mod plan_registry;
 pub mod planner;
 pub mod projector;
 
 pub use bootstrap_catalog::default_enterprise_catalog;
 pub use catalog_sentinel::{PropylonCatalogSyncSentinel, CatalogSyncOutcome, CatalogSyncSentinel};
 pub use goal_planner::GoalPlanner;
+pub use plan_registry::{get_shared_plan_registry, PlanRegistry};
 
 pub use catalog_index::{
     BackendCatalogMetadata, BackendIndexStatus, CatalogSearchIndex, CatalogSearchResult,

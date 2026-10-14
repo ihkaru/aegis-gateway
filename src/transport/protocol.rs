@@ -144,37 +144,9 @@ impl McpProtocolHandler {
             .cloned()
             .unwrap_or_else(|| json!({}));
 
-        // Handle meta-tools and sandbox directly
-        if tool_name == "execute_code" || tool_name == "gateway_execute_code" {
-            return MetaToolDispatcher::handle_execute_code(id, &self.gateway, Some(arguments)).await;
-        }
-        if tool_name == "evaluate_data_egress" || tool_name == "gateway_evaluate_data_egress" {
-            return MetaToolDispatcher::handle_evaluate_data_egress(id, &self.gateway, Some(arguments)).await;
-        }
-        if tool_name == "execute_in_situ_query" || tool_name == "gateway_execute_in_situ_query" {
-            return MetaToolDispatcher::handle_execute_in_situ_query(id, &self.gateway, Some(arguments)).await;
-        }
-        if tool_name == "resolve_approval" || tool_name == "gateway_resolve_approval" {
-            return MetaToolDispatcher::handle_resolve_approval(id, &self.gateway, Some(arguments)).await;
-        }
-        if tool_name == "gateway_search_tools" {
-            return MetaToolDispatcher::handle_search(id, self.tools.clone(), Some(arguments)).await;
-        }
-        if tool_name == "gateway_plan_tasks" {
-            return MetaToolDispatcher::handle_plan(
-                id,
-                self.tools.clone(),
-                &self.gateway,
-                &self.planner,
-                Some(arguments),
-            )
-            .await;
-        }
-        if tool_name == "gateway_list_servers" {
-            return MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await;
-        }
-        if tool_name == "gateway_register_tools" {
-            return self.handle_meta_register(id, Some(arguments)).await;
+        // Handle meta-tools, plan execution, and dynamic tool invoker
+        if let Some(resp) = self.dispatch_meta_or_plan(&tool_name, id.clone(), Some(arguments.clone())).await {
+            return resp;
         }
 
         let tool_info = {
@@ -262,6 +234,49 @@ impl McpProtocolHandler {
         self.register_tools(new_tools).await;
         JsonRpcResponse::success(id, json!({ "status": "registered", "tools_count": count }))
     }
+
+    async fn dispatch_meta_or_plan(
+        &self,
+        tool: &str,
+        id: JsonRpcId,
+        args: Option<Value>,
+    ) -> Option<JsonRpcResponse> {
+        match tool {
+            "execute_code" | "gateway_execute_code" => {
+                Some(MetaToolDispatcher::handle_execute_code(id, &self.gateway, args).await)
+            }
+            "evaluate_data_egress" | "gateway_evaluate_data_egress" => {
+                Some(MetaToolDispatcher::handle_evaluate_data_egress(id, &self.gateway, args).await)
+            }
+            "execute_in_situ_query" | "gateway_execute_in_situ_query" => {
+                Some(MetaToolDispatcher::handle_execute_in_situ_query(id, &self.gateway, args).await)
+            }
+            "resolve_approval" | "gateway_resolve_approval" => {
+                Some(MetaToolDispatcher::handle_resolve_approval(id, &self.gateway, args).await)
+            }
+            "gateway_search_tools" => {
+                Some(MetaToolDispatcher::handle_search(id, self.tools.clone(), args).await)
+            }
+            "gateway_plan_tasks" => {
+                Some(MetaToolDispatcher::handle_plan(id, self.tools.clone(), &self.gateway, &self.planner, args).await)
+            }
+            "gateway_execute_plan" => {
+                Some(crate::transport::plan_executor::PlanExecutorDispatcher::handle_execute_plan(
+                    id, &self.gateway, self.tools.clone(), self.registry.clone(), args,
+                ).await)
+            }
+            "gateway_call_tool" => {
+                Some(crate::transport::plan_executor::PlanExecutorDispatcher::handle_call_tool(
+                    id, &self.gateway, self.tools.clone(), self.registry.clone(), args,
+                ).await)
+            }
+            "gateway_list_servers" => {
+                Some(MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await)
+            }
+            "gateway_register_tools" => Some(self.handle_meta_register(id, args).await),
+            _ => None,
+        }
+    }
 }
 
 #[async_trait]
@@ -294,39 +309,16 @@ impl WireProtocolHandler for McpProtocolHandler {
             "tools/call" => self.handle_tools_call(id, req.params).await,
             "resources/list" => JsonRpcResponse::success(id, json!({ "resources": [] })),
             "prompts/list" => JsonRpcResponse::success(id, json!({ "prompts": [] })),
-            "execute_code" | "gateway_execute_code" => {
-                MetaToolDispatcher::handle_execute_code(id, &self.gateway, req.params).await
+            other => {
+                if let Some(resp) = self.dispatch_meta_or_plan(other, id.clone(), req.params).await {
+                    resp
+                } else {
+                    JsonRpcResponse::error(
+                        id,
+                        JsonRpcError::new(METHOD_NOT_FOUND, format!("Method '{other}' not implemented")),
+                    )
+                }
             }
-            "evaluate_data_egress" | "gateway_evaluate_data_egress" => {
-                MetaToolDispatcher::handle_evaluate_data_egress(id, &self.gateway, req.params).await
-            }
-            "execute_in_situ_query" | "gateway_execute_in_situ_query" => {
-                MetaToolDispatcher::handle_execute_in_situ_query(id, &self.gateway, req.params).await
-            }
-            "resolve_approval" | "gateway_resolve_approval" => {
-                MetaToolDispatcher::handle_resolve_approval(id, &self.gateway, req.params).await
-            }
-            "gateway_search_tools" => {
-                MetaToolDispatcher::handle_search(id, self.tools.clone(), req.params).await
-            }
-            "gateway_plan_tasks" => {
-                MetaToolDispatcher::handle_plan(
-                    id,
-                    self.tools.clone(),
-                    &self.gateway,
-                    &self.planner,
-                    req.params,
-                )
-                .await
-            }
-            "gateway_list_servers" => {
-                MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await
-            }
-            "gateway_register_tools" => self.handle_meta_register(id, req.params).await,
-            other => JsonRpcResponse::error(
-                id,
-                JsonRpcError::new(METHOD_NOT_FOUND, format!("Method '{other}' not implemented")),
-            ),
         };
 
         Ok(Some(serde_json::to_string(&resp)?))
