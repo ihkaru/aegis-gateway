@@ -34,6 +34,8 @@ impl Default for EgressFilterEngine {
                 "pypi.org".to_string(),
                 "pythonhosted.org".to_string(),
                 "huggingface.co".to_string(),
+                "dvlpid.my.id".to_string(),
+                "*.dvlpid.my.id".to_string(),
             ],
             block_cloud_metadata: true,
             block_internal_networks: true,
