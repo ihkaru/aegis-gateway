@@ -57,6 +57,12 @@ impl MetaToolDispatcher {
         };
 
         let read = tools.read().await;
+        let mut all_tools = read.clone();
+        for meta in crate::transport::meta_schemas::get_native_meta_tool_definitions() {
+            if !all_tools.iter().any(|t| t.name == meta.name) {
+                all_tools.push(meta);
+            }
+        }
         let caller = crate::core::types::CallerContext {
             tenant_id: crate::core::types::TenantId::new("default"),
             subject: "mcp-wire-client".to_string(),
@@ -67,7 +73,7 @@ impl MetaToolDispatcher {
         };
         match crate::discovery::GoalPlanner::process_planning_request(
             &plan_val,
-            &read,
+            &all_tools,
             planner,
             gateway.policy(),
             &caller,

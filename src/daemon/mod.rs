@@ -97,9 +97,16 @@ impl DaemonSupervisor {
             eprintln!("[PROPYLON] Discovered {} tools across registered backends", tools.len());
             handler.register_tools(tools).await;
         } else {
-            let defaults = crate::discovery::default_enterprise_catalog();
-            eprintln!("[PROPYLON] Seeded {} foundational enterprise tools into catalog", defaults.len());
-            handler.register_tools(defaults).await;
+            let enable_demo = std::env::var("PROPYLON_ENABLE_DEMO_FIXTURES")
+                .map(|v| v == "true" || v == "1")
+                .unwrap_or(false);
+            if enable_demo {
+                let defaults = crate::discovery::default_enterprise_catalog();
+                eprintln!("[PROPYLON] Seeded {} demo enterprise tools into catalog", defaults.len());
+                handler.register_tools(defaults).await;
+            } else {
+                eprintln!("[PROPYLON] Clean gateway mode: 0 synthetic catalog fixtures seeded. Operating with native meta-tools and registered backends.");
+            }
         }
 
         Ok((gateway, handler, registry))
