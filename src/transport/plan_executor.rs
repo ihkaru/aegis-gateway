@@ -211,12 +211,19 @@ impl PlanExecutorDispatcher {
                 "javascript" | "js" | "node" => crate::core::sandbox::ExecutionLanguage::JavaScript,
                 _ => crate::core::sandbox::ExecutionLanguage::Python,
             };
+            let svcs: Vec<String> = arguments.get("services").and_then(|s| s.as_array())
+                .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default();
+            let mut envs = std::collections::HashMap::new();
+            if let Some(map) = arguments.get("env_vars").and_then(|e| e.as_object()) {
+                for (k, v) in map { if let Some(s) = v.as_str() { envs.insert(k.clone(), s.to_string()); } }
+            }
             let req = crate::core::sandbox::SandboxExecutionRequest {
                 code: code.to_string(),
                 language: lang,
-                services: vec![],
+                services: svcs,
                 timeout_secs: Some(30),
-                env_vars: std::collections::HashMap::new(),
+                env_vars: envs,
                 tenant_id: None,
                 caller_id: None,
             };
