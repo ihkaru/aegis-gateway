@@ -128,12 +128,20 @@ impl CodeSandboxEngine for HermeticProcessSandbox {
         cmd.current_dir(temp_dir.path());
         cmd.env_clear();
 
-        // Inject strictly necessary base environment
-        cmd.env("PATH", "/usr/local/bin:/usr/bin:/bin");
-        cmd.env("HOME", temp_dir.path());
+        // Inject strictly necessary base environment with persistent mise paths
+        let base_path = std::env::var("PATH").unwrap_or_else(|_| {
+            "/app/data/mise/shims:/app/data/mise/bin:/app/data/bin:/home/propylon/.local/bin:/usr/local/bin:/usr/bin:/bin".to_string()
+        });
+        cmd.env("PATH", base_path);
+        cmd.env("HOME", std::env::var("HOME").unwrap_or_else(|_| "/home/propylon".to_string()));
         cmd.env("TMPDIR", temp_dir.path());
         cmd.env("LANG", "C.UTF-8");
         cmd.env("PYTHONUNBUFFERED", "1");
+        cmd.env("MISE_DATA_DIR", "/app/data/mise");
+        cmd.env("MISE_CONFIG_DIR", "/app/data/mise/config");
+        cmd.env("MISE_CACHE_DIR", "/app/data/mise/cache");
+        cmd.env("MISE_STATE_DIR", "/app/data/mise/state");
+        cmd.env("MISE_YES", "1");
 
         for (k, v) in &req.env_vars {
             cmd.env(k, v);
