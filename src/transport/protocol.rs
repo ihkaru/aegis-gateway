@@ -273,6 +273,9 @@ impl McpProtocolHandler {
             "gateway_install_tool" => {
                 Some(MetaToolDispatcher::handle_install_tool(id, &self.gateway, args).await)
             }
+            "gateway_list_credentials" => {
+                Some(MetaToolDispatcher::handle_list_credentials(id, &self.gateway).await)
+            }
             "gateway_list_servers" => {
                 Some(MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await)
             }

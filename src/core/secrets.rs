@@ -15,6 +15,11 @@ pub trait SecretStore: Send + Sync {
     /// Check if secret store is reachable
     async fn health_check(&self) -> PropylonResult<bool>;
 
+    /// List available secret keys (zero-knowledge: names only, never secrets)
+    async fn list_secret_keys(&self) -> PropylonResult<Vec<String>> {
+        Ok(vec![])
+    }
+
     /// Invalidate in-memory cache entry for a given secret (optional/hot-rotation)
     async fn invalidate(&self, _key: &str) -> PropylonResult<()> {
         Ok(())

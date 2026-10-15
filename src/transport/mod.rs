@@ -3,6 +3,7 @@
 pub mod buffer;
 pub mod command_split;
 pub mod cors;
+pub mod credential_handlers;
 pub mod execution_pipeline;
 pub mod http;
 pub mod meta_handlers;

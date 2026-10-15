@@ -95,15 +95,53 @@ impl VaultCredentialBroker {
         let clean = service.to_uppercase().replace(['-', '.'], "_");
         let token_key = format!("{clean}_TOKEN");
         let api_key = format!("{clean}_API_KEY");
+        let secret_key = format!("{clean}_SECRET");
 
         if let Some(val) = self.secret_store.get_secret(&token_key).await? {
-            envs.insert(token_key, val.clone());
-            self.register_secret(&val).await;
+            self.inject_secret_or_json(&token_key, &val, envs).await;
         } else if let Some(val) = self.secret_store.get_secret(&api_key).await? {
-            envs.insert(api_key, val.clone());
-            self.register_secret(&val).await;
+            self.inject_secret_or_json(&api_key, &val, envs).await;
+        } else if let Some(val) = self.secret_store.get_secret(&secret_key).await? {
+            self.inject_secret_or_json(&secret_key, &val, envs).await;
         }
         Ok(())
+    }
+
+    async fn inject_secret_or_json(&self, key: &str, val: &str, envs: &mut HashMap<String, String>) {
+        envs.insert(key.to_string(), val.to_string());
+        self.register_secret(val).await;
+
+        if val.trim().starts_with('{') {
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(val) {
+                if let Some(token) = parsed.get("token").or_else(|| parsed.get("access_token")).and_then(|t| t.as_str()) {
+                    envs.insert(format!("{key}_ACCESS_TOKEN"), token.to_string());
+                    if key.contains("GDRIVE") || key.contains("GOOGLE") {
+                        envs.insert("GOOGLE_ACCESS_TOKEN".to_string(), token.to_string());
+                    }
+                    self.register_secret(token).await;
+                }
+                if let Some(refresh) = parsed.get("refresh_token").and_then(|r| r.as_str()) {
+                    envs.insert(format!("{key}_REFRESH_TOKEN"), refresh.to_string());
+                    if key.contains("GDRIVE") || key.contains("GOOGLE") {
+                        envs.insert("GOOGLE_REFRESH_TOKEN".to_string(), refresh.to_string());
+                    }
+                    self.register_secret(refresh).await;
+                }
+                if let Some(secret) = parsed.get("client_secret").and_then(|s| s.as_str()) {
+                    envs.insert(format!("{key}_CLIENT_SECRET"), secret.to_string());
+                    if key.contains("GDRIVE") || key.contains("GOOGLE") {
+                        envs.insert("GOOGLE_CLIENT_SECRET".to_string(), secret.to_string());
+                    }
+                    self.register_secret(secret).await;
+                }
+                if let Some(cid) = parsed.get("client_id").and_then(|c| c.as_str()) {
+                    envs.insert(format!("{key}_CLIENT_ID"), cid.to_string());
+                    if key.contains("GDRIVE") || key.contains("GOOGLE") {
+                        envs.insert("GOOGLE_CLIENT_ID".to_string(), cid.to_string());
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -112,14 +150,33 @@ impl CredentialBroker for VaultCredentialBroker {
     async fn broker_credentials(&self, services: &[String]) -> PropylonResult<HashMap<String, String>> {
         let mut envs = HashMap::new();
         for svc in services {
-            match svc.to_lowercase().as_str() {
-                "google" | "gdrive" | "gdocs" | "gsheets" => {
+            let trimmed = svc.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            // 1. Check exact key as specified (case-sensitive or raw from vault)
+            if let Some(val) = self.secret_store.get_secret(trimmed).await? {
+                self.inject_secret_or_json(trimmed, &val, &mut envs).await;
+                continue;
+            }
+
+            // 2. Check uppercase key
+            let upper = trimmed.to_uppercase().replace(['-', '.'], "_");
+            if let Some(val) = self.secret_store.get_secret(&upper).await? {
+                self.inject_secret_or_json(&upper, &val, &mut envs).await;
+                continue;
+            }
+
+            // 3. Match well-known vendor alias or fall back to generic pattern
+            match upper.as_str() {
+                "GOOGLE" | "GDRIVE" | "GDOCS" | "GSHEETS" => {
                     self.broker_google(&mut envs).await?;
                 }
-                "github" => {
+                "GITHUB" => {
                     self.broker_github(&mut envs).await?;
                 }
-                "aws" => {
+                "AWS" => {
                     self.broker_aws(&mut envs).await?;
                 }
                 other => {

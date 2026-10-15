@@ -204,6 +204,11 @@ impl SecretStore for InfisicalSecretStore {
     async fn health_check(&self) -> PropylonResult<bool> {
         Ok(!self.base_url.is_empty() && !self.client_id.is_empty())
     }
+
+    async fn list_secret_keys(&self) -> PropylonResult<Vec<String>> {
+        let read = self.cache.read().await;
+        Ok(read.keys().cloned().collect())
+    }
 }
 
 /// Chained fallback secret store (Memory Cache -> Vault / Infisical -> Local Env)
@@ -233,6 +238,16 @@ impl SecretStore for ChainedSecretStore {
             let _ = store.set_secret(key, value).await;
         }
         Ok(())
+    }
+
+    async fn list_secret_keys(&self) -> PropylonResult<Vec<String>> {
+        let mut all_keys = std::collections::BTreeSet::new();
+        for store in &self.stores {
+            if let Ok(keys) = store.list_secret_keys().await {
+                all_keys.extend(keys);
+            }
+        }
+        Ok(all_keys.into_iter().collect())
     }
 
     async fn invalidate(&self, key: &str) -> PropylonResult<()> {

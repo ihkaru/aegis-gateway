@@ -53,6 +53,11 @@ impl SecretStore for VaultSecretStore {
     async fn health_check(&self) -> PropylonResult<bool> {
         Ok(!self.vault_addr.is_empty())
     }
+
+    async fn list_secret_keys(&self) -> PropylonResult<Vec<String>> {
+        let read = self.local_secrets.read().await;
+        Ok(read.keys().cloned().collect())
+    }
 }
 
 /// Environment variable secret store with runtime memory override map (Zero Unsafe)
@@ -75,13 +80,39 @@ impl SecretStore for EnvSecretStore {
             return Ok(Some(val.clone()));
         }
         let sanitized_key = key.replace(['/', '-', '.'], "_").to_uppercase();
-        Ok(std::env::var(&sanitized_key).ok())
+        if let Ok(val) = std::env::var(&sanitized_key) {
+            return Ok(Some(val));
+        }
+        Ok(std::env::var(key).ok())
     }
 
     async fn set_secret(&self, key: &str, value: &str) -> PropylonResult<()> {
         let mut overrides = self.overrides.write().await;
         overrides.insert(key.to_string(), value.to_string());
         Ok(())
+    }
+
+    async fn list_secret_keys(&self) -> PropylonResult<Vec<String>> {
+        let overrides = self.overrides.read().await;
+        let mut keys: std::collections::BTreeSet<String> = overrides.keys().cloned().collect();
+        for (k, _) in std::env::vars() {
+            let upper = k.to_uppercase();
+            if (upper.contains("TOKEN")
+                || upper.contains("KEY")
+                || upper.contains("SECRET")
+                || upper.contains("CREDENTIAL")
+                || upper.contains("PASSWORD")
+                || upper.contains("GDRIVE")
+                || upper.contains("AUTH"))
+                && !upper.starts_with("CARGO")
+                && !upper.starts_with("RUST")
+                && !upper.starts_with("ANTIGRAVITY_CSRF")
+                && !upper.starts_with("PATH")
+            {
+                keys.insert(k);
+            }
+        }
+        Ok(keys.into_iter().collect())
     }
 
     async fn health_check(&self) -> PropylonResult<bool> {

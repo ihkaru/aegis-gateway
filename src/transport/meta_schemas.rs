@@ -54,14 +54,22 @@ pub fn get_built_in_meta_tools() -> Vec<Value> {
             }
         }),
         json!({
+            "name": "gateway_list_credentials",
+            "description": "Zero-Knowledge Credential Discovery: Lists the names of all available API, token, and service credentials in the vault (e.g. 'AINA_GDRIVE_TOKEN_JSON', 'GH_TOKEN', 'CLOUDFLARE_API_TOKEN'). Values remain encrypted and zero-knowledge. Specify discovered key names or service names in execute_code's 'services' parameter to automatically broker and inject authenticated sessions into the sandbox.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }),
+        json!({
             "name": "execute_code",
-            "description": "Hermetic Code Sandbox: Execute context-agnostic Python/Bash/Node code. Equipped with 'mise' to install on-demand persistent tools (e.g. 'mise use -g gh') stored in /app/data/mise. Integrated with Zero-Knowledge Credential Broker: DO NOT ask user for PAT/tokens; specify services: ['github', 'infisical'] to automatically broker authenticated sessions.",
+            "description": "Hermetic Code Sandbox: Execute context-agnostic Python/Bash/Node code. Equipped with 'mise' to install on-demand persistent tools (e.g. 'mise use -g gh') stored in /app/data/mise. Integrated with Zero-Knowledge Credential Broker: specify any available vault key (discovered via gateway_list_credentials, e.g. ['AINA_GDRIVE_TOKEN_JSON', 'GH_TOKEN', 'CLOUDFLARE_API_TOKEN']) or service name in 'services' to automatically broker and inject authenticated environment variables into the sandbox.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "code": { "type": "string", "description": "The script source code to execute" },
                     "language": { "type": "string", "description": "Execution language: python (default), bash, javascript" },
-                    "services": { "type": "array", "items": { "type": "string" }, "description": "Services requiring brokered credentials (e.g. ['github', 'infisical', 'google', 'aws'])" },
+                    "services": { "type": "array", "items": { "type": "string" }, "description": "Keys discovered via gateway_list_credentials (e.g. ['AINA_GDRIVE_TOKEN_JSON', 'GH_TOKEN']) or service names" },
                     "timeout_secs": { "type": "integer", "description": "Maximum execution time in seconds (default 30)" },
                     "env_vars": { "type": "object", "description": "Optional environment variables" },
                     "plan_id": { "type": "string", "description": "Optional plan ID from gateway_plan_tasks for correlation" }

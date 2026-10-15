@@ -309,34 +309,14 @@ impl MetaToolDispatcher {
         gateway: &PropylonGateway,
         params: Option<Value>,
     ) -> JsonRpcResponse {
-        let args = match params {
-            Some(p) => p,
-            None => return JsonRpcResponse::error(id, JsonRpcError::new(INVALID_PARAMS, "Missing tool parameter")),
-        };
-        let tool_name = match args.get("tool").and_then(|t| t.as_str()) {
-            Some(t) => t.trim(),
-            None => return JsonRpcResponse::error(id, JsonRpcError::new(INVALID_PARAMS, "Missing 'tool' field")),
-        };
-        let bin_name = tool_name.split('@').next().unwrap_or(tool_name);
-        let code = format!("mise use -g {tool_name} && mise reshim && (which {bin_name} || true) 2>&1");
-        let req = crate::core::sandbox::SandboxExecutionRequest {
-            code,
-            language: crate::core::sandbox::ExecutionLanguage::Bash,
-            services: vec![],
-            timeout_secs: Some(120),
-            env_vars: std::collections::HashMap::new(),
-            tenant_id: None,
-            caller_id: None,
-        };
-        match gateway.sandbox().execute(&req).await {
-            Ok(outcome) => JsonRpcResponse::success(id, json!({
-                "tool": tool_name,
-                "installed": outcome.exit_code == 0,
-                "output": outcome.stdout.trim(),
-                "error": outcome.stderr.trim(),
-                "persistent_path": format!("/app/data/mise/bin/{tool_name}")
-            })),
-            Err(e) => JsonRpcResponse::error(id, e.to_rpc_error()),
-        }
+        super::credential_handlers::CredentialAndToolInstallerDispatcher::handle_install_tool(id, gateway, params).await
+    }
+
+    pub async fn handle_list_credentials(
+        id: JsonRpcId,
+        gateway: &PropylonGateway,
+    ) -> JsonRpcResponse {
+        super::credential_handlers::CredentialAndToolInstallerDispatcher::handle_list_credentials(id, gateway).await
     }
 }
+
