@@ -48,6 +48,9 @@ impl WebApiDispatcher {
         if path.starts_with("/api/v1/auth/") || path == "/api/v1/policy/simulate" || path == "/api/v1/policy/abac" || path.starts_with("/saml/") {
             return crate::control::auth_api::AuthApiDispatcher::dispatch(method, path, body_bytes).await;
         }
+        if path.starts_with("/api/v1/search/") {
+            return crate::control::search_api::SearchApiDispatcher::dispatch(method, path, body_bytes, gateway).await;
+        }
 
         match (method, path) {
             ("GET", "/api/v1/overview") => {

@@ -54,6 +54,20 @@ pub fn get_built_in_meta_tools() -> Vec<Value> {
             }
         }),
         json!({
+            "name": "gateway_web_search",
+            "description": "Enterprise Web & Knowledge Search: Real-time neural and keyword factual search across the public web. Integrated with multi-key round-robin/least-used load balancing and zero-vendor-lockin interface. Returns query-relevant page highlights and verified links.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "The search query, topic, or factual statement to research" },
+                    "limit": { "type": "integer", "description": "Maximum number of search results to return (default: 5, max: 10)" },
+                    "category": { "type": "string", "description": "Optional category filter: news, company, research paper" },
+                    "search_type": { "type": "string", "description": "Search type: auto (default), neural, keyword" }
+                },
+                "required": ["query"]
+            }
+        }),
+        json!({
             "name": "gateway_list_credentials",
             "description": "Zero-Knowledge Credential Discovery: Lists the names of all available API, token, and service credentials in the vault (e.g. 'AINA_GDRIVE_TOKEN_JSON', 'GH_TOKEN', 'CLOUDFLARE_API_TOKEN'). Values remain encrypted and zero-knowledge. Specify discovered key names or service names in execute_code's 'services' parameter to automatically broker and inject authenticated sessions into the sandbox.",
             "inputSchema": {
@@ -198,6 +212,15 @@ pub fn get_native_meta_tool_definitions() -> Vec<ToolDefinition> {
             required_params: vec!["name".to_string()],
             when_to_use: "When calling a specific backend tool on demand".to_string(),
             tags: vec!["call".to_string(), "tool".to_string(), "invoke".to_string()],
+        },
+        ToolDefinition {
+            name: "gateway_web_search".to_string(),
+            server: "gateway".to_string(),
+            description: "Search the public web for real-time information, documentation, news, and facts".to_string(),
+            input_schema: json!({ "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }),
+            required_params: vec!["query".to_string()],
+            when_to_use: "When needing real-time web facts, external information, documentation, or news".to_string(),
+            tags: vec!["search".to_string(), "web".to_string(), "internet".to_string(), "exa".to_string(), "cari".to_string(), "fakta".to_string(), "berita".to_string(), "google".to_string()],
         },
     ]
 }

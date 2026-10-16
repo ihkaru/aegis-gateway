@@ -18,6 +18,7 @@ pub mod dlp;
 pub mod k8s;
 pub mod policy;
 pub mod sandbox;
+pub mod search;
 pub mod skills;
 pub mod state;
 pub mod transport;
@@ -65,6 +66,7 @@ pub struct PropylonGateway {
     in_situ: Arc<dyn InSituDataEnclave>,
     approval_dispatcher: Arc<dyn ApprovalNotificationDispatcher>,
     resume_router: Arc<dyn DurableResumeRouter>,
+    search: Arc<search::WebSearchManager>,
 }
 
 impl PropylonGateway {
@@ -125,6 +127,33 @@ impl PropylonGateway {
         let approval_dispatcher = Arc::new(policy::MultiChannelApprovalDispatcher::new(channels));
         let resume_router = Arc::new(policy::DurableTaskResumeRouter::new(approval.clone(), audit.clone()));
 
+        let search_driver = Arc::new(search::ExaSearchDriver::new());
+        let mut search_pool = search::SearchKeyPool::new();
+        for i in 1..=10 {
+            if let Ok(val) = std::env::var(format!("EXA_API_KEY_{i}")) {
+                if !val.trim().is_empty() {
+                    search_pool.add_key(val, Some(format!("Exa Key #{i}")));
+                }
+            }
+        }
+        if let Ok(val) = std::env::var("EXA_API_KEYS") {
+            for (idx, token) in val.split(',').enumerate() {
+                let t = token.trim();
+                if !t.is_empty() {
+                    search_pool.add_key(t, Some(format!("Exa Pooled Key #{}", idx + 1)));
+                }
+            }
+        }
+        if let Ok(val) = std::env::var("EXA_API_KEY") {
+            if !val.trim().is_empty() {
+                search_pool.add_key(val, Some("Default Exa Key".to_string()));
+            }
+        }
+        let search = Arc::new(search::WebSearchManager::new(
+            search_driver,
+            Arc::new(tokio::sync::RwLock::new(search_pool)),
+        ));
+
         Self {
             state,
             policy,
@@ -142,6 +171,7 @@ impl PropylonGateway {
             in_situ,
             approval_dispatcher,
             resume_router,
+            search,
         }
     }
 
@@ -201,6 +231,14 @@ impl PropylonGateway {
 
     pub fn resume_router(&self) -> &dyn DurableResumeRouter {
         self.resume_router.as_ref()
+    }
+
+    pub fn search_manager(&self) -> &search::WebSearchManager {
+        self.search.as_ref()
+    }
+
+    pub fn search_manager_arc(&self) -> Arc<search::WebSearchManager> {
+        self.search.clone()
     }
 
     /// Discover tools with progressive disclosure projection

@@ -279,6 +279,9 @@ impl McpProtocolHandler {
             "gateway_list_servers" => {
                 Some(MetaToolDispatcher::handle_list_servers(id, self.registry.as_ref()).await)
             }
+            "gateway_web_search" | "web_search" => {
+                Some(crate::transport::search_handler::SearchToolDispatcher::handle_web_search(id, &self.gateway, args).await)
+            }
             "gateway_register_tools" => Some(self.handle_meta_register(id, args).await),
             _ => None,
         }

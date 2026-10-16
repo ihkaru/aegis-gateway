@@ -25,8 +25,14 @@ impl MetaToolDispatcher {
             .unwrap_or("");
 
         let read = tools.read().await;
+        let mut all_tools = read.clone();
+        for meta in crate::transport::meta_schemas::get_native_meta_tool_definitions() {
+            if !all_tools.iter().any(|t| t.name == meta.name) {
+                all_tools.push(meta);
+            }
+        }
         let mut engine = crate::discovery::HybridSearchEngine::new();
-        engine.index_tools("default", read.clone());
+        engine.index_tools("default", all_tools);
         let res = engine.search(query, DisclosureTier::L0, 20);
         JsonRpcResponse::success(
             id,

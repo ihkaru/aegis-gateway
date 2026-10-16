@@ -16,9 +16,10 @@
   import FinopsTab from './lib/FinopsTab.svelte';
   import AuditTab from './lib/AuditTab.svelte';
   import ConfigTab from './lib/ConfigTab.svelte';
+  import SearchKeysTab from './lib/SearchKeysTab.svelte';
   import LoginGate from './lib/LoginGate.svelte';
 
-  type Tab = 'overview' | 'backends' | 'tools' | 'tokens' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
+  type Tab = 'overview' | 'backends' | 'tools' | 'search' | 'tokens' | 'topology' | 'policy' | 'config' | 'dlp' | 'hitl' | 'finops' | 'audit';
   type Theme = 'zinc' | 'slate' | 'neutral' | 'oled';
 
   let currentTab = $state<Tab>('overview');
@@ -180,6 +181,9 @@
       <button onclick={() => (currentTab = 'tools')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'tools' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
         <Terminal class="h-3.5 w-3.5" /> Tools
       </button>
+      <button onclick={() => (currentTab = 'search')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'search' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
+        <Search class="h-3.5 w-3.5 text-blue-400" /> Web Search
+      </button>
       <button onclick={() => (currentTab = 'topology')} class="flex items-center gap-2 py-2.5 sm:py-3 px-3 border-b-2 transition-colors {currentTab === 'topology' ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}">
         <Network class="h-3.5 w-3.5" /> Topology Flow
       </button>
@@ -243,6 +247,8 @@
       <BackendsTab />
     {:else if currentTab === 'tools'}
       <ToolsTab />
+    {:else if currentTab === 'search'}
+      <SearchKeysTab />
     {:else if currentTab === 'topology'}
       <TopologyTab {isDark} />
     {:else if currentTab === 'policy'}
