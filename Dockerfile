@@ -35,8 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     xz-utils \
     zstd \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
+    && (for i in 1 2 3 4 5; do curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh && break || sleep 2; done)
 
 # Create non-root unprivileged user
 RUN groupadd -g 10001 propylon && \
