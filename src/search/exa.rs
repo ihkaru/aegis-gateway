@@ -84,6 +84,7 @@ impl WebSearchDriver for ExaSearchDriver {
             .post(&self.base_url)
             .header("x-api-key", api_key)
             .header("Content-Type", "application/json")
+            .header("Accept-Encoding", "gzip, deflate, identity")
             .json(&payload)
             .send()
             .await
@@ -105,10 +106,25 @@ impl WebSearchDriver for ExaSearchDriver {
             )));
         }
 
-        let body: Value = resp
-            .json()
+        let raw_bytes = resp
+            .bytes()
             .await
-            .map_err(|e| SearchError::Provider(format!("Failed to parse Exa JSON response: {e}")))?;
+            .map_err(|e| SearchError::Provider(format!("Failed to read Exa response bytes: {e}")))?;
+
+        let body: Value = if raw_bytes.starts_with(&[0x1f, 0x8b]) {
+            use std::io::Read;
+            let mut decoder = flate2::read::GzDecoder::new(&raw_bytes[..]);
+            let mut decompressed = String::new();
+            decoder.read_to_string(&mut decompressed).map_err(|e| {
+                SearchError::Provider(format!("Failed to decompress gzip Exa response: {e}"))
+            })?;
+            serde_json::from_str(&decompressed).map_err(|e| {
+                SearchError::Provider(format!("Failed to parse decompressed Exa JSON: {e}"))
+            })?
+        } else {
+            serde_json::from_slice(&raw_bytes)
+                .map_err(|e| SearchError::Provider(format!("Failed to parse Exa JSON response: {e}")))?
+        };
 
         let mut items = Vec::new();
         if let Some(raw_results) = body.get("results").and_then(|r| r.as_array()) {
